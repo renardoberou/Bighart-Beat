@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0907">
+<title>BIGHART BEAT — STUDIO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/main.css">
+<script src="src/main.js" defer></script>
+</head>
+<body>
+
+<!-- ═══ START ═══ -->
+<div id="ss">
+  <div class="sub">RESONANT SYSTEMS</div>
+  <h1>BIGHART BEAT</h1>
+  <div class="sub">STUDIO EDITION</div>
+  <button class="bt" id="startBtn">ENGAGE</button>
+  <div class="ft">v4.1 — FOR THE 244</div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+
+  <!-- TRANSPORT -->
+  <div class="tx">
+    <div class="tx-l">
+      <button class="btn btn-play" id="playBtn">PLAY</button>
+      <button class="btn btn-stop" id="stopBtn">STOP</button>
+    </div>
+    <div class="tx-c">
+      <div class="bpm-box">
+        <button class="bpm-btn" id="bpmDn">−</button>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div class="bpm-d" id="bpmD">120</div>
+          <div class="bpm-lbl">BPM</div>
+        </div>
+        <button class="bpm-btn" id="bpmUp">+</button>
+      </div>
+      <button class="btn tap-btn" id="tapBtn">TAP</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+        <div class="step-box" id="stepD">--</div>
+        <div class="bpm-lbl">STEP</div>
+      </div>
+    </div>
+    <div class="tx-r">
+      <div class="patt" id="patt">
+        <button class="patt-b on" data-p="0">A</button>
+        <button class="patt-b" data-p="1">B</button>
+        <button class="patt-b" data-p="2">C</button>
+        <button class="patt-b" data-p="3">D</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEQUENCER -->
+  <div class="seq" id="seq"></div>
+
+  <!-- CONTROLS -->
+  <div class="ctrl">
+
+    <!-- MIX STRIP -->
+    <div class="panel">
+      <div class="p-hdr">
+        <div class="p-t">MIX</div>
+        <div class="p-sub">VOL · MUTE · DLY · REV</div>
+      </div>
+      <div class="mix" id="mix"></div>
+    </div>
+
+    <!-- VOICE EDIT -->
+    <div class="panel">
+      <div class="p-hdr">
+        <div class="p-t">VOICE</div>
+        <div class="ve-hd"><b id="veName">KICK</b></div>
+      </div>
+      <div id="vePanel" class="ve"></div>
+    </div>
+
+    <!-- FX -->
+    <div class="fx-grid">
+      <!-- DELAY -->
+      <div class="fx-pan">
+        <div class="fx-hd">
+          <div class="fx-nm dly">DIGITAL DELAY</div>
+          <button class="fx-tog" id="togDly"></button>
+        </div>
+        <div class="div-row" id="dlyDiv">
+          <button class="div-b" data-d="0.25">1/16</button>
+          <button class="div-b" data-d="0.375">1/16.</button>
+          <button class="div-b" data-d="0.5">1/8</button>
+          <button class="div-b on" data-d="0.75">1/8.</button>
+          <button class="div-b" data-d="1">1/4</button>
+          <button class="div-b" data-d="1.5">1/4.</button>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">FDBCK</div>
+          <input type="range" class="fdr b" id="dlyFb" min="0" max="80" value="32">
+          <div class="fx-val" id="vDlyFb">32%</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">TONE</div>
+          <input type="range" class="fdr b" id="dlyTone" min="0" max="100" value="55">
+          <div class="fx-val" id="vDlyTone">55%</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">WET</div>
+          <input type="range" class="fdr b" id="dlyWet" min="0" max="100" value="26">
+          <div class="fx-val" id="vDlyWet">26%</div>
+        </div>
+      </div>
+
+      <!-- GATED REVERB -->
+      <div class="fx-pan">
+        <div class="fx-hd">
+          <div class="fx-nm rev">GATED REVERB</div>
+          <button class="fx-tog" id="togRev"></button>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">SIZE</div>
+          <input type="range" class="fdr e" id="revSize" min="0" max="100" value="60">
+          <div class="fx-val" id="vRevSize">60%</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">DAMP</div>
+          <input type="range" class="fdr e" id="revDamp" min="0" max="100" value="55">
+          <div class="fx-val" id="vRevDamp">55%</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">GATE</div>
+          <input type="range" class="fdr e" id="revGate" min="40" max="600" value="180">
+          <div class="fx-val" id="vRevGate">180 ms</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">WET</div>
+          <input type="range" class="fdr e" id="revWet" min="0" max="100" value="28">
+          <div class="fx-val" id="vRevWet">28%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MASTER -->
+    <div class="panel">
+      <div class="p-hdr">
+        <div class="p-t">MASTER</div>
+        <div class="p-sub">→ 244</div>
+      </div>
+      <div class="mstr">
+        <div class="mstr-l">
+          <div class="mstr-row">
+            <div class="ve-lbl">LEVEL</div>
+            <input type="range" class="fdr a" id="mstVol" min="0" max="100" value="72">
+            <div class="ve-val" id="vMstVol">72%</div>
+          </div>
+          <div class="ovu" id="ovu"></div>
+        </div>
+        <div class="mstr-r">
+          <button class="mstr-btn" id="clearBtn">CLEAR</button>
+          <button class="mstr-btn" id="expBtn">EXPORT</button>
+          <button class="mstr-btn" id="impBtn">IMPORT</button>
+          <input type="file" id="impFile" accept=".json,application/json">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="smpFile" accept="audio/*">
+
+
+
+</body>
+</html>
