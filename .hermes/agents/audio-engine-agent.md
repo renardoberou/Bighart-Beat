@@ -1,5 +1,10 @@
 # AUDIO ENGINE AGENT
 
+
+## Pre-approval
+
+This role operates under the project pre-approval charter at `.hermes/PRE_APPROVAL.md`. Stay inside that charter. If a requested action is outside it, stop and ask for explicit Bernado approval.
+
 ## Purpose
 Design and review sound generation, sample playback, sequencing, timing, swing, MIDI, and audio routing.
 

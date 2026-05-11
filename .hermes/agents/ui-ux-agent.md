@@ -1,5 +1,10 @@
 # UI / UX AGENT
 
+
+## Pre-approval
+
+This role operates under the project pre-approval charter at `.hermes/PRE_APPROVAL.md`. Stay inside that charter. If a requested action is outside it, stop and ask for explicit Bernado approval.
+
 ## Purpose
 Design the interface, layout, controls, visual language, and interaction flow for Bighart Beat.
 
