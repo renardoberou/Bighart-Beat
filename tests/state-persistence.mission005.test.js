@@ -41,9 +41,10 @@ assert.strictEqual(serialized.patterns[2].ether[15], 1);
 assert.strictEqual(serialized.tracks[0].n, undefined, 'serialized tracks include only runtime save/import fields');
 assert.strictEqual(serialized.tracks[4].smp, undefined, 'serialized tracks omit sample buffers');
 
-serialized.patterns[0].kick[0] = 0;
-serialized.tracks[0].p.pitch = 999;
-serialized.fx.dly.on = false;
+const serializedCloneProbe = serializeProject({ appState, tracks, fx, patterns });
+serializedCloneProbe.patterns[0].kick[0] = 0;
+serializedCloneProbe.tracks[0].p.pitch = 999;
+serializedCloneProbe.fx.dly.on = false;
 assert.strictEqual(patterns[0].kick[0], 1, 'serializeProject clones patterns');
 assert.strictEqual(tracks[0].p.pitch, 123, 'serializeProject clones track params');
 assert.strictEqual(fx.dly.on, true, 'serializeProject clones fx');
@@ -67,6 +68,125 @@ const legacyShape = {
   fx,
 };
 assert.strictEqual(parseProjectImport(legacyShape).ok, true, 'parseProjectImport accepts current v4 export shape without schemaVersion');
+assert.strictEqual(parseProjectImport({ ...legacyShape, patt: 1 }).ok, true, 'parseProjectImport accepts legacy shape with patt and without schemaVersion');
+
+function assertImportRejected(project, pattern, label) {
+  const result = parseProjectImport(project);
+  assert.strictEqual(result.ok, false, label + ' is rejected');
+  assert(result.errors.some(e => pattern.test(e)), label + ' reports expected validation error: ' + result.errors.join('; '));
+}
+
+assertImportRejected({ ...serialized, bpm: undefined }, /bpm/i, 'missing bpm');
+assertImportRejected({ ...serialized, mstVol: undefined }, /mstVol/i, 'missing mstVol');
+assertImportRejected({ ...serialized, patterns: undefined }, /patterns/i, 'missing patterns');
+assertImportRejected({ ...serialized, tracks: undefined }, /tracks/i, 'missing tracks');
+assertImportRejected({ ...serialized, fx: undefined }, /fx/i, 'missing top-level fx');
+assertImportRejected({ ...serialized, fx: null }, /fx.*object/i, 'non-object top-level fx');
+assertImportRejected({ ...serialized, fx: { dly: serialized.fx.dly } }, /fx\.rev|missing/i, 'missing fx.rev object');
+assertImportRejected({ ...serialized, fx: { rev: serialized.fx.rev } }, /fx\.dly|missing/i, 'missing fx.dly object');
+
+assertImportRejected({ ...serialized, tracks: serialized.tracks.slice(0, 5) }, /six|6|exactly/i, 'short tracks array');
+assertImportRejected({ ...serialized, tracks: [...serialized.tracks, { ...serialized.tracks[0] }] }, /six|6|exactly/i, 'long tracks array');
+assertImportRejected({ ...serialized, tracks: serialized.tracks.map((t, i) => i === 1 ? { ...t, id: 'kick' } : t) }, /duplicate|missing|exactly once/i, 'duplicate track id');
+assertImportRejected({ ...serialized, tracks: serialized.tracks.map((t, i) => i === 1 ? { ...t, id: 'rim' } : t) }, /unknown|known|canonical/i, 'unknown track id');
+
+const patternWithExtraTrack = serializeProject({ appState, tracks, fx, patterns });
+patternWithExtraTrack.patterns[0].rim = Array(16).fill(0);
+assertImportRejected(patternWithExtraTrack, /unknown|extra|track key/i, 'pattern bank with unknown extra track key');
+
+const patternWithMissingTrack = serializeProject({ appState, tracks, fx, patterns });
+delete patternWithMissingTrack.patterns[0].ether;
+assertImportRejected(patternWithMissingTrack, /ether|missing|16/i, 'pattern bank with missing canonical track');
+
+assertImportRejected({ ...serialized, schemaVersion: 2 }, /schemaVersion/i, 'unsupported schema version');
+assertImportRejected({ ...serialized, meta: 'not-meta' }, /meta/i, 'non-object meta');
+assertImportRejected({ ...serialized, meta: { app: 'not-bighart' } }, /meta\.app|bighart-beat-v4/i, 'wrong meta app');
+assert.strictEqual(parseProjectImport({ ...serialized, extraHarmlessTopLevel: true }).ok, true, 'parseProjectImport remains lenient for harmless top-level extras');
+
+const badFxDelayField = serializeProject({ appState, tracks, fx, patterns });
+badFxDelayField.fx.dly.fb = 'bad';
+assertImportRejected(badFxDelayField, /fx\.dly\.fb|finite number/i, 'malformed delay feedback field');
+
+const badFxDelayToggle = serializeProject({ appState, tracks, fx, patterns });
+badFxDelayToggle.fx.dly.on = 1;
+assertImportRejected(badFxDelayToggle, /fx\.dly\.on|boolean/i, 'malformed delay on field');
+
+const badTrackMute = serializeProject({ appState, tracks, fx, patterns });
+badTrackMute.tracks[0].mute = 'false';
+assertImportRejected(badTrackMute, /tracks\[0\]\.mute|boolean/i, 'malformed track mute field');
+
+const badTrackDelaySend = serializeProject({ appState, tracks, fx, patterns });
+badTrackDelaySend.tracks[3].dlyS = 'true';
+assertImportRejected(badTrackDelaySend, /tracks\[3\]\.dlyS|boolean/i, 'malformed track delay send field');
+
+const badTrackReverbSend = serializeProject({ appState, tracks, fx, patterns });
+badTrackReverbSend.tracks[5].revS = 'true';
+assertImportRejected(badTrackReverbSend, /tracks\[5\]\.revS|boolean/i, 'malformed track reverb send field');
+
+const missingTrackBoolean = serializeProject({ appState, tracks, fx, patterns });
+delete missingTrackBoolean.tracks[1].mute;
+assertImportRejected(missingTrackBoolean, /tracks\[1\]\.mute|boolean/i, 'missing persisted track boolean field');
+
+const badFxReverbField = serializeProject({ appState, tracks, fx, patterns });
+badFxReverbField.fx.rev.gate = Infinity;
+assertImportRejected(badFxReverbField, /fx\.rev\.gate|finite number/i, 'malformed reverb gate field');
+
+const unknownFxField = serializeProject({ appState, tracks, fx, patterns });
+unknownFxField.fx.dly.extra = 0.2;
+assertImportRejected(unknownFxField, /fx\.dly\.extra|unknown/i, 'unknown delay field');
+
+const partialFx = serializeProject({ appState, tracks, fx, patterns });
+partialFx.fx = { dly: { fb: 0.25 }, rev: { on: false } };
+assert.strictEqual(parseProjectImport(partialFx).ok, true, 'parseProjectImport allows valid partial fx subfields for legacy saves');
+
+function assertImportRejectedAt(pathLabel, mutate, pattern) {
+  const project = serializeProject({ appState, tracks, fx, patterns });
+  mutate(project);
+  assertImportRejected(project, pattern || new RegExp(pathLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '|range|between', 'i'), 'out-of-range ' + pathLabel);
+}
+
+assertImportRejectedAt('bpm', p => { p.bpm = 39; }, /bpm|range|between/i);
+assertImportRejectedAt('bpm', p => { p.bpm = 241; }, /bpm|range|between/i);
+assertImportRejectedAt('mstVol', p => { p.mstVol = 1.01; }, /mstVol|range|between/i);
+assertImportRejectedAt('tracks[0].vol', p => { p.tracks[0].vol = -0.01; }, /tracks\[0\]\.vol|range|between/i);
+assertImportRejectedAt('fx.dly.mult', p => { p.fx.dly.mult = 0.125; }, /fx\.dly\.mult|range|between/i);
+assertImportRejectedAt('fx.dly.fb', p => { p.fx.dly.fb = 1.01; }, /fx\.dly\.fb|range|between/i);
+assertImportRejectedAt('fx.rev.gate', p => { p.fx.rev.gate = 601; }, /fx\.rev\.gate|range|between/i);
+assertImportRejectedAt('tracks[0].p.pitch', p => { p.tracks[0].p.pitch = 59; }, /tracks\[0\]\.p\.pitch|range|between/i);
+assertImportRejectedAt('tracks[1].p.decay', p => { p.tracks[1].p.decay = 0.51; }, /tracks\[1\]\.p\.decay|range|between/i);
+assertImportRejectedAt('tracks[2].p.freq', p => { p.tracks[2].p.freq = 14001; }, /tracks\[2\]\.p\.freq|range|between/i);
+assertImportRejectedAt('tracks[2].p.decay', p => { p.tracks[2].p.decay = 0.081; }, /tracks\[2\]\.p\.decay|range|between/i);
+assertImportRejectedAt('tracks[3].p.spread', p => { p.tracks[3].p.spread = 1; }, /tracks\[3\]\.p\.spread|range|between/i);
+assertImportRejectedAt('tracks[4].p.pitch', p => { p.tracks[4].p.pitch = 3.01; }, /tracks\[4\]\.p\.pitch|range|between/i);
+assertImportRejectedAt('tracks[5].p.freq', p => { p.tracks[5].p.freq = 19; }, /tracks\[5\]\.p\.freq|range|between/i);
+
+const badKickParam = serializeProject({ appState, tracks, fx, patterns });
+badKickParam.tracks[0].p.pitch = 'bad';
+assertImportRejected(badKickParam, /tracks\[0\]\.p\.pitch|finite number/i, 'malformed kick pitch param');
+
+const unknownKickParam = serializeProject({ appState, tracks, fx, patterns });
+unknownKickParam.tracks[0].p.rim = 1;
+assertImportRejected(unknownKickParam, /tracks\[0\]\.p\.rim|unknown/i, 'unknown kick param');
+
+const badEtherMode = serializeProject({ appState, tracks, fx, patterns });
+badEtherMode.tracks[5].p.mode = 'bad';
+assertImportRejected(badEtherMode, /tracks\[5\]\.p\.mode|ether|hum|clock|wifi/i, 'malformed ether mode param');
+
+['hum', 'clock', 'wifi', 'ether'].forEach(mode => {
+  const validEtherMode = serializeProject({ appState, tracks, fx, patterns });
+  validEtherMode.tracks[5].p.mode = mode;
+  const parsed = parseProjectImport(validEtherMode);
+  assert.strictEqual(parsed.ok, true, 'parseProjectImport accepts ether mode ' + mode);
+  assert.strictEqual(parsed.value.tracks[5].p.mode, mode, 'parseProjectImport round-trips ether mode ' + mode);
+});
+
+const badEtherNumericParam = serializeProject({ appState, tracks, fx, patterns });
+badEtherNumericParam.tracks[5].p.freq = NaN;
+assertImportRejected(badEtherNumericParam, /tracks\[5\]\.p\.freq|finite number/i, 'malformed ether numeric param');
+
+const partialParams = serializeProject({ appState, tracks, fx, patterns });
+partialParams.tracks = partialParams.tracks.map(t => ({ ...t, p: t.id === 'ether' ? { mode: 'ether' } : {} }));
+assert.strictEqual(parseProjectImport(partialParams).ok, true, 'parseProjectImport allows missing track params for legacy saves while validating present keys');
 
 function assertDangerousProjectJsonRejected(json, label) {
   const beforePolluted = {}.polluted;

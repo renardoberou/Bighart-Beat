@@ -44,9 +44,9 @@ const canonicalCss = extractBetween(source, '<style>', '</style>', 'inline style
 const canonicalJs = extractBetween(source, '<script>', '</script>', 'inline script block');
 assert(css.trim() === canonicalCss, 'styles/main.css exactly matches canonical <style> content');
 assert(
-  extractFromMarker(js, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', 'src/main.js') ===
-  extractFromMarker(canonicalJs, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', 'canonical JS'),
-  'src/main.js preserves canonical audio/UI/export behavior after state block'
+  extractBetween(js, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', '/* ═══════════════════════════════════════════════\n   SEQUENCER BUILD', 'src/main.js audio block') ===
+  extractBetween(canonicalJs, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', '/* ═══════════════════════════════════════════════\n   SEQUENCER BUILD', 'canonical JS audio block'),
+  'src/main.js preserves canonical audio engine block after state block'
 );
 
 assert(index.includes('<link rel="stylesheet" href="styles/main.css">'), 'index links styles/main.css');
@@ -55,6 +55,8 @@ const requiredScripts = [
   'src/state/patterns.js',
   'src/state/fx-state.js',
   'src/state/app-state.js',
+  'src/state/pattern-operations.js',
+  'src/state/persistence.js',
   'src/main.js'
 ];
 let previousScriptIdx = -1;
@@ -108,6 +110,22 @@ const requiredJsRegexes = [
 for (const [regex, label] of requiredJsRegexes) {
   assert(regex.test(js), `src/main.js preserves canonical ${label}`);
   assert(regex.test(source), `canonical source contains ${label}`);
+}
+
+const requiredMission005RuntimeRegexes = [
+  [/PATTERNS\[S\.patt\]\s*=\s*State\.toggleStep\(PATTERNS\[S\.patt\],\s*tr\.id,\s*i\)/, 'step toggles via State.toggleStep selected-bank replacement'],
+  [/PATTERNS\[S\.patt\]\s*=\s*State\.clearPattern\(\)/, 'clear pattern via State.clearPattern selected-bank replacement'],
+  [/State\.serializeProject\(\{\s*appState:\s*S,\s*tracks:\s*TRACKS,\s*fx:\s*FX,\s*patterns:\s*PATTERNS/, 'runtime save/export uses State.serializeProject'],
+  [/State\.parseProjectImport\(/, 'runtime load/import validates with State.parseProjectImport'],
+  [/toast\('Import failed'\)/, 'runtime import reports validation failures'],
+  [/function\s+syncPatternButtons\b[\s\S]*?classList\.toggle\('on',\s*parseInt\(b\.dataset\.p\)\s*===\s*S\.patt\)/, 'runtime has reusable selected pattern button sync'],
+  [/function\s+syncFxControls\b[\s\S]*?setFdr\('dlyFb',[\s\S]*?setFdr\('revWet'/, 'runtime has reusable FX control sync'],
+  [/function\s+syncMasterControls\b[\s\S]*?\$\('bpmD'\)\.textContent\s*=\s*S\.bpm[\s\S]*?setFdr\('mstVol'/, 'runtime has reusable master control sync'],
+  [/applyProjectData\(parsed\.value\);[\s\S]*?syncPatternButtons\(\)[\s\S]*?syncMasterControls\(\)[\s\S]*?syncFxControls\(\)/, 'runtime import syncs pattern, master, and FX controls after applying project'],
+  [/if\s*\(A\)\s*genRevIR\(\)/, 'runtime regenerates reverb impulse when imported FX changes while audio exists'],
+];
+for (const [regex, label] of requiredMission005RuntimeRegexes) {
+  assert(regex.test(js), `src/main.js Mission 005 runtime wiring: ${label}`);
 }
 
 const requiredCssRegexes = [

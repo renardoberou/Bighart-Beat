@@ -566,9 +566,8 @@ function buildSeq() {
       const grid = PATTERNS[S.patt];
       if (grid[tr.id][i]) c.classList.add('on');
       c.addEventListener('click', () => {
-        const g = PATTERNS[S.patt];
-        g[tr.id][i] = g[tr.id][i] ? 0 : 1;
-        if (g[tr.id][i]) c.classList.add('on');
+        PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
+        if (PATTERNS[S.patt][tr.id][i]) c.classList.add('on');
         else c.classList.remove('on');
         autosave();
       });
@@ -737,16 +736,7 @@ function autosave() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try {
-      const data = {
-        bpm: S.bpm,
-        patt: S.patt,
-        mstVol: S.mstVol,
-        patterns: PATTERNS,
-        tracks: TRACKS.map(t => ({
-          id: t.id, mute: t.mute, vol: t.vol, dlyS: t.dlyS, revS: t.revS, p: t.p
-        })),
-        fx: FX,
-      };
+      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS });
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch(e) {}
   }, 250);
@@ -755,27 +745,55 @@ function loadSave() {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
-    const d = JSON.parse(raw);
-    if (d.bpm) S.bpm = d.bpm;
-    if (typeof d.patt === 'number') S.patt = d.patt;
-    if (typeof d.mstVol === 'number') S.mstVol = d.mstVol;
-    if (d.patterns) for (let i = 0; i < 4; i++) if (d.patterns[i]) PATTERNS[i] = d.patterns[i];
-    if (d.tracks) {
-      d.tracks.forEach(st => {
-        const tr = TRACKS.find(x => x.id === st.id);
-        if (tr) {
-          tr.mute = !!st.mute;
-          tr.vol = typeof st.vol === 'number' ? st.vol : tr.vol;
-          tr.dlyS = !!st.dlyS; tr.revS = !!st.revS;
-          if (st.p) Object.assign(tr.p, st.p);
-        }
-      });
-    }
-    if (d.fx) {
-      if (d.fx.dly) Object.assign(FX.dly, d.fx.dly);
-      if (d.fx.rev) Object.assign(FX.rev, d.fx.rev);
-    }
+    const parsed = State.parseProjectImport(raw);
+    if (!parsed.ok) return;
+    applyProjectData(parsed.value);
   } catch(e) {}
+}
+
+function syncPatternButtons() {
+  $('patt').querySelectorAll('.patt-b').forEach(b => b.classList.toggle('on', parseInt(b.dataset.p) === S.patt));
+}
+
+function syncFxControls() {
+  $('togDly').classList.toggle('on', FX.dly.on);
+  $('togRev').classList.toggle('on', FX.rev.on);
+  $('dlyDiv').querySelectorAll('.div-b').forEach(b =>
+    b.classList.toggle('on', Math.abs(parseFloat(b.dataset.d) - FX.dly.mult) < .001)
+  );
+  setFdr('dlyFb',   Math.round(FX.dly.fb * 100),   v => v + '%');
+  setFdr('dlyTone', Math.round(FX.dly.tone * 100), v => v + '%');
+  setFdr('dlyWet',  Math.round(FX.dly.wet * 100),  v => v + '%');
+  setFdr('revSize', Math.round(FX.rev.size * 100), v => v + '%');
+  setFdr('revDamp', Math.round(FX.rev.damp * 100), v => v + '%');
+  setFdr('revGate', FX.rev.gate, v => v + ' ms');
+  setFdr('revWet',  Math.round(FX.rev.wet * 100),  v => v + '%');
+}
+
+function syncMasterControls() {
+  $('bpmD').textContent = S.bpm;
+  setFdr('mstVol', Math.round(S.mstVol * 100), v => v + '%');
+}
+
+function applyProjectData(d) {
+  S.bpm = d.bpm;
+  if (typeof d.patt === 'number') S.patt = d.patt;
+  S.mstVol = d.mstVol;
+  for (let i = 0; i < 4; i++) PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
+  d.tracks.forEach(st => {
+    const tr = TRACKS.find(x => x.id === st.id);
+    if (tr) {
+      tr.mute = !!st.mute;
+      tr.vol = typeof st.vol === 'number' ? st.vol : tr.vol;
+      tr.dlyS = !!st.dlyS; tr.revS = !!st.revS;
+      if (st.p) Object.assign(tr.p, st.p);
+    }
+  });
+  if (d.fx) {
+    if (d.fx.dly) Object.assign(FX.dly, d.fx.dly);
+    if (d.fx.rev) Object.assign(FX.rev, d.fx.rev);
+    if (A) genRevIR();
+  }
 }
 
 /* ═══════════════════════════════════════════════
@@ -801,8 +819,7 @@ function wire() {
   $('patt').querySelectorAll('.patt-b').forEach(b => {
     b.addEventListener('click', () => {
       S.patt = parseInt(b.dataset.p);
-      $('patt').querySelectorAll('.patt-b').forEach(x => x.classList.remove('on'));
-      b.classList.add('on');
+      syncPatternButtons();
       buildSeq();
       autosave();
     });
@@ -846,8 +863,7 @@ function wire() {
   // clear / export / import
   $('clearBtn').addEventListener('click', () => {
     if (!confirm('Clear pattern ' + 'ABCD'[S.patt] + '?')) return;
-    const g = PATTERNS[S.patt];
-    for (const k in g) g[k] = g[k].map(() => 0);
+    PATTERNS[S.patt] = State.clearPattern();
     buildSeq();
     autosave();
     toast('Pattern ' + 'ABCD'[S.patt] + ' cleared');
@@ -931,13 +947,7 @@ function doTap() {
 }
 
 function exportJSON() {
-  const data = {
-    bpm: S.bpm, mstVol: S.mstVol,
-    patterns: PATTERNS,
-    tracks: TRACKS.map(t => ({ id:t.id, mute:t.mute, vol:t.vol, dlyS:t.dlyS, revS:t.revS, p:t.p })),
-    fx: FX,
-    meta: { app: 'bighart-beat-v4', ts: new Date().toISOString() }
-  };
+  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, timestamp: new Date().toISOString() });
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -949,26 +959,18 @@ async function importJSON(e) {
   const f = e.target.files[0]; if (!f) return;
   try {
     const txt = await f.text();
-    const d = JSON.parse(txt);
-    if (typeof d.bpm === 'number') { S.bpm = d.bpm; $('bpmD').textContent = d.bpm; }
-    if (typeof d.mstVol === 'number') { S.mstVol = d.mstVol; $('mstVol').value = Math.round(d.mstVol*100); }
-    if (d.patterns) for (let i = 0; i < 4; i++) if (d.patterns[i]) PATTERNS[i] = d.patterns[i];
-    if (d.tracks) d.tracks.forEach(st => {
-      const tr = TRACKS.find(x => x.id === st.id);
-      if (tr) {
-        tr.mute = !!st.mute;
-        tr.vol = typeof st.vol === 'number' ? st.vol : tr.vol;
-        tr.dlyS = !!st.dlyS; tr.revS = !!st.revS;
-        if (st.p) Object.assign(tr.p, st.p);
-      }
-    });
-    if (d.fx) { if (d.fx.dly) Object.assign(FX.dly, d.fx.dly); if (d.fx.rev) Object.assign(FX.rev, d.fx.rev); }
+    const parsed = State.parseProjectImport(txt);
+    if (!parsed.ok) { toast('Import failed'); return; }
+    applyProjectData(parsed.value);
+    syncPatternButtons();
+    syncMasterControls();
+    syncFxControls();
     buildSeq(); buildMix(); buildVE();
     applyFXState();
     autosave();
     toast('Imported');
   } catch(err) { toast('Import failed'); }
-  e.target.value = '';
+  finally { e.target.value = ''; }
 }
 
 function toast(msg) {
@@ -996,22 +998,9 @@ function launch() {
     ovu.appendChild(s);
   }
   // restore UI state
-  $('bpmD').textContent = S.bpm;
-  $('patt').querySelectorAll('.patt-b').forEach(b => b.classList.toggle('on', parseInt(b.dataset.p) === S.patt));
-  $('togDly').classList.toggle('on', FX.dly.on);
-  $('togRev').classList.toggle('on', FX.rev.on);
-  $('dlyDiv').querySelectorAll('.div-b').forEach(b =>
-    b.classList.toggle('on', Math.abs(parseFloat(b.dataset.d) - FX.dly.mult) < .001)
-  );
-  // set fader values from state
-  setFdr('dlyFb',   Math.round(FX.dly.fb * 100),   v => v + '%');
-  setFdr('dlyTone', Math.round(FX.dly.tone * 100), v => v + '%');
-  setFdr('dlyWet',  Math.round(FX.dly.wet * 100),  v => v + '%');
-  setFdr('revSize', Math.round(FX.rev.size * 100), v => v + '%');
-  setFdr('revDamp', Math.round(FX.rev.damp * 100), v => v + '%');
-  setFdr('revGate', FX.rev.gate, v => v + ' ms');
-  setFdr('revWet',  Math.round(FX.rev.wet * 100),  v => v + '%');
-  setFdr('mstVol',  Math.round(S.mstVol * 100),    v => v + '%');
+  syncMasterControls();
+  syncPatternButtons();
+  syncFxControls();
   wire();
   requestAnimationFrame(uiLoop);
   // resume audio context on first gesture (iOS)
