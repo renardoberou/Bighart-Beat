@@ -34,13 +34,37 @@ const index = readRequired(indexPath);
 const js = readRequired(jsPath);
 const css = readRequired(cssPath);
 
+function extractFromMarker(text, marker, label) {
+  const markerIdx = text.indexOf(marker);
+  assert(markerIdx !== -1, `${label} contains ${marker}`);
+  return markerIdx !== -1 ? text.slice(markerIdx).trim() : '';
+}
+
 const canonicalCss = extractBetween(source, '<style>', '</style>', 'inline style block');
 const canonicalJs = extractBetween(source, '<script>', '</script>', 'inline script block');
 assert(css.trim() === canonicalCss, 'styles/main.css exactly matches canonical <style> content');
-assert(js.trim() === canonicalJs, 'src/main.js exactly matches canonical <script> content');
+assert(
+  extractFromMarker(js, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', 'src/main.js') ===
+  extractFromMarker(canonicalJs, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', 'canonical JS'),
+  'src/main.js preserves canonical audio/UI/export behavior after state block'
+);
 
 assert(index.includes('<link rel="stylesheet" href="styles/main.css">'), 'index links styles/main.css');
-assert(index.includes('<script src="src/main.js" defer></script>'), 'index loads src/main.js with defer');
+const requiredScripts = [
+  'src/state/tracks.js',
+  'src/state/patterns.js',
+  'src/state/fx-state.js',
+  'src/state/app-state.js',
+  'src/main.js'
+];
+let previousScriptIdx = -1;
+for (const scriptSrc of requiredScripts) {
+  const tag = `<script src="${scriptSrc}" defer></script>`;
+  const scriptIdx = index.indexOf(tag);
+  assert(scriptIdx !== -1, `index loads ${scriptSrc} with defer`);
+  assert(scriptIdx > previousScriptIdx, `index loads ${scriptSrc} after prior app script`);
+  previousScriptIdx = scriptIdx;
+}
 assert(!index.includes('<style>'), 'index has no inline style block');
 assert(!index.includes('<script>'), 'index has no inline script block');
 

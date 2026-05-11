@@ -4,52 +4,11 @@ const $ = id => document.getElementById(id);
 /* ═══════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════ */
-const TRACKS = [
-  { id:'kick',  n:'KCK', col:'r', mute:false, vol:.78, dlyS:false, revS:false,
-    p:{ pitch:150, end:42, decay:.45, click:.42, drive:.32 } },
-  { id:'snare', n:'SNR', col:'o', mute:false, vol:.68, dlyS:false, revS:true,
-    p:{ tone:210, snap:.70, decay:.18, body:.55 } },
-  { id:'hihat', n:'HHT', col:'a', mute:false, vol:.46, dlyS:false, revS:false,
-    p:{ freq:8200, decay:.055, open:.0, metal:.30 } },
-  { id:'clap',  n:'CLP', col:'b', mute:false, vol:.58, dlyS:true,  revS:true,
-    p:{ spread:10, decay:.14, tone:1700 } },
-  { id:'input', n:'INP', col:'g', mute:false, vol:.70, dlyS:false, revS:false,
-    p:{ pitch:1.0, decay:1.0 }, smp:null, smpN:null },
-  { id:'ether', n:'ETH', col:'e', mute:false, vol:.62, dlyS:true,  revS:true,
-    p:{ mode:'ether', freq:55, harmonics:.5, texture:.5, decay:.28, grit:.4 } },
-];
-
-const FX = {
-  dly: { on:false, mult:0.75, fb:.32, tone:.55, wet:.26 }, // mult = of a beat (16th = 0.25)
-  rev: { on:false, size:.60, damp:.55, gate:180, wet:.28 },
-};
-
-const PATTERNS = [
-  null, null, null, null
-];
-// default pattern A
-function defaultGrid() {
-  return {
-    kick:  [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
-    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-    hihat: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
-    clap:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
-    input: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    ether: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  };
-}
-PATTERNS[0] = defaultGrid();
-PATTERNS[1] = defaultGrid();
-PATTERNS[2] = defaultGrid();
-PATTERNS[3] = defaultGrid();
-
-const S = {
-  bpm: 120,
-  playing: false,
-  patt: 0,
-  sel: 0,
-  mstVol: .72,
-};
+const State = globalThis.BighartBeatState;
+const TRACKS = State.createDefaultTracks();
+const FX = State.createDefaultFxState();
+const PATTERNS = State.createPatternBanks();
+const S = State.createAppState();
 
 /* ═══════════════════════════════════════════════
    AUDIO ENGINE
