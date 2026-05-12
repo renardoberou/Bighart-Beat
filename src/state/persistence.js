@@ -4,6 +4,7 @@
   const SCHEMA_VERSION = 1;
   const PROJECT_APP = 'bighart-beat-v4';
   const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+  const ENGINES = ['808', '909', 'reznor', 'aphex'];
   const ETHER_MODES = ['hum', 'clock', 'wifi', 'ether'];
   const STEP_COUNT = 16;
   const BANK_COUNT = 4;
@@ -85,6 +86,7 @@
       schemaVersion: SCHEMA_VERSION,
       bpm: appState.bpm,
       patt: appState.patt,
+      engine: ENGINES.includes(appState.engine) ? appState.engine : 'aphex',
       mstVol: appState.mstVol,
       patterns: clonePatterns(input.patterns),
       tracks: serializeTracks(input.tracks),
@@ -108,6 +110,9 @@
     validateNumberInRange(data.bpm, 40, 240, errors, 'bpm');
     if (data.patt !== undefined && (!Number.isInteger(data.patt) || data.patt < 0 || data.patt >= BANK_COUNT)) {
       errors.push('patt must be an integer from 0 to 3');
+    }
+    if (data.engine !== undefined && !ENGINES.includes(data.engine)) {
+      errors.push('engine must be one of: ' + ENGINES.join(', '));
     }
     validateNumberInRange(data.mstVol, 0, 1, errors, 'mstVol');
 
@@ -291,12 +296,15 @@
 
     const validation = validateProjectData(data);
     if (!validation.ok) return validation;
-    return { ok: true, value: cloneValue(data), errors: [] };
+    const value = cloneValue(data);
+    if (value.engine === undefined) value.engine = 'aphex';
+    return { ok: true, value, errors: [] };
   }
 
   const api = {
     SCHEMA_VERSION,
     PROJECT_APP,
+    ENGINES,
     serializeProject,
     parseProjectImport,
     validateProjectData,

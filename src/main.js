@@ -22,6 +22,30 @@ const KICK_PUMP_WEIGHT = 1;
 const NON_KICK_PUMP_WEIGHT = 0.35;
 const GATE_ANALOG_JITTER_MS = 6;
 const GATE_ANALOG_CLOSED_DB = 3;
+const ENGINE_PROFILES = {
+  '808': {
+    kick: { pitch: .92, decay: 1.18, click: .62, drive: .62 },
+    snare: { tone: .88, noise: .82, body: 1.15, snap: .75 },
+    hihat: { noise: .78, tone: .12, bright: .82, decay: 1.05, ratios: [2.00, 2.74, 3.00, 4.17, 4.36, 6.42], osc: 'square', instability: 0, glitch: 0, chokeClosed: .018, chokeOpen: .060 },
+  },
+  '909': {
+    kick: { pitch: 1.06, decay: .86, click: 1.18, drive: .88 },
+    snare: { tone: 1.12, noise: 1.12, body: .92, snap: 1.18 },
+    hihat: { noise: 1.08, tone: .20, bright: 1.24, decay: .86, ratios: [2.00, 2.33, 3.01, 3.88, 4.61, 5.97], osc: 'square', instability: .01, glitch: 0, chokeClosed: .014, chokeOpen: .050 },
+  },
+  reznor: {
+    kick: { pitch: .82, decay: .95, click: 1.05, drive: 1.55 },
+    snare: { tone: .72, noise: 1.28, body: .70, snap: 1.25 },
+    hihat: { noise: 1.18, tone: .30, bright: .72, decay: 1.18, ratios: [1.41, 1.93, 2.79, 3.76, 5.11, 7.23], osc: 'sawtooth', instability: .025, glitch: .10, chokeClosed: .012, chokeOpen: .070 },
+  },
+  aphex: {
+    // inharmonic metallic hihat ratios + bounded instability + optional tiny glitch tick.
+    kick: { pitch: 1.18, decay: .78, click: 1.35, drive: 1.10 },
+    snare: { tone: 1.28, noise: 1.05, body: .62, snap: 1.45 },
+    hihat: { noise: .96, tone: .44, bright: 1.34, decay: .92, ratios: [1.00, 1.618, 2.414, 3.732, 5.387, 8.09], osc: 'triangle', instability: .045, glitch: .22, chokeClosed: .010, chokeOpen: .085 },
+  },
+};
+const hihatChokeState = { gain: null, open: false };
 
 function initAudio() {
   if (A) { A.resume(); return; }
@@ -150,6 +174,8 @@ function toneHz(v) { // 0..1 → 800 Hz..16 kHz exp
 }
 
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+function boundedRand(amount) { return 1 + (Math.random() * 2 - 1) * amount; }
+function engineProfile() { return ENGINE_PROFILES[S.engine] || ENGINE_PROFILES.aphex; }
 
 function dbToGain(db) {
   return Math.pow(10, db / 20);
@@ -257,25 +283,26 @@ function triggerCompGate(t, trackId) {
 // ── KICK ── deep thump with click and saturation
 function synthKick(t, v, p) {
   const dest = routeVoice(t, 0);
+  const ep = engineProfile().kick;
   // body oscillator (sine with pitch drop)
   const o = A.createOscillator(); o.type = 'sine';
-  o.frequency.setValueAtTime(p.pitch * 1.8, t);                  // attack spike
-  o.frequency.exponentialRampToValueAtTime(p.pitch, t + .008);    // initial drop
-  o.frequency.exponentialRampToValueAtTime(p.end, t + p.decay * .6);
+  o.frequency.setValueAtTime(p.pitch * 1.8 * ep.pitch, t);                  // attack spike
+  o.frequency.exponentialRampToValueAtTime(p.pitch * ep.pitch, t + .008);    // initial drop
+  o.frequency.exponentialRampToValueAtTime(p.end * ep.pitch, t + p.decay * ep.decay * .6);
   // body envelope — peak at 0.85 leaves headroom for click + sub
   const g = A.createGain();
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(v * .85, t + .003);
-  g.gain.exponentialRampToValueAtTime(.001, t + p.decay);
+  g.gain.exponentialRampToValueAtTime(.001, t + p.decay * ep.decay);
   // saturation on body
-  const sat = A.createWaveShaper(); sat.curve = mkSatCurve(p.drive); sat.oversample = '2x';
+  const sat = A.createWaveShaper(); sat.curve = mkSatCurve(clamp(p.drive * ep.drive, 0, 1)); sat.oversample = '2x';
   o.connect(sat); sat.connect(g); g.connect(dest);
-  o.start(t); o.stop(t + p.decay + .08);
+  o.start(t); o.stop(t + p.decay * ep.decay + .08);
   // click layer — noise burst HP
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
   const nf = A.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 1800; nf.Q.value = .7;
   const ng = A.createGain();
-  ng.gain.setValueAtTime(v * p.click * .42, t);
+  ng.gain.setValueAtTime(v * p.click * ep.click * .42, t);
   ng.gain.exponentialRampToValueAtTime(.001, t + .018);
   ns.connect(nf); nf.connect(ng); ng.connect(dest);
   ns.start(t); ns.stop(t + .025);
@@ -284,74 +311,114 @@ function synthKick(t, v, p) {
   const g2 = A.createGain();
   g2.gain.setValueAtTime(0, t);
   g2.gain.linearRampToValueAtTime(v * .28, t + .01);
-  g2.gain.exponentialRampToValueAtTime(.001, t + p.decay * 1.1);
+  g2.gain.exponentialRampToValueAtTime(.001, t + p.decay * ep.decay * 1.1);
   o2.connect(g2); g2.connect(dest);
-  o2.start(t); o2.stop(t + p.decay * 1.2 + .05);
+  o2.start(t); o2.stop(t + p.decay * ep.decay * 1.2 + .05);
 }
 
 // ── SNARE ── noise + pitched shell + crack
 function synthSnare(t, v, p) {
   const dest = routeVoice(t, 1);
+  const ep = engineProfile().snare;
   // noise body (bandpass 1.5–4kHz)
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
-  const nf = A.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 2200; nf.Q.value = .5;
-  const nhp = A.createBiquadFilter(); nhp.type = 'highpass'; nhp.frequency.value = 800;
+  const nf = A.createBiquadFilter();  nf.type = 'bandpass'; nf.frequency.value = 2200 * ep.tone; nf.Q.value = .5;
+  const nhp = A.createBiquadFilter(); nhp.type = 'highpass'; nhp.frequency.value = 800 * ep.tone;
   const ng = A.createGain();
   ng.gain.setValueAtTime(0, t);
-  ng.gain.linearRampToValueAtTime(v * .58, t + .0018);
+  ng.gain.linearRampToValueAtTime(v * .58 * ep.noise, t + .0018);
   ng.gain.exponentialRampToValueAtTime(.001, t + p.decay);
   ns.connect(nf); nf.connect(nhp); nhp.connect(ng); ng.connect(dest);
   ns.start(t); ns.stop(t + p.decay + .04);
   // pitched shell — two triangles an octave apart
-  const t1 = A.createOscillator(); t1.type = 'triangle'; t1.frequency.value = p.tone;
-  const t2 = A.createOscillator(); t2.type = 'triangle'; t2.frequency.value = p.tone * 1.5;
+  const t1 = A.createOscillator(); t1.type = 'triangle'; t1.frequency.value = p.tone * ep.tone;
+  const t2 = A.createOscillator(); t2.type = 'triangle'; t2.frequency.value = p.tone * 1.5 * ep.tone;
   const tg = A.createGain();
   tg.gain.setValueAtTime(0, t);
-  tg.gain.linearRampToValueAtTime(v * p.body * .68, t + .0015);
+  tg.gain.linearRampToValueAtTime(v * p.body * .68 * ep.body, t + .0015);
   tg.gain.exponentialRampToValueAtTime(.001, t + p.decay * .45);
   t1.connect(tg); t2.connect(tg); tg.connect(dest);
   t1.start(t); t1.stop(t + p.decay * .6);
   t2.start(t); t2.stop(t + p.decay * .6);
   // transient crack — very short noise burst HP
   const cr = A.createBufferSource(); cr.buffer = nz; cr.loop = true;
-  const cf = A.createBiquadFilter(); cf.type = 'highpass'; cf.frequency.value = 4500;
+  const cf = A.createBiquadFilter();  cf.type = 'highpass'; cf.frequency.value = 4500 * ep.tone;
   const cg = A.createGain();
-  cg.gain.setValueAtTime(v * p.snap * .55, t);
+  cg.gain.setValueAtTime(v * p.snap * .55 * ep.snap, t);
   cg.gain.exponentialRampToValueAtTime(.001, t + .012);
   cr.connect(cf); cf.connect(cg); cg.connect(dest);
   cr.start(t); cr.stop(t + .02);
 }
 
-// ── HIHAT ── highpass noise + metallic square ratios
+function triggerHihatChoke(t, openAmount, choke) {
+  const previous = hihatChokeState.gain;
+  const wasOpen = hihatChokeState.open;
+  const isOpen = openAmount > .5;
+  if (previous && previous.gain) {
+    const g = previous.gain;
+    if (g.cancelAndHoldAtTime) {
+      g.cancelAndHoldAtTime(t);
+    } else {
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(Math.max(.001, g.value || .001), t);
+    }
+    const ep = engineProfile().hihat;
+    const tau = !isOpen ? ep.chokeClosed : (wasOpen ? ep.chokeOpen : ep.chokeOpen * .75);
+    g.setTargetAtTime(.0008, t, tau);
+  }
+  hihatChokeState.gain = choke;
+  hihatChokeState.open = isOpen;
+}
+
+// ── HIHAT ── highpass noise + engine-aware metallic ratios on existing HHT open control
 function synthHihat(t, v, p) {
   const dest = routeVoice(t, 2);
-  const dec = p.open > .5 ? Math.max(p.decay, .22 + p.open * .25) : p.decay;
+  const ep = engineProfile().hihat;
+  const instability = ep.instability || 0;
+  const openBoost = p.open > .5 ? Math.max(p.decay, .22 + p.open * .25) : p.decay;
+  const dec = clamp(openBoost * ep.decay * boundedRand(instability), .006, .70);
+  const choke = A.createGain();
+  choke.gain.setValueAtTime(0, t);
+  choke.gain.linearRampToValueAtTime(1, t + .0015);
+  choke.gain.setTargetAtTime(.0008, t + dec, Math.max(.012, dec * .18));
+  choke.connect(dest);
+  triggerHihatChoke(t, p.open, choke);
   // noise layer
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
-  const hf = A.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = p.freq; hf.Q.value = .8;
-  const hf2 = A.createBiquadFilter(); hf2.type = 'bandpass'; hf2.frequency.value = 10500; hf2.Q.value = .7;
+  const hf = A.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = clamp(p.freq * ep.bright * boundedRand(instability), 2500, 17000); hf.Q.value = .8;
+  const hf2 = A.createBiquadFilter(); hf2.type = 'bandpass'; hf2.frequency.value = clamp(10500 * ep.bright * boundedRand(instability), 4500, 18000); hf2.Q.value = .7 + instability * 8;
   const ng = A.createGain();
   ng.gain.setValueAtTime(0, t);
-  ng.gain.linearRampToValueAtTime(v * .42, t + .0012);
+  ng.gain.linearRampToValueAtTime(clamp(v * .42 * ep.noise * boundedRand(instability * .6), 0, .72), t + .0012);
   ng.gain.exponentialRampToValueAtTime(.001, t + dec);
-  ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(dest);
-  ns.start(t); ns.stop(t + dec + .04);
-  // metallic tone mix (808-style square ratios) — only if metal > 0
+  ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(choke);
+  ns.start(t); ns.stop(t + dec + .05);
+  // metallic tone mix — only if metal > 0
   if (p.metal > 0.01) {
-    const ratios = [2.00, 2.74, 3.00, 4.17, 4.36, 6.42];
+    const ratios = ep.ratios;
     const mg = A.createGain();
     mg.gain.setValueAtTime(0, t);
-    mg.gain.linearRampToValueAtTime(v * p.metal * .18, t + .001);
+    mg.gain.linearRampToValueAtTime(clamp(v * p.metal * (.14 + ep.tone * .18), 0, .34), t + .001);
     mg.gain.exponentialRampToValueAtTime(.001, t + dec * .8);
-    const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = p.freq * .9;
-    mg.connect(hp); hp.connect(dest);
+    const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = clamp(p.freq * .85 * ep.bright, 2200, 17000);
+    mg.connect(hp); hp.connect(choke);
     for (const r of ratios) {
-      const o = A.createOscillator(); o.type = 'square';
-      o.frequency.value = 205 * r;
-      const og = A.createGain(); og.gain.value = 1 / ratios.length * .6;
+      const o = A.createOscillator(); o.type = ep.osc;
+      o.frequency.value = clamp(205 * r * ep.bright * boundedRand(instability), 80, 18000);
+      const og = A.createGain(); og.gain.value = 1 / ratios.length * .5;
       o.connect(og); og.connect(mg);
-      o.start(t); o.stop(t + dec + .02);
+      o.start(t); o.stop(t + dec + .025);
     }
+  }
+  if (ep.glitch > 0 && Math.random() < ep.glitch) {
+    const tick = A.createBufferSource(); tick.buffer = nz; tick.loop = true;
+    const tf = A.createBiquadFilter(); tf.type = 'bandpass'; tf.frequency.value = clamp(7000 * boundedRand(.4), 3500, 14000); tf.Q.value = 12;
+    const tg = A.createGain();
+    tg.gain.setValueAtTime(0, t);
+    tg.gain.linearRampToValueAtTime(clamp(v * ep.glitch * .16, 0, .06), t + .0008);
+    tg.gain.exponentialRampToValueAtTime(.001, t + .006);
+    tick.connect(tf); tf.connect(tg); tg.connect(choke);
+    tick.start(t); tick.stop(t + .010);
   }
 }
 
@@ -864,6 +931,10 @@ function syncPatternButtons() {
   $('patt').querySelectorAll('.patt-b').forEach(b => b.classList.toggle('on', parseInt(b.dataset.p) === S.patt));
 }
 
+function syncEngineSelector() {
+  $('engineSel').querySelectorAll('[data-engine]').forEach(b => b.classList.toggle('on', b.dataset.engine === S.engine));
+}
+
 function syncFxControls() {
   $('togDly').classList.toggle('on', FX.dly.on);
   $('togRev').classList.toggle('on', FX.rev.on);
@@ -898,6 +969,7 @@ function syncMasterControls() {
 function applyProjectData(d) {
   S.bpm = d.bpm;
   if (typeof d.patt === 'number') S.patt = d.patt;
+  S.engine = d.engine || 'aphex';
   S.mstVol = d.mstVol;
   for (let i = 0; i < 4; i++) PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
   d.tracks.forEach(st => {
@@ -943,6 +1015,15 @@ function wire() {
       syncPatternButtons();
       buildSeq();
       renderRhythmIntelligence();
+      autosave();
+    });
+  });
+
+  // drum-machine engine: changes synthesis immediately and does not stop playback
+  $('engineSel').querySelectorAll('[data-engine]').forEach(b => {
+    b.addEventListener('click', () => {
+      S.engine = b.dataset.engine;
+      syncEngineSelector();
       autosave();
     });
   });
@@ -1126,6 +1207,7 @@ async function importJSON(e) {
     syncPatternButtons();
     syncMasterControls();
     syncFxControls();
+    syncEngineSelector();
     buildSeq(); buildMix(); buildVE();
     renderRhythmIntelligence();
     applyFXState();
@@ -1163,6 +1245,7 @@ function launch() {
   syncMasterControls();
   syncPatternButtons();
   syncFxControls();
+  syncEngineSelector();
   renderRhythmIntelligence();
   wire();
   requestAnimationFrame(uiLoop);

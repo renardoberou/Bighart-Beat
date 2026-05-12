@@ -7,6 +7,7 @@
       playing: false,
       patt: 0,
       sel: 0,
+      engine: 'aphex',
       mstVol: .72,
     };
   }

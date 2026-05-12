@@ -19,6 +19,7 @@ assert.strictEqual(SCHEMA_VERSION, 1, 'schema version is explicit and stable');
 const appState = createAppState();
 appState.bpm = 132;
 appState.patt = 2;
+appState.engine = '909';
 appState.mstVol = 0.64;
 const tracks = createDefaultTracks();
 tracks[0].mute = true;
@@ -43,11 +44,12 @@ const patterns = createPatternBanks();
 patterns[2].ether[15] = 1;
 
 const serialized = serializeProject({ appState, tracks, fx, patterns });
-assert.deepStrictEqual(Object.keys(serialized), ['schemaVersion', 'bpm', 'patt', 'mstVol', 'patterns', 'tracks', 'fx', 'meta'], 'serializeProject uses deterministic v4-compatible top-level shape');
+assert.deepStrictEqual(Object.keys(serialized), ['schemaVersion', 'bpm', 'patt', 'engine', 'mstVol', 'patterns', 'tracks', 'fx', 'meta'], 'serializeProject uses deterministic v4-compatible top-level shape');
 assert.strictEqual(serialized.schemaVersion, 1);
 assert.deepStrictEqual(serialized.meta, { app: 'bighart-beat-v4' }, 'serializeProject omits volatile timestamps unless provided');
 assert.strictEqual(serialized.bpm, 132);
 assert.strictEqual(serialized.patt, 2);
+assert.strictEqual(serialized.engine, '909', 'serializeProject persists selected drum-machine engine');
 assert.strictEqual(serialized.mstVol, 0.64);
 assert.strictEqual(serialized.tracks[0].mute, true);
 assert.strictEqual(serialized.tracks[0].p.pitch, 123);
@@ -67,12 +69,20 @@ assert.deepStrictEqual(validateProjectData(serializeProject({ appState, tracks, 
 
 const parsedFromObject = parseProjectImport(serializeProject({ appState, tracks, fx, patterns }));
 assert.strictEqual(parsedFromObject.ok, true, 'parseProjectImport accepts valid objects');
+assert.strictEqual(parsedFromObject.value.engine, '909', 'parseProjectImport round-trips valid engine values');
 assert.strictEqual(parsedFromObject.value.patterns[2].ether[15], 1);
 parsedFromObject.value.patterns[2].ether[15] = 0;
 assert.strictEqual(patterns[2].ether[15], 1, 'parseProjectImport returns cloned data');
 
 const parsedFromString = parseProjectImport(JSON.stringify(serializeProject({ appState, tracks, fx, patterns })));
 assert.strictEqual(parsedFromString.ok, true, 'parseProjectImport accepts JSON strings');
+
+['808', '909', 'reznor', 'aphex'].forEach(engine => {
+  const project = serializeProject({ appState: { ...appState, engine }, tracks, fx, patterns });
+  const parsed = parseProjectImport(project);
+  assert.strictEqual(parsed.ok, true, 'parseProjectImport accepts engine ' + engine);
+  assert.strictEqual(parsed.value.engine, engine, 'parseProjectImport hydrates engine ' + engine);
+});
 
 const legacyShape = {
   bpm: 118,
@@ -83,6 +93,7 @@ const legacyShape = {
 };
 assert.strictEqual(parseProjectImport(legacyShape).ok, true, 'parseProjectImport accepts current v4 export shape without schemaVersion');
 assert.strictEqual(parseProjectImport({ ...legacyShape, patt: 1 }).ok, true, 'parseProjectImport accepts legacy shape with patt and without schemaVersion');
+assert.strictEqual(parseProjectImport(legacyShape).value.engine, 'aphex', 'legacy imports without engine default to aphex');
 
 function assertImportRejected(project, pattern, label) {
   const result = parseProjectImport(project);
@@ -114,6 +125,7 @@ delete patternWithMissingTrack.patterns[0].ether;
 assertImportRejected(patternWithMissingTrack, /ether|missing|16/i, 'pattern bank with missing canonical track');
 
 assertImportRejected({ ...serialized, schemaVersion: 2 }, /schemaVersion/i, 'unsupported schema version');
+assertImportRejected({ ...serialized, engine: 'linndrum' }, /engine|808|909|reznor|aphex/i, 'unknown engine');
 assertImportRejected({ ...serialized, meta: 'not-meta' }, /meta/i, 'non-object meta');
 assertImportRejected({ ...serialized, meta: { app: 'not-bighart' } }, /meta\.app|bighart-beat-v4/i, 'wrong meta app');
 assert.strictEqual(parseProjectImport({ ...serialized, extraHarmlessTopLevel: true }).ok, true, 'parseProjectImport remains lenient for harmless top-level extras');

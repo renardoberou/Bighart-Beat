@@ -158,6 +158,24 @@ for (const [regex, label] of requiredMission005RuntimeRegexes) {
   assert(regex.test(js), `src/main.js Mission 005 runtime wiring: ${label}`);
 }
 
+assert(index.includes('id="engineSel"'), 'index exposes compact drum-machine engine selector');
+['data-engine="808"', 'data-engine="909"', 'data-engine="reznor"', 'data-engine="aphex"', '>APHEX<'].forEach(marker => {
+  assert(index.includes(marker), `index exposes engine selector marker ${marker}`);
+});
+const requiredIssue003RuntimeRegexes = [
+  [/const\s+ENGINE_PROFILES\s*=\s*\{[\s\S]*?['"]808['"][\s\S]*?['"]909['"][\s\S]*?reznor[\s\S]*?aphex/, 'engine profiles contain 808/909/reznor/aphex'],
+  [/aphex[\s\S]*?inharmonic[\s\S]*?instability[\s\S]*?glitch/i, 'Aphex profile documents inharmonic instability glitch markers'],
+  [/const\s+hihatChokeState\s*=\s*\{/, 'hihat choke state exists'],
+  [/function\s+triggerHihatChoke\b[\s\S]*?cancelAndHoldAtTime[\s\S]*?setTargetAtTime/, 'hihat choke helper softly cancels tails'],
+  [/function\s+synthHihat\b[\s\S]*?const\s+choke\s*=\s*A\.createGain\(\)[\s\S]*?choke\.connect\(dest\)[\s\S]*?triggerHihatChoke\(t,\s*p\.open/, 'synthHihat routes layers through shared choke gain'],
+  [/function\s+syncEngineSelector\b[\s\S]*?dataset\.engine\s*===\s*S\.engine/, 'engine selector syncs selected state'],
+  [/engineSel[\s\S]*?addEventListener\('click'[\s\S]*?S\.engine\s*=\s*b\.dataset\.engine[\s\S]*?syncEngineSelector\(\)[\s\S]*?autosave\(\)/, 'engine selector wiring updates state without stopping playback'],
+  [/applyProjectData\(parsed\.value\);[\s\S]*?syncPatternButtons\(\)[\s\S]*?syncMasterControls\(\)[\s\S]*?syncFxControls\(\)[\s\S]*?syncEngineSelector\(\)/, 'runtime import syncs engine selector after applying project'],
+];
+for (const [regex, label] of requiredIssue003RuntimeRegexes) {
+  assert(regex.test(js), `src/main.js Issue 003 runtime wiring: ${label}`);
+}
+
 const requiredCssRegexes = [
   [/:root\b/, ':root'],
   [/--amber\b/, '--amber'],

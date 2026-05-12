@@ -77,6 +77,7 @@ assert.deepStrictEqual(appState, {
   playing: false,
   patt: 0,
   sel: 0,
+  engine: 'aphex',
   mstVol: .72,
 }, 'createAppState returns canonical app defaults');
 assertIndependent(createAppState, null, s => { s.bpm = 140; }, s => s.bpm, 'createAppState');
