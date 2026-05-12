@@ -132,6 +132,11 @@ function buildGraph() {
   // DIGI WRECK digital destruction: post-drum-bus/pump, pre-master safety chain.
   N.wreckIn = A.createGain();
   N.wreckDry = A.createGain();
+  N.wreckDownsample = A.createScriptProcessor(256, 1, 1);
+  N.wreckDownsample.wreckRate = FX.wreck.rate;
+  N.wreckDownsample.wreckHeldSample = 0;
+  N.wreckDownsample.wreckHoldCounter = 0;
+  N.wreckDownsample.onaudioprocess = processWreckDownsample;
   N.wreckCrusher = A.createWaveShaper();
   N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate);
   N.wreckCrusher.oversample = 'none';
@@ -139,10 +144,10 @@ function buildGraph() {
   N.wreckTone.frequency.value = wreckToneHz(FX.wreck.tone);
   N.wreckTone.Q.value = .35;
   N.wreckWet = A.createGain();
-  N.wreckOut = A.createGain(); N.wreckOut.gain.value = FX.wreck.out;
+  N.wreckOut = A.createGain(); N.wreckOut.gain.value = FX.wreck.on ? FX.wreck.out : 1;
   N.compMakeup.connect(N.wreckIn);
   N.wreckIn.connect(N.wreckDry); N.wreckDry.connect(N.wreckOut);
-  N.wreckIn.connect(N.wreckCrusher); N.wreckCrusher.connect(N.wreckTone); N.wreckTone.connect(N.wreckWet); N.wreckWet.connect(N.wreckOut);
+  N.wreckIn.connect(N.wreckDownsample); N.wreckDownsample.connect(N.wreckCrusher); N.wreckCrusher.connect(N.wreckTone); N.wreckTone.connect(N.wreckWet); N.wreckWet.connect(N.wreckOut);
 
   // gentle warmth saturation, AFTER comp and optional digital destruction
   N.mstSat = A.createWaveShaper();
@@ -208,6 +213,29 @@ function mkWreckCurve(bits, mode, rate) {
     c[i] = clamp(y * .92, -1, 1);
   }
   return c;
+}
+
+function wreckHoldStep(rate) {
+  const safeRate = clamp(rate == null ? .75 : rate, 0, 1);
+  return Math.max(1, Math.round(1 + Math.pow(1 - safeRate, 2) * 63));
+}
+
+function processWreckDownsample(e) {
+  const input = e.inputBuffer.getChannelData(0);
+  const output = e.outputBuffer.getChannelData(0);
+  const step = wreckHoldStep(this.wreckRate);
+  let held = this.wreckHeldSample || 0;
+  let counter = this.wreckHoldCounter || 0;
+  for (let i = 0; i < input.length; i++) {
+    if (counter <= 0) {
+      held = input[i];
+      counter = step;
+    }
+    output[i] = held;
+    counter--;
+  }
+  this.wreckHeldSample = held;
+  this.wreckHoldCounter = counter;
 }
 
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
@@ -955,10 +983,11 @@ function applyFXState() {
   N.compMakeup.gain.setTargetAtTime(dbToGain(autoMakeupGainDb(FX.comp)), A.currentTime, .02);
   // digital destruction
   N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate);
+  N.wreckDownsample.wreckRate = FX.wreck.rate;
   N.wreckTone.frequency.setTargetAtTime(wreckToneHz(FX.wreck.tone), A.currentTime, .02);
   N.wreckDry.gain.setTargetAtTime(FX.wreck.on ? 1 - FX.wreck.mix : 1, A.currentTime, .02);
   N.wreckWet.gain.setTargetAtTime(FX.wreck.on ? FX.wreck.mix : 0, A.currentTime, .02);
-  N.wreckOut.gain.setTargetAtTime(FX.wreck.out, A.currentTime, .02);
+  N.wreckOut.gain.setTargetAtTime(FX.wreck.on ? FX.wreck.out : 1, A.currentTime, .02);
   // master
   N.mstVol.gain.setTargetAtTime(S.mstVol, A.currentTime, .02);
 }
