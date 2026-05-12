@@ -230,9 +230,9 @@
           <button class="fx-tog" id="togWreck"></button>
         </div>
         <div class="div-row" id="wreckMode">
-          <button class="div-b on" data-curve="clip">CLIP</button>
-          <button class="div-b" data-curve="fold">FOLD</button>
-          <button class="div-b" data-curve="crush">CRUSH</button>
+          <button class="div-b on" data-curve="pixel">PIXEL</button>
+          <button class="div-b" data-curve="glass">GLASS</button>
+          <button class="div-b" data-curve="shard">SHARD</button>
         </div>
         <div class="fx-row">
           <div class="fx-lbl">BITS</div>
@@ -243,6 +243,11 @@
           <div class="fx-lbl">RATE</div>
           <input type="range" class="fdr b" id="wreckRate" min="0" max="100" value="75">
           <div class="fx-val" id="vWreckRate">75%</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">THRSH</div>
+          <input type="range" class="fdr b" id="wreckThresh" min="-80" max="0" value="-24">
+          <div class="fx-val" id="vWreckThresh">-24 dB</div>
         </div>
         <div class="fx-row">
           <div class="fx-lbl">TONE</div>
@@ -256,10 +261,10 @@
         </div>
         <div class="fx-row">
           <div class="fx-lbl">OUT</div>
-          <input type="range" class="fdr b" id="wreckOut" min="0" max="100" value="90">
-          <div class="fx-val" id="vWreckOut">90%</div>
+          <input type="range" class="fdr b" id="wreckOut" min="0" max="100" value="85">
+          <div class="fx-val" id="vWreckOut">85%</div>
         </div>
-        <div class="p-sub">POST PUMP · PRE LIMITER</div>
+        <div class="p-sub">SYNTH DIGITAL · POST PUMP · PRE LIMITER</div>
       </div>
     </div>
 

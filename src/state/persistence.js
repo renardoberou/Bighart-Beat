@@ -21,9 +21,10 @@
     dly: { mult:[0.25,1.5], fb:[0,1], tone:[0,1], wet:[0,1] },
     rev: { size:[0,1], damp:[0,1], gate:[40,600], wet:[0,1] },
     comp: { threshold:[-80,0], ratio:[1,20], attack:[1,200], release:[20,2000], gateThreshold:[-80,0], gateRate:[10,2000], gateAnalog:[0,1] },
-    wreck: { bits:[4,16], rate:[0,1], tone:[0,1], mix:[0,1], out:[0,1] },
+    wreck: { bits:[4,16], rate:[0,1], threshold:[-80,0], tone:[0,1], mix:[0,1], out:[0,1] },
   };
-  const WRECK_CURVES = ['clip', 'fold', 'crush'];
+  const WRECK_CURVES = ['pixel', 'glass', 'shard'];
+  const LEGACY_WRECK_CURVE_MAP = { clip: 'pixel', fold: 'glass', crush: 'shard' };
 
   function getDefaultTracks() {
     if (root && root.BighartBeatState && typeof root.BighartBeatState.createDefaultTracks === 'function') {
@@ -360,7 +361,9 @@
       } else if (field === 'detector') {
         if (value !== 'peak' && value !== 'rms') errors.push('fx.' + sectionName + '.detector must be peak or rms');
       } else if (field === 'curve') {
-        if (!WRECK_CURVES.includes(value)) errors.push('fx.' + sectionName + '.curve must be one of: ' + WRECK_CURVES.join(', '));
+        if (!WRECK_CURVES.includes(value) && !Object.prototype.hasOwnProperty.call(LEGACY_WRECK_CURVE_MAP, value)) {
+          errors.push('fx.' + sectionName + '.curve must be one of: ' + WRECK_CURVES.join(', '));
+        }
       } else {
         const range = FX_RANGES[sectionName] && FX_RANGES[sectionName][field];
         validateNumberInRange(value, range && range[0], range && range[1], errors, 'fx.' + sectionName + '.' + field);
@@ -394,7 +397,16 @@
     if (value.engine === undefined) value.engine = 'aphex';
     if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
     if (value.hihatOpenness === undefined) value.hihatOpenness = createHihatOpennessBanks();
+    normalizeLegacyFx(value.fx);
     return { ok: true, value, errors: [] };
+  }
+
+  function normalizeLegacyFx(fx) {
+    if (!fx || !fx.wreck) return;
+    if (Object.prototype.hasOwnProperty.call(LEGACY_WRECK_CURVE_MAP, fx.wreck.curve)) {
+      fx.wreck.curve = LEGACY_WRECK_CURVE_MAP[fx.wreck.curve];
+    }
+    if (fx.wreck.threshold === undefined) fx.wreck.threshold = -24;
   }
 
   const api = {

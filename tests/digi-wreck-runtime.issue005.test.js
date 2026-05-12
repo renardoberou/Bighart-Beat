@@ -42,7 +42,7 @@ assert(/wreckHoldStep\(this\.wreckRate\)/.test(js), 'sample-hold processor reads
 assert(/function\s+wreckToneHz\s*\(/.test(js), 'runtime defines DIGI WRECK tone mapper');
 
 const applyFXState = extractFunction('applyFXState');
-assert(/N\.wreckCrusher\.curve\s*=\s*mkWreckCurve\(FX\.wreck\.bits,\s*FX\.wreck\.curve/.test(applyFXState), 'applyFXState updates bit depth and transfer mode');
+assert(/N\.wreckCrusher\.curve\s*=\s*mkWreckCurve\(FX\.wreck\.bits,\s*FX\.wreck\.curve,\s*FX\.wreck\.rate,\s*FX\.wreck\.threshold\)/.test(applyFXState), 'applyFXState updates bit depth, transfer mode, rate, and threshold');
 assert(/N\.wreckDownsample\.wreckRate\s*=\s*FX\.wreck\.rate/.test(applyFXState), 'applyFXState drives the real sample-hold/downsample stage from RATE');
 assert(/N\.wreckTone\.frequency\.setTargetAtTime\(wreckToneHz\(FX\.wreck\.tone/.test(applyFXState), 'applyFXState maps DIGI WRECK tone to a filter');
 assert(/N\.wreckDry\.gain\.setTargetAtTime\(FX\.wreck\.on\s*\?\s*1\s*-\s*FX\.wreck\.mix\s*:\s*1/.test(applyFXState), 'applyFXState keeps dry signal when DIGI WRECK is bypassed');
@@ -51,20 +51,23 @@ assert(/N\.wreckOut\.gain\.setTargetAtTime\(FX\.wreck\.on\s*\?\s*FX\.wreck\.out\
 
 const syncFxControls = extractFunction('syncFxControls');
 ['togWreck','wreckMode'].forEach(id => assert(syncFxControls.includes(`$('${id}')`), `runtime syncs ${id}`));
-['wreckBits','wreckRate','wreckTone','wreckMix','wreckOut'].forEach(id => {
+['wreckBits','wreckRate','wreckThresh','wreckTone','wreckMix','wreckOut'].forEach(id => {
   assert(syncFxControls.includes(`setFdr('${id}'`), `runtime syncs DIGI WRECK fader ${id}`);
 });
 
 const wire = extractFunction('wire');
 ['togWreck','wreckMode'].forEach(id => assert(wire.includes(`$('${id}')`), `runtime wires ${id}`));
-['wreckBits','wreckRate','wreckTone','wreckMix','wreckOut'].forEach(id => {
+['wreckBits','wreckRate','wreckThresh','wreckTone','wreckMix','wreckOut'].forEach(id => {
   assert(wire.includes(`bindF('${id}'`), `runtime binds DIGI WRECK fader ${id}`);
 });
 
 assert(/DIGI WRECK/.test(html), 'UI uses original DIGI WRECK naming');
-assert(!/GEIGER/i.test(html), 'UI avoids protected/clone branding');
-['togWreck','wreckMode','wreckBits','wreckRate','wreckTone','wreckMix','wreckOut'].forEach(id => {
+assert(!/GEIGER/i.test(html + js), 'UI/runtime avoid protected/clone branding');
+['togWreck','wreckMode','wreckBits','wreckRate','wreckThresh','wreckTone','wreckMix','wreckOut'].forEach(id => {
   assert(html.includes(`id="${id}"`), `UI exposes compact DIGI WRECK control ${id}`);
 });
+['pixel','glass','shard'].forEach(mode => assert(html.includes(`data-curve="${mode}"`), `UI exposes synth-digital ${mode} mode`));
+['clip','fold','crush'].forEach(mode => assert(!html.includes(`data-curve="${mode}"`), `UI no longer presents pedal-like ${mode} mode`));
+assert(/clamp\([^\n]*,\s*-\.98,\s*\.98\)/.test(js), 'DIGI WRECK transfer is bounded before the master safety chain');
 
 console.log('Issue 005 DIGI WRECK runtime/UI checks passed.');

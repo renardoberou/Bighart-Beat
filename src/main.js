@@ -69,7 +69,9 @@ function buildGraph() {
   N.bus = A.createGain(); N.bus.gain.value = 0.55;
 
   // ── FX SENDS — also attenuated so wet returns don't blow the limiter.
-  N.dlySend = A.createGain(); N.dlySend.gain.value = 0.7;
+  // Delay input is per-track only: do not tap N.bus into N.dlyLine,
+  // or channels with D off will bleed into the delay wet path. Existing
+  // N.dlyFB repeats are intentional feedback tails from prior sent hits.
   N.revSend = A.createGain(); N.revSend.gain.value = 0.6;
 
   // ── DIGITAL DELAY ──────────────────────────────
@@ -112,8 +114,8 @@ function buildGraph() {
   N.mstSum = A.createGain(); N.mstSum.gain.value = 1;
   // bus is the dry path
   N.bus.connect(N.mstSum);
-  // delay/reverb sends tap from bus
-  N.bus.connect(N.dlySend); N.dlySend.connect(N.dlyLine);
+  // Reverb still taps the bus through its gated input. Delay does not:
+  // routeVoice() creates the only new delay sends, gated by track dlyS.
   N.bus.connect(N.revSend);
   // wet returns merge into the master sum
   N.dlyWet.connect(N.mstSum);
@@ -142,7 +144,7 @@ function buildGraph() {
   N.wreckDownsample.wreckHoldCounter = 0;
   N.wreckDownsample.onaudioprocess = processWreckDownsample;
   N.wreckCrusher = A.createWaveShaper();
-  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate);
+  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate, FX.wreck.threshold);
   N.wreckCrusher.oversample = 'none';
   N.wreckTone = A.createBiquadFilter(); N.wreckTone.type = 'lowpass';
   N.wreckTone.frequency.value = wreckToneHz(FX.wreck.tone);
@@ -202,22 +204,45 @@ function wreckToneHz(v) { // 0..1 → 900 Hz..18 kHz exp; dark settings tame ali
   return 900 * Math.pow(20, clamp(v, 0, 1));
 }
 
-function mkWreckCurve(bits, mode, rate) {
+function mkWreckCurve(bits, mode, rate, thresholdDb) {
   const n = 1024, c = new Float32Array(n);
   const safeBits = clamp(Math.round(bits || 12), 4, 16);
   const rateCrush = 1 - clamp(rate == null ? .75 : rate, 0, 1);
-  const levels = Math.pow(2, Math.max(2, Math.round(safeBits - rateCrush * 4)));
-  const drive = 1 + rateCrush * 5;
+  const threshold = dbToGain(clamp(thresholdDb == null ? -24 : thresholdDb, -80, 0));
+  const knee = Math.max(.015, threshold * .35);
+  const levels = Math.pow(2, Math.max(2, Math.round(safeBits - rateCrush * 3)));
+  const digitalPush = .25 + rateCrush * .75;
   for (let i = 0; i < n; i++) {
     const x = i * 2 / (n - 1) - 1;
-    let y = Math.round(x * levels) / levels;
-    if (mode === 'fold') y = Math.abs(((y * drive + 1) % 4 + 4) % 4 - 2) - 1;
-    else if (mode === 'crush') y = Math.sign(y) * Math.pow(Math.abs(y), .55 + rateCrush * .25);
-    else y = clamp(y * drive, -1, 1);
-    c[i] = clamp(y * .92, -1, 1);
+    const q = Math.round(x * levels) / levels;
+    const ax = Math.abs(q);
+    const sign = q < 0 ? -1 : 1;
+    const above = Math.max(0, ax - threshold);
+    const span = Math.max(1e-6, 1 - threshold);
+    const norm = clamp(above / span, 0, 1);
+    const blend = smoothstep(clamp((ax - threshold + knee) / (knee * 2), 0, 1));
+    let digital;
+    if (mode === 'glass') {
+      const folded = Math.abs(((norm * (2.4 + digitalPush * 1.6) + 1) % 4 + 4) % 4 - 2) - 1;
+      digital = sign * (threshold + folded * span * .82);
+    } else if (mode === 'shard') {
+      const steps = Math.max(3, Math.round(6 + safeBits * .45 - rateCrush * 4));
+      const stair = Math.round(Math.pow(norm, .72) * steps) / steps;
+      digital = sign * (threshold + stair * span * (.72 + digitalPush * .18));
+    } else {
+      const pxLevels = Math.max(1, levels * .35);
+      const px = Math.round(norm * pxLevels) / pxLevels;
+      digital = sign * (threshold + px * span * (.78 + digitalPush * .12));
+    }
+    // Threshold keeps low-level groove mostly clean while the soft knee avoids
+    // zippery jumps when the fader moves. Output remains bounded before the
+    // existing master saturation/limiter safety chain.
+    c[i] = clamp(q * (1 - blend) + digital * blend, -.98, .98);
   }
   return c;
 }
+
+function smoothstep(t) { return t * t * (3 - 2 * t); }
 
 function wreckHoldStep(rate) {
   const safeRate = clamp(rate == null ? .75 : rate, 0, 1);
@@ -1044,7 +1069,7 @@ function applyFXState() {
   N.mstComp.knee.setTargetAtTime(FX.comp.detector === 'peak' ? 6 : 12, A.currentTime, .02);
   N.compMakeup.gain.setTargetAtTime(dbToGain(autoMakeupGainDb(FX.comp)), A.currentTime, .02);
   // digital destruction
-  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate);
+  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate, FX.wreck.threshold);
   N.wreckDownsample.wreckRate = FX.wreck.rate;
   N.wreckTone.frequency.setTargetAtTime(wreckToneHz(FX.wreck.tone), A.currentTime, .02);
   N.wreckDry.gain.setTargetAtTime(FX.wreck.on ? 1 - FX.wreck.mix : 1, A.currentTime, .02);
@@ -1150,6 +1175,7 @@ function syncFxControls() {
   );
   setFdr('wreckBits', FX.wreck.bits, v => v + ' bit');
   setFdr('wreckRate', Math.round(FX.wreck.rate * 100), v => v + '%');
+  setFdr('wreckThresh', FX.wreck.threshold, v => v + ' dB');
   setFdr('wreckTone', Math.round(FX.wreck.tone * 100), v => v + '%');
   setFdr('wreckMix', Math.round(FX.wreck.mix * 100), v => v + '%');
   setFdr('wreckOut', Math.round(FX.wreck.out * 100), v => v + '%');
@@ -1308,6 +1334,7 @@ function wire() {
   });
   bindF('wreckBits', v => { FX.wreck.bits = v; applyFXState(); }, v => v + ' bit');
   bindF('wreckRate', v => { FX.wreck.rate = v / 100; applyFXState(); }, v => v + '%');
+  bindF('wreckThresh', v => { FX.wreck.threshold = v; applyFXState(); }, v => v + ' dB');
   bindF('wreckTone', v => { FX.wreck.tone = v / 100; applyFXState(); }, v => v + '%');
   bindF('wreckMix', v => { FX.wreck.mix = v / 100; applyFXState(); }, v => v + '%');
   bindF('wreckOut', v => { FX.wreck.out = v / 100; applyFXState(); }, v => v + '%');
