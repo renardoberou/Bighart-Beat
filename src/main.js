@@ -1194,7 +1194,8 @@ function exportJSON() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'bighart-beat-' + Date.now() + '.json';
-  a.click(); URL.revokeObjectURL(url);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
   toast('Exported');
 }
 async function importJSON(e) {

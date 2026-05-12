@@ -142,6 +142,19 @@ for (const [regex, label] of requiredJsRegexes) {
   assertCanonical(regex.test(source), `canonical source contains ${label}`);
 }
 
+const exportFunctionMatch = js.match(/function\s+exportJSON\b[\s\S]*?\n}\nasync function importJSON/);
+assert(exportFunctionMatch, 'runtime has exportJSON before importJSON');
+if (exportFunctionMatch) {
+  assert(
+    !/a\.click\(\);\s*URL\.revokeObjectURL\(url\);/.test(exportFunctionMatch[0]),
+    'runtime does not revoke export blob URL synchronously after click'
+  );
+  assert(
+    /setTimeout\(\(\)\s*=>\s*URL\.revokeObjectURL\(url\),\s*0\)/.test(exportFunctionMatch[0]),
+    'runtime defers export blob URL revocation for mobile download reliability'
+  );
+}
+
 const requiredMission005RuntimeRegexes = [
   [/PATTERNS\[S\.patt\]\s*=\s*State\.toggleStep\(PATTERNS\[S\.patt\],\s*tr\.id,\s*i\)/, 'step toggles via State.toggleStep selected-bank replacement'],
   [/PATTERNS\[S\.patt\]\s*=\s*State\.clearPattern\(\)/, 'clear pattern via State.clearPattern selected-bank replacement'],
