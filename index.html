@@ -221,6 +221,45 @@
         </div>
         <div class="p-sub">AUTO MAKEUP · MASTER LEVEL SEPARATE</div>
       </div>
+
+      <!-- DIGI WRECK -->
+      <div class="fx-pan">
+        <div class="fx-hd">
+          <div class="fx-nm">DIGI WRECK</div>
+          <button class="fx-tog" id="togWreck"></button>
+        </div>
+        <div class="div-row" id="wreckMode">
+          <button class="div-b on" data-curve="clip">CLIP</button>
+          <button class="div-b" data-curve="fold">FOLD</button>
+          <button class="div-b" data-curve="crush">CRUSH</button>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">BITS</div>
+          <input type="range" class="fdr b" id="wreckBits" min="4" max="16" value="12">
+          <div class="fx-val" id="vWreckBits">12 bit</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">RATE</div>
+          <input type="range" class="fdr b" id="wreckRate" min="0" max="100" value="75">
+          <div class="fx-val" id="vWreckRate">75%</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">TONE</div>
+          <input type="range" class="fdr b" id="wreckTone" min="0" max="100" value="65">
+          <div class="fx-val" id="vWreckTone">65%</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">MIX</div>
+          <input type="range" class="fdr b" id="wreckMix" min="0" max="100" value="35">
+          <div class="fx-val" id="vWreckMix">35%</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">OUT</div>
+          <input type="range" class="fdr b" id="wreckOut" min="0" max="100" value="90">
+          <div class="fx-val" id="vWreckOut">90%</div>
+        </div>
+        <div class="p-sub">POST PUMP · PRE LIMITER</div>
+      </div>
     </div>
 
     <!-- MASTER -->

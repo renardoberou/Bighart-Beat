@@ -54,7 +54,7 @@ assert(/N\.compMakeup\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master chain c
 assert(/N\.mstSum\.connect\(N\.compGate\)/.test(buildGraph), 'master sum feeds compressor gate first');
 assert(/N\.compGate\.connect\(N\.mstComp\)/.test(buildGraph), 'compressor gate feeds compressor');
 assert(/N\.mstComp\.connect\(N\.compMakeup\)/.test(buildGraph), 'compressor feeds auto-makeup gain');
-assert(/N\.compMakeup\.connect\(N\.mstSat\)/.test(buildGraph), 'auto-makeup feeds saturation before master fader');
+assert(/N\.compMakeup\.connect\(N\.(?:wreckIn|mstSat)\)/.test(buildGraph), 'auto-makeup feeds the next pre-master stage');
 assert(!/N\.mstComp\.connect\(N\.mstSat\)/.test(buildGraph), 'compressor no longer bypasses auto-makeup node');
 
 const applyFXState = extractFunction('applyFXState');

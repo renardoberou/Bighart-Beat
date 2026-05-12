@@ -17,6 +17,7 @@
         gateRate:120,
         gateAnalog:.35,
       },
+      wreck: { on:false, bits:12, rate:.75, curve:'clip', tone:.65, mix:.35, out:.90 },
     };
   }
 

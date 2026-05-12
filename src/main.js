@@ -129,11 +129,26 @@ function buildGraph() {
   N.compGate.connect(N.mstComp);
   N.mstComp.connect(N.compMakeup);
 
-  // gentle warmth saturation, AFTER comp
+  // DIGI WRECK digital destruction: post-drum-bus/pump, pre-master safety chain.
+  N.wreckIn = A.createGain();
+  N.wreckDry = A.createGain();
+  N.wreckCrusher = A.createWaveShaper();
+  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate);
+  N.wreckCrusher.oversample = 'none';
+  N.wreckTone = A.createBiquadFilter(); N.wreckTone.type = 'lowpass';
+  N.wreckTone.frequency.value = wreckToneHz(FX.wreck.tone);
+  N.wreckTone.Q.value = .35;
+  N.wreckWet = A.createGain();
+  N.wreckOut = A.createGain(); N.wreckOut.gain.value = FX.wreck.out;
+  N.compMakeup.connect(N.wreckIn);
+  N.wreckIn.connect(N.wreckDry); N.wreckDry.connect(N.wreckOut);
+  N.wreckIn.connect(N.wreckCrusher); N.wreckCrusher.connect(N.wreckTone); N.wreckTone.connect(N.wreckWet); N.wreckWet.connect(N.wreckOut);
+
+  // gentle warmth saturation, AFTER comp and optional digital destruction
   N.mstSat = A.createWaveShaper();
   N.mstSat.curve = mkSatCurve(.05);
   N.mstSat.oversample = '2x';
-  N.compMakeup.connect(N.mstSat);
+  N.wreckOut.connect(N.mstSat);
 
   // master volume
   N.mstVol = A.createGain(); N.mstVol.gain.value = S.mstVol;
@@ -172,6 +187,27 @@ function mkSatCurve(amt) {
 
 function toneHz(v) { // 0..1 → 800 Hz..16 kHz exp
   return 800 * Math.pow(20, v);
+}
+
+function wreckToneHz(v) { // 0..1 → 900 Hz..18 kHz exp; dark settings tame alias splash.
+  return 900 * Math.pow(20, clamp(v, 0, 1));
+}
+
+function mkWreckCurve(bits, mode, rate) {
+  const n = 1024, c = new Float32Array(n);
+  const safeBits = clamp(Math.round(bits || 12), 4, 16);
+  const rateCrush = 1 - clamp(rate == null ? .75 : rate, 0, 1);
+  const levels = Math.pow(2, Math.max(2, Math.round(safeBits - rateCrush * 4)));
+  const drive = 1 + rateCrush * 5;
+  for (let i = 0; i < n; i++) {
+    const x = i * 2 / (n - 1) - 1;
+    let y = Math.round(x * levels) / levels;
+    if (mode === 'fold') y = Math.abs(((y * drive + 1) % 4 + 4) % 4 - 2) - 1;
+    else if (mode === 'crush') y = Math.sign(y) * Math.pow(Math.abs(y), .55 + rateCrush * .25);
+    else y = clamp(y * drive, -1, 1);
+    c[i] = clamp(y * .92, -1, 1);
+  }
+  return c;
 }
 
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
@@ -917,6 +953,12 @@ function applyFXState() {
   N.mstComp.release.setTargetAtTime(FX.comp.release / 1000, A.currentTime, .02);
   N.mstComp.knee.setTargetAtTime(FX.comp.detector === 'peak' ? 6 : 12, A.currentTime, .02);
   N.compMakeup.gain.setTargetAtTime(dbToGain(autoMakeupGainDb(FX.comp)), A.currentTime, .02);
+  // digital destruction
+  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate);
+  N.wreckTone.frequency.setTargetAtTime(wreckToneHz(FX.wreck.tone), A.currentTime, .02);
+  N.wreckDry.gain.setTargetAtTime(FX.wreck.on ? 1 - FX.wreck.mix : 1, A.currentTime, .02);
+  N.wreckWet.gain.setTargetAtTime(FX.wreck.on ? FX.wreck.mix : 0, A.currentTime, .02);
+  N.wreckOut.gain.setTargetAtTime(FX.wreck.out, A.currentTime, .02);
   // master
   N.mstVol.gain.setTargetAtTime(S.mstVol, A.currentTime, .02);
 }
@@ -1011,6 +1053,15 @@ function syncFxControls() {
   setFdr('compRelease', FX.comp.release, v => v + ' ms');
   setFdr('compGateThresh', FX.comp.gateThreshold, v => v + ' dB');
   setFdr('compGateRate', FX.comp.gateRate, v => v + ' ms');
+  $('togWreck').classList.toggle('on', FX.wreck.on);
+  $('wreckMode').querySelectorAll('.div-b').forEach(b =>
+    b.classList.toggle('on', b.dataset.curve === FX.wreck.curve)
+  );
+  setFdr('wreckBits', FX.wreck.bits, v => v + ' bit');
+  setFdr('wreckRate', Math.round(FX.wreck.rate * 100), v => v + '%');
+  setFdr('wreckTone', Math.round(FX.wreck.tone * 100), v => v + '%');
+  setFdr('wreckMix', Math.round(FX.wreck.mix * 100), v => v + '%');
+  setFdr('wreckOut', Math.round(FX.wreck.out * 100), v => v + '%');
 }
 
 function syncMasterControls() {
@@ -1040,6 +1091,7 @@ function applyProjectData(d) {
     if (d.fx.dly) Object.assign(FX.dly, d.fx.dly);
     if (d.fx.rev) Object.assign(FX.rev, d.fx.rev);
     if (d.fx.comp) Object.assign(FX.comp, d.fx.comp);
+    if (d.fx.wreck) Object.assign(FX.wreck, d.fx.wreck);
     if (A) genRevIR();
   }
 }
@@ -1145,6 +1197,28 @@ function wire() {
   bindF('compRelease', v => { FX.comp.release = v; applyFXState(); }, v => v + ' ms');
   bindF('compGateThresh', v => { FX.comp.gateThreshold = v; applyFXState(); }, v => v + ' dB');
   bindF('compGateRate', v => { FX.comp.gateRate = v; applyFXState(); }, v => v + ' ms');
+
+  // DIGI WRECK compact digital destruction
+  $('togWreck').addEventListener('click', () => {
+    FX.wreck.on = !FX.wreck.on;
+    $('togWreck').classList.toggle('on', FX.wreck.on);
+    applyFXState();
+    autosave();
+  });
+  $('wreckMode').querySelectorAll('.div-b').forEach(b => {
+    b.addEventListener('click', () => {
+      FX.wreck.curve = b.dataset.curve;
+      $('wreckMode').querySelectorAll('.div-b').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      applyFXState();
+      autosave();
+    });
+  });
+  bindF('wreckBits', v => { FX.wreck.bits = v; applyFXState(); }, v => v + ' bit');
+  bindF('wreckRate', v => { FX.wreck.rate = v / 100; applyFXState(); }, v => v + '%');
+  bindF('wreckTone', v => { FX.wreck.tone = v / 100; applyFXState(); }, v => v + '%');
+  bindF('wreckMix', v => { FX.wreck.mix = v / 100; applyFXState(); }, v => v + '%');
+  bindF('wreckOut', v => { FX.wreck.out = v / 100; applyFXState(); }, v => v + '%');
 
   // master
   bindF('mstVol', v => { S.mstVol = v / 100; applyFXState(); }, v => v + '%');
