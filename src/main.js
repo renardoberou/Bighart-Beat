@@ -7,6 +7,7 @@ const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
 ═══════════════════════════════════════════════ */
 const State = globalThis.BighartBeatState;
 const Rhythm = globalThis.BighartBeatRhythm;
+const HihatVoice = globalThis.BighartBeatHihat;
 const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
 const PATTERNS = State.createPatternBanks();
@@ -415,7 +416,7 @@ function synthSnare(t, v, p) {
   cr.start(t); cr.stop(t + .02);
 }
 
-function triggerHihatChoke(t, openAmount, choke) {
+function triggerHihatChoke(t, openAmount, choke, spec) {
   const previous = hihatChokeState.gain;
   const wasOpen = hihatChokeState.open;
   const isOpen = openAmount > .5;
@@ -427,8 +428,7 @@ function triggerHihatChoke(t, openAmount, choke) {
       g.cancelScheduledValues(t);
       g.setValueAtTime(Math.max(.001, g.value || .001), t);
     }
-    const ep = engineProfile().hihat;
-    const tau = !isOpen ? ep.chokeClosed : (wasOpen ? ep.chokeOpen : ep.chokeOpen * .75);
+    const tau = !isOpen ? spec.chokeClosedTau : (wasOpen ? spec.chokeOpenTau : spec.chokeOpenTau * .75);
     g.setTargetAtTime(.0008, t, tau);
   }
   hihatChokeState.gain = choke;
@@ -438,49 +438,46 @@ function triggerHihatChoke(t, openAmount, choke) {
 // ── HIHAT ── highpass noise + engine-aware metallic ratios on existing HHT open control
 function synthHihat(t, v, p) {
   const dest = routeVoice(t, 2);
-  const ep = engineProfile().hihat;
-  const instability = ep.instability || 0;
-  const openBoost = p.open > .5 ? Math.max(p.decay, .22 + p.open * .25) : p.decay;
-  const dec = clamp(openBoost * ep.decay * boundedRand(instability), .006, .70);
+  const spec = HihatVoice.resolveHihatVoiceSpec(S.engine, p, Math.random);
+  const dec = spec.decaySec;
   const choke = A.createGain();
   choke.gain.setValueAtTime(0, t);
   choke.gain.linearRampToValueAtTime(1, t + .0015);
   choke.gain.setTargetAtTime(.0008, t + dec, Math.max(.012, dec * .18));
   choke.connect(dest);
-  triggerHihatChoke(t, p.open, choke);
+  triggerHihatChoke(t, p.open, choke, spec);
   // noise layer
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
-  const hf = A.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = clamp(p.freq * ep.bright * boundedRand(instability), 2500, 17000); hf.Q.value = .8;
-  const hf2 = A.createBiquadFilter(); hf2.type = 'bandpass'; hf2.frequency.value = clamp(10500 * ep.bright * boundedRand(instability), 4500, 18000); hf2.Q.value = .7 + instability * 8;
+  const hf = A.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = spec.highpassHz; hf.Q.value = .8;
+  const hf2 = A.createBiquadFilter(); hf2.type = 'bandpass'; hf2.frequency.value = spec.bandpassHz; hf2.Q.value = spec.bandpassQ;
   const ng = A.createGain();
   ng.gain.setValueAtTime(0, t);
-  ng.gain.linearRampToValueAtTime(clamp(v * .42 * ep.noise * boundedRand(instability * .6), 0, .72), t + .0012);
+  ng.gain.linearRampToValueAtTime(clamp(v * spec.noiseGain, 0, .72), t + .0012);
   ng.gain.exponentialRampToValueAtTime(.001, t + dec);
   ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(choke);
   ns.start(t); ns.stop(t + dec + .05);
   // metallic tone mix — only if metal > 0
-  if (p.metal > 0.01) {
-    const ratios = ep.ratios;
+  if (spec.metalGain > 0.001) {
     const mg = A.createGain();
     mg.gain.setValueAtTime(0, t);
-    mg.gain.linearRampToValueAtTime(clamp(v * p.metal * (.14 + ep.tone * .18), 0, .34), t + .001);
+    mg.gain.linearRampToValueAtTime(clamp(v * spec.metalGain, 0, .34), t + .001);
     mg.gain.exponentialRampToValueAtTime(.001, t + dec * .8);
-    const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = clamp(p.freq * .85 * ep.bright, 2200, 17000);
+    const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = spec.metalHighpassHz;
     mg.connect(hp); hp.connect(choke);
-    for (const r of ratios) {
-      const o = A.createOscillator(); o.type = ep.osc;
-      o.frequency.value = clamp(205 * r * ep.bright * boundedRand(instability), 80, 18000);
-      const og = A.createGain(); og.gain.value = 1 / ratios.length * .5;
+    for (const frequency of spec.oscillatorFrequencies) {
+      const o = A.createOscillator(); o.type = spec.oscType;
+      o.frequency.value = frequency;
+      const og = A.createGain(); og.gain.value = spec.oscillatorGain;
       o.connect(og); og.connect(mg);
       o.start(t); o.stop(t + dec + .025);
     }
   }
-  if (ep.glitch > 0 && Math.random() < ep.glitch) {
+  if (spec.glitchWillFire) {
     const tick = A.createBufferSource(); tick.buffer = nz; tick.loop = true;
-    const tf = A.createBiquadFilter(); tf.type = 'bandpass'; tf.frequency.value = clamp(7000 * boundedRand(.4), 3500, 14000); tf.Q.value = 12;
+    const tf = A.createBiquadFilter(); tf.type = 'bandpass'; tf.frequency.value = spec.glitchBandpassHz; tf.Q.value = 12;
     const tg = A.createGain();
     tg.gain.setValueAtTime(0, t);
-    tg.gain.linearRampToValueAtTime(clamp(v * ep.glitch * .16, 0, .06), t + .0008);
+    tg.gain.linearRampToValueAtTime(clamp(v * spec.glitchGain, 0, .06), t + .0008);
     tg.gain.exponentialRampToValueAtTime(.001, t + .006);
     tick.connect(tf); tf.connect(tg); tg.connect(choke);
     tick.start(t); tick.stop(t + .010);
