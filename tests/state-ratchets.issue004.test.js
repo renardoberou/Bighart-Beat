@@ -104,6 +104,7 @@ assert(/scheduledHitTimes\(t,\s*stepDur\(\),\s*count\)/.test(js));
 assert(/fire\(ti,\s*hitT\)/.test(js));
 assert(/getRatchetCount\(RATCHETS\[S\.patt\],\s*tr\.id,\s*step\)/.test(js));
 assert(/addEventListener\(['"]contextmenu['"]/.test(js));
+assert(/addEventListener\(['"]contextmenu['"],\s*e\s*=>\s*{[\s\S]*?e\.preventDefault\(\);[\s\S]*?if\s*\(\s*longPressFired\s*\)\s*return;[\s\S]*?cycleCellRatchet\(\);[\s\S]*?}\)/.test(js), 'contextmenu suppresses duplicate cycle after pointer long-press');
 assert(/pointerdown/.test(js) && /LONG_PRESS_MS/.test(js));
 assert(/cycleRatchetCount/.test(js));
 assert(/classList\.add\('r'\s*\+\s*(?:nextRatchet|ratchet)/.test(js));

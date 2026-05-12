@@ -726,6 +726,7 @@ function buildSeq() {
       });
       c.addEventListener('contextmenu', e => {
         e.preventDefault();
+        if (longPressFired) return;
         cycleCellRatchet();
       });
       c.addEventListener('pointerdown', () => {
