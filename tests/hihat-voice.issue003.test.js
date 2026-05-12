@@ -45,9 +45,11 @@ for (const engine of ['808', '909', 'reznor', 'aphex', 'mystery']) {
 }
 
 const closed = resolveHihatVoiceSpec('909', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5);
+const tight = resolveHihatVoiceSpec('909', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5);
 const open = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5);
 assert(closed.decaySec >= 0.006 && closed.decaySec <= 0.70, 'closed hihat decay has same safe upper bound as open');
-assert(open.decaySec > closed.decaySec, 'open hihat decay is longer than closed for the same base decay');
+assert(tight.decaySec > closed.decaySec, 'tight hihat placement is audibly longer than closed for the same base decay');
+assert(open.decaySec > tight.decaySec, 'open hihat decay is longer than tight for the same base decay');
 assert(open.decaySec <= 0.70, 'open hihat decay has safe upper bound');
 
 for (const engine of ['808', '909', 'reznor', 'aphex']) {
