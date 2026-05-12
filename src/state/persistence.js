@@ -19,7 +19,7 @@
   const FX_RANGES = {
     dly: { mult:[0.25,1.5], fb:[0,1], tone:[0,1], wet:[0,1] },
     rev: { size:[0,1], damp:[0,1], gate:[40,600], wet:[0,1] },
-    comp: { threshold:[-80,0], ratio:[1,20], attack:[1,200], release:[20,2000], gateThreshold:[-80,0], gateRate:[10,2000] },
+    comp: { threshold:[-80,0], ratio:[1,20], attack:[1,200], release:[20,2000], gateThreshold:[-80,0], gateRate:[10,2000], gateAnalog:[0,1] },
   };
 
   function getDefaultTracks() {

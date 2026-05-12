@@ -35,6 +35,7 @@ assert.deepStrictEqual(fx.comp, {
   gateOn: false,
   gateThreshold: -60,
   gateRate: 120,
+  gateAnalog: 0.35,
 }, 'default fx includes Alesis 3630-inspired compressor/gate state with auto makeup only');
 assert.strictEqual(Object.prototype.hasOwnProperty.call(fx.comp, 'makeup'), false, 'compressor state does not expose manual makeup gain');
 assert.strictEqual(Object.prototype.hasOwnProperty.call(fx.comp, 'output'), false, 'compressor state does not expose manual output gain');
@@ -180,6 +181,7 @@ assertImportRejectedAt('fx.comp.attack', p => { p.fx.comp.attack = 0; }, /fx\.co
 assertImportRejectedAt('fx.comp.release', p => { p.fx.comp.release = 2001; }, /fx\.comp\.release|range|between/i);
 assertImportRejectedAt('fx.comp.gateThreshold', p => { p.fx.comp.gateThreshold = 1; }, /fx\.comp\.gateThreshold|range|between/i);
 assertImportRejectedAt('fx.comp.gateRate', p => { p.fx.comp.gateRate = 2001; }, /fx\.comp\.gateRate|range|between/i);
+assertImportRejectedAt('fx.comp.gateAnalog', p => { p.fx.comp.gateAnalog = 1.01; }, /fx\.comp\.gateAnalog|range|between/i);
 assertImportRejectedAt('tracks[0].p.pitch', p => { p.tracks[0].p.pitch = 59; }, /tracks\[0\]\.p\.pitch|range|between/i);
 assertImportRejectedAt('tracks[1].p.decay', p => { p.tracks[1].p.decay = 0.51; }, /tracks\[1\]\.p\.decay|range|between/i);
 assertImportRejectedAt('tracks[2].p.freq', p => { p.tracks[2].p.freq = 14001; }, /tracks\[2\]\.p\.freq|range|between/i);

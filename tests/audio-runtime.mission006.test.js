@@ -66,13 +66,30 @@ assert(/N\.mstComp\.knee\.setTargetAtTime\(FX\.comp\.detector\s*===\s*['"]peak['
 assert(/N\.compMakeup\.gain\.setTargetAtTime\(dbToGain\(autoMakeupGainDb\(FX\.comp\)\)/.test(applyFXState), 'auto makeup gain is applied after compressor');
 
 const fire = extractFunction('fire');
-assert(/triggerCompGate\(t\)/.test(fire), 'scheduled hits trigger compressor gate envelope');
+assert(/triggerCompGate\(t,\s*tr\.id\)/.test(fire), 'scheduled hits trigger compressor gate envelope with track id context');
 
 const triggerCompGate = extractFunction('triggerCompGate');
 assert(/if\s*\(\s*!FX\.comp\.gateOn\s*\|\|\s*!N\.compGate\s*\)\s*return;/.test(triggerCompGate), 'compressor gate can be disabled safely');
 assert(/FX\.comp\.gateRate\s*\/\s*1000/.test(triggerCompGate), 'compressor gate rate maps ms to seconds');
+assert(/const\s+KICK_PUMP_WEIGHT\s*=\s*1(?:\.0+)?\b/.test(js), 'runtime defines kick as full-priority pump trigger');
+assert(/const\s+NON_KICK_PUMP_WEIGHT\s*=\s*0\.[1-6]/.test(js), 'runtime defines reduced non-kick pump trigger weight');
+assert(/trackId\s*===\s*['"]kick['"]\s*\?\s*KICK_PUMP_WEIGHT\s*:\s*NON_KICK_PUMP_WEIGHT/.test(triggerCompGate), 'compressor gate weights kick hits stronger than non-kick hits');
+assert(/weightedClosed\s*=\s*clamp\(closed\s*\+\s*\(1\s*-\s*closed\)\s*\*\s*\(1\s*-\s*weight\)/.test(triggerCompGate), 'non-kick hits are blended toward open so dense hats/noise do not over-flatten the pump');
+assert(/GATE_ANALOG_JITTER_MS/.test(js) && /GATE_ANALOG_CLOSED_DB/.test(js), 'runtime defines bounded analog gate looseness constants');
+assert(/analogJitter/.test(triggerCompGate) && /analogClosedDb/.test(triggerCompGate), 'compressor gate applies bounded timing and closed-level analogization');
 
-['togComp','compDetector','togCompGate'].forEach(id => {
+const applyPumpMacro = extractFunction('applyPumpMacro');
+assert(/FX\.comp\.on\s*=\s*true/.test(applyPumpMacro), 'PUMP macro enables compressor');
+assert(/threshold:\s*-4[02468]|FX\.comp\.threshold\s*=\s*-4[02468]/.test(applyPumpMacro), 'PUMP macro uses low threshold for hard pumping');
+assert(/ratio:\s*(?:10|12)|FX\.comp\.ratio\s*=\s*(?:10|12)/.test(applyPumpMacro), 'PUMP macro uses high ratio');
+assert(/toast\(['"]PUMP ARMED['"]\)/.test(applyPumpMacro), 'PUMP macro gives visual feedback');
+
+const applyFrenchHousePreset = extractFunction('applyFrenchHousePreset');
+assert(/threshold:\s*-3[2-9]|FX\.comp\.threshold\s*=\s*-3[2-9]/.test(applyFrenchHousePreset), 'French House preset threshold is in aggressive filtered-house range');
+assert(/ratio:\s*[6-9]|FX\.comp\.ratio\s*=\s*[6-9]/.test(applyFrenchHousePreset), 'French House preset ratio is in 6:1-10:1 range');
+assert(/gateOn:\s*true|FX\.comp\.gateOn\s*=\s*true/.test(applyFrenchHousePreset), 'French House preset lightly enables gate');
+
+['togComp','compDetector','togCompGate','pumpMacro','frenchHousePreset'].forEach(id => {
   assert(js.includes(`$('${id}')`), `runtime wires compressor UI control ${id}`);
 });
 ['compThresh','compRatio','compAttack','compRelease','compGateThresh','compGateRate'].forEach(id => {

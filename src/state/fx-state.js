@@ -15,6 +15,7 @@
         gateOn:false,
         gateThreshold:-60,
         gateRate:120,
+        gateAnalog:.35,
       },
     };
   }

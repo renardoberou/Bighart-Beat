@@ -107,6 +107,18 @@ for (const marker of requiredIndexMarkers) {
   assertCanonical(source.includes(marker), `canonical source contains marker ${marker}`);
 }
 
+const issue002UiMarkers = [
+  'id="pumpMacro"',
+  'PUMP',
+  'id="frenchHousePreset"',
+  'FRENCH HOUSE',
+  'AUTO MAKEUP · MASTER LEVEL SEPARATE'
+];
+for (const marker of issue002UiMarkers) {
+  assert(index.includes(marker), `index exposes Issue 002 compressor/gate UI marker ${marker}`);
+}
+assert(!/id="(?:compMakeup|compOutput)"/.test(index), 'index does not expose manual compressor makeup/output controls');
+
 const requiredJsRegexes = [
   [/\bconst\s+TRACKS\b/, 'const TRACKS'],
   [/\bconst\s+PATTERNS\b/, 'const PATTERNS'],

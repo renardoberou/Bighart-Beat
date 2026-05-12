@@ -18,6 +18,10 @@ const S = State.createAppState();
 let A = null;
 let nz = null;
 const N = {}; // nodes
+const KICK_PUMP_WEIGHT = 1;
+const NON_KICK_PUMP_WEIGHT = 0.35;
+const GATE_ANALOG_JITTER_MS = 6;
+const GATE_ANALOG_CLOSED_DB = 3;
 
 function initAudio() {
   if (A) { A.resume(); return; }
@@ -228,11 +232,17 @@ function triggerGate(t) {
   g.linearRampToValueAtTime(0, t + atk + hold + rel);
 }
 
-function triggerCompGate(t) {
+function triggerCompGate(t, trackId) {
   if (!FX.comp.gateOn || !N.compGate) return;
   const g = N.compGate.gain;
   const closed = dbToGain(FX.comp.gateThreshold);
-  const atk = .002, hold = .006, rel = FX.comp.gateRate / 1000;
+  const weight = trackId === 'kick' ? KICK_PUMP_WEIGHT : NON_KICK_PUMP_WEIGHT;
+  const analogAmount = clamp(FX.comp.gateAnalog == null ? .35 : FX.comp.gateAnalog, 0, 1);
+  const analogJitter = (Math.random() * 2 - 1) * GATE_ANALOG_JITTER_MS * analogAmount / 1000;
+  const analogClosedDb = (Math.random() * 2 - 1) * GATE_ANALOG_CLOSED_DB * analogAmount;
+  const weightedClosed = clamp(closed + (1 - closed) * (1 - weight), dbToGain(-80), 1);
+  const analogClosed = clamp(weightedClosed * dbToGain(analogClosedDb), dbToGain(-80), 1);
+  const atk = Math.max(.001, .002 + analogJitter * .25), hold = Math.max(.003, .006 + Math.abs(analogJitter) * .5), rel = Math.max(.01, FX.comp.gateRate / 1000 + analogJitter);
   if (g.cancelAndHoldAtTime) {
     g.cancelAndHoldAtTime(t);
   } else {
@@ -241,7 +251,7 @@ function triggerCompGate(t) {
   }
   g.linearRampToValueAtTime(1, t + atk);
   g.setValueAtTime(1, t + atk + hold);
-  g.setTargetAtTime(closed, t + atk + hold, Math.max(.005, rel / 3));
+  g.setTargetAtTime(analogClosed, t + atk + hold, Math.max(.005, rel / 3));
 }
 
 // ── KICK ── deep thump with click and saturation
@@ -471,7 +481,7 @@ function synthEther(t, v, p) {
 function fire(ti, t) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
-  triggerCompGate(t);
+  triggerCompGate(t, tr.id);
   const v = tr.vol;
   switch (tr.id) {
     case 'kick':  synthKick(t, v, tr.p); break;
@@ -792,6 +802,40 @@ function applyFXState() {
   N.mstVol.gain.setTargetAtTime(S.mstVol, A.currentTime, .02);
 }
 
+function applyPumpMacro() {
+  FX.comp.on = true;
+  FX.comp.threshold = -46;
+  FX.comp.ratio = 12;
+  FX.comp.attack = 2;
+  FX.comp.release = 520;
+  FX.comp.detector = 'peak';
+  FX.comp.gateOn = true;
+  FX.comp.gateThreshold = -54;
+  FX.comp.gateRate = 420;
+  FX.comp.gateAnalog = .55;
+  syncFxControls();
+  applyFXState();
+  autosave();
+  toast('PUMP ARMED');
+}
+
+function applyFrenchHousePreset() {
+  FX.comp.on = true;
+  FX.comp.threshold = -36;
+  FX.comp.ratio = 8;
+  FX.comp.attack = 3;
+  FX.comp.release = 560;
+  FX.comp.detector = 'peak';
+  FX.comp.gateOn = true;
+  FX.comp.gateThreshold = -68;
+  FX.comp.gateRate = 680;
+  FX.comp.gateAnalog = .45;
+  syncFxControls();
+  applyFXState();
+  autosave();
+  toast('FRENCH HOUSE');
+}
+
 /* ═══════════════════════════════════════════════
    PERSISTENCE
 ═══════════════════════════════════════════════ */
@@ -948,6 +992,8 @@ function wire() {
     applyFXState();
     autosave();
   });
+  $('pumpMacro').addEventListener('click', applyPumpMacro);
+  $('frenchHousePreset').addEventListener('click', applyFrenchHousePreset);
   $('compDetector').querySelectorAll('.div-b').forEach(b => {
     b.addEventListener('click', () => {
       FX.comp.detector = b.dataset.det;
