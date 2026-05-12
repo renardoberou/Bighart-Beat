@@ -12,7 +12,10 @@ const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
 const PATTERNS = State.createPatternBanks();
 const RATCHETS = State.createRatchetBanks();
+const HHT_OPENNESS = State.createHihatOpennessBanks();
 const S = State.createAppState();
+let HHT_PLACE = 0;
+let firingStep = 0;
 
 /* ═══════════════════════════════════════════════
    AUDIO ENGINE
@@ -616,6 +619,10 @@ function synthEther(t, v, p) {
   }
 }
 
+function getStepHihatOpen(step) {
+  return State.getHihatOpenness(HHT_OPENNESS[S.patt], step);
+}
+
 function fire(ti, t) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
@@ -624,7 +631,7 @@ function fire(ti, t) {
   switch (tr.id) {
     case 'kick':  synthKick(t, v, tr.p); break;
     case 'snare': synthSnare(t, v, tr.p); break;
-    case 'hihat': synthHihat(t, v, tr.p); break;
+    case 'hihat': synthHihat(t, v, { ...tr.p, open: getStepHihatOpen(firingStep) }); break;
     case 'clap':  synthClap(t, v, tr.p); break;
     case 'input': synthInput(t, v, tr.p); break;
     case 'ether': synthEther(t, v, tr.p); break;
@@ -658,6 +665,7 @@ function schedStep(step, t) {
     const tr = TRACKS[ti];
     if (!grid[tr.id][step] || tr.mute) continue;
     const count = State.getRatchetCount(RATCHETS[S.patt], tr.id, step);
+    firingStep = step;
     for (const hitT of scheduledHitTimes(t, stepDur(), count)) fire(ti, hitT);
   }
 }
@@ -760,7 +768,21 @@ function buildSeq() {
       if (i % 4 === 0)  c.classList.add('db');
       if (i % 8 === 0)  c.classList.add('db4');
       const grid = PATTERNS[S.patt];
+      const setHihatCellMarker = () => {
+        c.classList.remove('hht-tight', 'hht-open');
+        delete c.dataset.hat;
+        if (tr.id !== 'hihat' || !PATTERNS[S.patt][tr.id][i]) return;
+        const open = State.getHihatOpenness(HHT_OPENNESS[S.patt], i);
+        if (open === 0.45) {
+          c.classList.add('hht-tight');
+          c.dataset.hat = 'tight';
+        } else if (open === 1) {
+          c.classList.add('hht-open');
+          c.dataset.hat = 'open';
+        }
+      };
       if (grid[tr.id][i]) c.classList.add('on');
+      setHihatCellMarker();
       const ratchet = State.getRatchetCount(RATCHETS[S.patt], tr.id, i);
       if (ratchet > 1) {
         c.classList.add('r' + ratchet);
@@ -775,9 +797,12 @@ function buildSeq() {
           c.classList.add('r' + nextRatchet);
           c.dataset.r = nextRatchet + 'x';
         }
+        setHihatCellMarker();
       };
       const cycleCellRatchet = () => {
-        if (!PATTERNS[S.patt][tr.id][i]) PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
+        const wasOn = !!PATTERNS[S.patt][tr.id][i];
+        if (!wasOn) PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
+        if (tr.id === 'hihat' && !wasOn) HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
         RATCHETS[S.patt] = State.cycleRatchetCount(RATCHETS[S.patt], tr.id, i);
         refreshCell();
         renderRhythmIntelligence();
@@ -787,9 +812,15 @@ function buildSeq() {
       let longPressFired = false;
       c.addEventListener('click', () => {
         if (longPressFired) { longPressFired = false; return; }
+        const wasOn = !!PATTERNS[S.patt][tr.id][i];
         const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
         PATTERNS[S.patt] = result.pattern;
         RATCHETS[S.patt] = result.ratchets;
+        if (tr.id === 'hihat') {
+          HHT_OPENNESS[S.patt] = wasOn
+            ? State.clearHihatOpenness(HHT_OPENNESS[S.patt], i)
+            : State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
+        }
         refreshCell();
         renderRhythmIntelligence();
         autosave();
@@ -929,11 +960,24 @@ function buildVE() {
         <button class="hat-test-b" data-open="0">CLOSED</button>
         <button class="hat-test-b" data-open=".45">TIGHT</button>
         <button class="hat-test-b" data-open="1">OPEN</button>
+      </div>
+      <div class="ve-lbl">PLACE</div>
+      <div class="hat-place-btns">
+        <button class="hat-place-b${HHT_PLACE===0?' on':''}" data-place="0">PLACE CLOSED</button>
+        <button class="hat-place-b${HHT_PLACE===0.45?' on':''}" data-place=".45">PLACE TIGHT</button>
+        <button class="hat-place-b${HHT_PLACE===1?' on':''}" data-place="1">PLACE OPEN</button>
       </div>`;
     pn.appendChild(hatTest);
     hatTest.querySelector('[data-open="0"]').addEventListener('click', () => previewHihat(0));
     hatTest.querySelector('[data-open=".45"]').addEventListener('click', () => previewHihat(.45));
     hatTest.querySelector('[data-open="1"]').addEventListener('click', () => previewHihat(1));
+    hatTest.querySelectorAll('[data-place]').forEach(b => {
+      b.addEventListener('click', () => {
+        HHT_PLACE = parseFloat(b.dataset.place);
+        hatTest.querySelectorAll('.hat-place-b').forEach(x => x.classList.remove('on'));
+        b.classList.add('on');
+      });
+    });
     mkRow('FREQ',  4000, 14000, 100, tr.p.freq, x=>`${(x/1000).toFixed(1)} kHz`, v=>tr.p.freq=v, c);
     mkRow('DECAY', 2, 40, 1, Math.round(tr.p.decay*1000), x=>`${x} ms`, v=>tr.p.decay=v/1000, c);
     mkRow('OPEN',  0, 100, 1, Math.round(tr.p.open*100), x=>`${x}%`, v=>tr.p.open=v/100, c);
@@ -1053,7 +1097,7 @@ function autosave() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try {
-      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS });
+      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS });
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch(e) {}
   }, 250);
@@ -1124,6 +1168,7 @@ function applyProjectData(d) {
   for (let i = 0; i < 4; i++) {
     PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
     RATCHETS[i] = State.cloneRatchetGrid(d.ratchets[i]);
+    HHT_OPENNESS[i] = State.cloneHihatOpennessGrid(d.hihatOpenness[i]);
   }
   d.tracks.forEach(st => {
     const tr = TRACKS.find(x => x.id === st.id);
@@ -1275,6 +1320,7 @@ function wire() {
     if (!confirm('Clear pattern ' + 'ABCD'[S.patt] + '?')) return;
     PATTERNS[S.patt] = State.clearPattern();
     RATCHETS[S.patt] = State.createDefaultRatchetGrid();
+    HHT_OPENNESS[S.patt] = State.createDefaultHihatOpennessGrid();
     buildSeq();
     renderRhythmIntelligence();
     autosave();
@@ -1366,7 +1412,7 @@ function doTap() {
 }
 
 function exportJSON() {
-  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, timestamp: new Date().toISOString() });
+  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, timestamp: new Date().toISOString() });
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

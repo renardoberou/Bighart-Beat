@@ -86,6 +86,18 @@
     });
   }
 
+  function createDefaultHihatOpennessGrid() {
+    return Array(STEP_COUNT).fill(0);
+  }
+
+  function createHihatOpennessBanks() {
+    return Array.from({ length: BANK_COUNT }, createDefaultHihatOpennessGrid);
+  }
+
+  function cloneHihatOpennessBanks(hihatOpenness) {
+    return hihatOpenness.map(bank => bank.slice());
+  }
+
   function serializeTracks(tracks) {
     return tracks.map(t => ({
       id: t.id,
@@ -114,6 +126,7 @@
       meta,
     };
     if (input.ratchets !== undefined) project.ratchets = cloneRatchets(input.ratchets);
+    if (input.hihatOpenness !== undefined) project.hihatOpenness = cloneHihatOpennessBanks(input.hihatOpenness);
     return project;
   }
 
@@ -140,6 +153,7 @@
 
     validatePatterns(data.patterns, errors);
     validateRatchets(data.ratchets, errors);
+    validateHihatOpenness(data.hihatOpenness, errors);
     validateTracks(data.tracks, errors);
     validateFx(data.fx, errors);
 
@@ -215,6 +229,25 @@
             errors.push('ratchets[' + bankIndex + '].' + trackId + '[' + stepIndex + '] must be integer 1/2/3');
           }
         });
+      });
+    });
+  }
+
+  function validateHihatOpenness(hihatOpenness, errors) {
+    if (hihatOpenness === undefined) return;
+    if (!Array.isArray(hihatOpenness) || hihatOpenness.length !== BANK_COUNT) {
+      errors.push('hihatOpenness must contain exactly 4 banks');
+      return;
+    }
+    hihatOpenness.forEach((bank, bankIndex) => {
+      if (!Array.isArray(bank) || bank.length !== STEP_COUNT) {
+        errors.push('hihatOpenness[' + bankIndex + '] must contain 16 openness values');
+        return;
+      }
+      bank.forEach((value, stepIndex) => {
+        if (value !== 0 && value !== 0.45 && value !== 1) {
+          errors.push('hihatOpenness[' + bankIndex + '][' + stepIndex + '] must be 0, 0.45, or 1');
+        }
       });
     });
   }
@@ -360,6 +393,7 @@
     const value = cloneValue(data);
     if (value.engine === undefined) value.engine = 'aphex';
     if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
+    if (value.hihatOpenness === undefined) value.hihatOpenness = createHihatOpennessBanks();
     return { ok: true, value, errors: [] };
   }
 

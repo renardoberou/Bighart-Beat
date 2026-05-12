@@ -30,6 +30,27 @@
     return Array.from({ length: BANK_COUNT }, createDefaultRatchetGrid);
   }
 
+  function isAllowedHihatOpenness(value) {
+    return value === 0 || value === 0.45 || value === 1;
+  }
+
+  function createDefaultHihatOpennessGrid() {
+    return Array(STEP_COUNT).fill(0);
+  }
+
+  function createHihatOpennessBanks() {
+    return Array.from({ length: BANK_COUNT }, createDefaultHihatOpennessGrid);
+  }
+
+  function cloneHihatOpennessGrid(opennessGrid) {
+    const clone = createDefaultHihatOpennessGrid();
+    if (!Array.isArray(opennessGrid)) return clone;
+    for (let i = 0; i < Math.min(STEP_COUNT, opennessGrid.length); i++) {
+      if (isAllowedHihatOpenness(opennessGrid[i])) clone[i] = opennessGrid[i];
+    }
+    return clone;
+  }
+
   function cloneRatchetGrid(ratchetGrid) {
     const clone = createDefaultRatchetGrid();
     TRACK_IDS.forEach(id => {
@@ -48,6 +69,9 @@
     createDefaultRatchetGrid,
     createRatchetBanks,
     cloneRatchetGrid,
+    createDefaultHihatOpennessGrid,
+    createHihatOpennessBanks,
+    cloneHihatOpennessGrid,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

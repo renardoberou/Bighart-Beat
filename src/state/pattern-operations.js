@@ -20,6 +20,12 @@
     }
   }
 
+  function assertHihatOpenness(value) {
+    if (value !== 0 && value !== 0.45 && value !== 1) {
+      throw new Error('Hihat openness must be exactly 0, 0.45, or 1');
+    }
+  }
+
   function createEmptyGrid() {
     const grid = {};
     TRACK_IDS.forEach(id => { grid[id] = Array(STEP_COUNT).fill(0); });
@@ -53,6 +59,38 @@
       }
     });
     return clone;
+  }
+
+  function createDefaultHihatOpennessGrid() {
+    return Array(STEP_COUNT).fill(0);
+  }
+
+  function cloneHihatOpennessGrid(opennessGrid) {
+    const clone = createDefaultHihatOpennessGrid();
+    if (!Array.isArray(opennessGrid)) return clone;
+    for (let i = 0; i < Math.min(STEP_COUNT, opennessGrid.length); i++) {
+      if (opennessGrid[i] === 0 || opennessGrid[i] === 0.45 || opennessGrid[i] === 1) clone[i] = opennessGrid[i];
+    }
+    return clone;
+  }
+
+  function getHihatOpenness(opennessGrid, stepIndex) {
+    assertStepIndex(stepIndex);
+    const value = Array.isArray(opennessGrid) ? opennessGrid[stepIndex] : 0;
+    return value === 0.45 || value === 1 ? value : 0;
+  }
+
+  function setHihatOpenness(opennessGrid, stepIndex, value) {
+    assertStepIndex(stepIndex);
+    assertHihatOpenness(value);
+    const next = cloneHihatOpennessGrid(opennessGrid);
+    next[stepIndex] = value;
+    return next;
+  }
+
+  function clearHihatOpenness(opennessGrid, stepIndex) {
+    if (stepIndex === undefined) return createDefaultHihatOpennessGrid();
+    return setHihatOpenness(opennessGrid, stepIndex, 0);
   }
 
   function getRatchetCount(ratchetGrid, trackId, stepIndex) {
@@ -106,6 +144,11 @@
     getRatchetCount,
     setRatchetCount,
     cycleRatchetCount,
+    createDefaultHihatOpennessGrid,
+    cloneHihatOpennessGrid,
+    getHihatOpenness,
+    setHihatOpenness,
+    clearHihatOpenness,
     toggleStep,
     clearPattern,
   };
