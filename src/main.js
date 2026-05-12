@@ -487,6 +487,15 @@ function synthHihat(t, v, p) {
   }
 }
 
+function previewHihat(openAmount) {
+  initAudio();
+  const tr = TRACKS[2];
+  const t = A.currentTime + .015;
+  const p = { ...tr.p, open: openAmount };
+  triggerCompGate(t, tr.id);
+  synthHihat(t, tr.vol, p);
+}
+
 // ── CLAP ── 3 short bursts + tail
 function synthClap(t, v, p) {
   const dest = routeVoice(t, 3);
@@ -916,6 +925,18 @@ function buildVE() {
     mkRow('SNAP',  0, 100, 1, Math.round(tr.p.snap*100), x=>`${x}%`, v=>tr.p.snap=v/100, c);
     mkRow('DECAY', 4, 50, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
   } else if (tr.id === 'hihat') {
+    const hatTest = document.createElement('div');
+    hatTest.className = 'hat-test';
+    hatTest.innerHTML = `<div class="ve-lbl">HAT TEST</div>
+      <div class="hat-test-btns">
+        <button class="hat-test-b" data-open="0">CLOSED</button>
+        <button class="hat-test-b" data-open=".45">TIGHT</button>
+        <button class="hat-test-b" data-open="1">OPEN</button>
+      </div>`;
+    pn.appendChild(hatTest);
+    hatTest.querySelector('[data-open="0"]').addEventListener('click', () => previewHihat(0));
+    hatTest.querySelector('[data-open=".45"]').addEventListener('click', () => previewHihat(.45));
+    hatTest.querySelector('[data-open="1"]').addEventListener('click', () => previewHihat(1));
     mkRow('FREQ',  4000, 14000, 100, tr.p.freq, x=>`${(x/1000).toFixed(1)} kHz`, v=>tr.p.freq=v, c);
     mkRow('DECAY', 2, 40, 1, Math.round(tr.p.decay*1000), x=>`${x} ms`, v=>tr.p.decay=v/1000, c);
     mkRow('OPEN',  0, 100, 1, Math.round(tr.p.open*100), x=>`${x}%`, v=>tr.p.open=v/100, c);

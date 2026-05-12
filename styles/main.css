@@ -415,6 +415,24 @@ body.running #ss  { display: none; }
 }
 .ve-lbl { font-size: 8px; letter-spacing: 2px; color: var(--textDm); }
 .ve-val { font-size: 8px; letter-spacing: 1px; color: var(--amberLt); text-align: right; }
+.hat-test {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  align-items: center; gap: 8px;
+  margin-bottom: 2px;
+}
+.hat-test-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.hat-test-b {
+  min-height: 40px;
+  padding: 8px 6px;
+  background: var(--panel2);
+  border: 1px solid var(--borderLt);
+  color: var(--amberLt);
+  font-family: var(--mono);
+  font-size: 8px; letter-spacing: 1.5px;
+  cursor: pointer;
+}
+.hat-test-b:active { background: var(--amber); color: var(--bg); }
 
 /* horizontal faders */
 .fdr {
