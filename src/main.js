@@ -10,6 +10,7 @@ const Rhythm = globalThis.BighartBeatRhythm;
 const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
 const PATTERNS = State.createPatternBanks();
+const RATCHETS = State.createRatchetBanks();
 const S = State.createAppState();
 
 /* ═══════════════════════════════════════════════
@@ -564,10 +565,20 @@ function fire(ti, t) {
    SCHEDULER — deterministic, tight
 ═══════════════════════════════════════════════ */
 const AHEAD = .10, TICK = 24;
+const LONG_PRESS_MS = 420;
 let nextT = 0, sch = 0, schTimer = null;
 const tlog = [];
 
 function stepDur() { return 60 / S.bpm / 4; }
+
+function ratchetOffsets(stepDuration, count) {
+  if (count !== 1 && count !== 2 && count !== 3) count = 1;
+  return Array.from({ length: count }, (_, i) => i * stepDuration / count);
+}
+
+function scheduledHitTimes(stepStart, stepDuration, count) {
+  return ratchetOffsets(stepDuration, count).map(offset => stepStart + offset);
+}
 
 function schedStep(step, t) {
   tlog.push({ step, time: t });
@@ -576,7 +587,8 @@ function schedStep(step, t) {
   for (let ti = 0; ti < TRACKS.length; ti++) {
     const tr = TRACKS[ti];
     if (!grid[tr.id][step] || tr.mute) continue;
-    fire(ti, t);
+    const count = State.getRatchetCount(RATCHETS[S.patt], tr.id, step);
+    for (const hitT of scheduledHitTimes(t, stepDur(), count)) fire(ti, hitT);
   }
 }
 function advance() { sch = (sch + 1) % 16; nextT += stepDur(); }
@@ -679,13 +691,52 @@ function buildSeq() {
       if (i % 8 === 0)  c.classList.add('db4');
       const grid = PATTERNS[S.patt];
       if (grid[tr.id][i]) c.classList.add('on');
+      const ratchet = State.getRatchetCount(RATCHETS[S.patt], tr.id, i);
+      if (ratchet > 1) {
+        c.classList.add('r' + ratchet);
+        c.dataset.r = ratchet + 'x';
+      }
+      const refreshCell = () => {
+        const nextRatchet = State.getRatchetCount(RATCHETS[S.patt], tr.id, i);
+        c.classList.toggle('on', !!PATTERNS[S.patt][tr.id][i]);
+        c.classList.remove('r2', 'r3');
+        delete c.dataset.r;
+        if (nextRatchet > 1) {
+          c.classList.add('r' + nextRatchet);
+          c.dataset.r = nextRatchet + 'x';
+        }
+      };
+      const cycleCellRatchet = () => {
+        if (!PATTERNS[S.patt][tr.id][i]) PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
+        RATCHETS[S.patt] = State.cycleRatchetCount(RATCHETS[S.patt], tr.id, i);
+        refreshCell();
+        renderRhythmIntelligence();
+        autosave();
+      };
+      let pressTimer = null;
+      let longPressFired = false;
       c.addEventListener('click', () => {
-        PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
-        if (PATTERNS[S.patt][tr.id][i]) c.classList.add('on');
-        else c.classList.remove('on');
+        if (longPressFired) { longPressFired = false; return; }
+        const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
+        PATTERNS[S.patt] = result.pattern;
+        RATCHETS[S.patt] = result.ratchets;
+        refreshCell();
         renderRhythmIntelligence();
         autosave();
       });
+      c.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        cycleCellRatchet();
+      });
+      c.addEventListener('pointerdown', () => {
+        longPressFired = false;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(() => {
+          longPressFired = true;
+          cycleCellRatchet();
+        }, LONG_PRESS_MS);
+      });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => c.addEventListener(ev, () => clearTimeout(pressTimer)));
       row.appendChild(c);
     }
     seq.appendChild(row);
@@ -912,7 +963,7 @@ function autosave() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try {
-      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS });
+      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS });
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch(e) {}
   }, 250);
@@ -971,7 +1022,10 @@ function applyProjectData(d) {
   if (typeof d.patt === 'number') S.patt = d.patt;
   S.engine = d.engine || 'aphex';
   S.mstVol = d.mstVol;
-  for (let i = 0; i < 4; i++) PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
+  for (let i = 0; i < 4; i++) {
+    PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
+    RATCHETS[i] = State.cloneRatchetGrid(d.ratchets[i]);
+  }
   d.tracks.forEach(st => {
     const tr = TRACKS.find(x => x.id === st.id);
     if (tr) {
@@ -1098,6 +1152,7 @@ function wire() {
   $('clearBtn').addEventListener('click', () => {
     if (!confirm('Clear pattern ' + 'ABCD'[S.patt] + '?')) return;
     PATTERNS[S.patt] = State.clearPattern();
+    RATCHETS[S.patt] = State.createDefaultRatchetGrid();
     buildSeq();
     renderRhythmIntelligence();
     autosave();
@@ -1189,7 +1244,7 @@ function doTap() {
 }
 
 function exportJSON() {
-  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, timestamp: new Date().toISOString() });
+  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, timestamp: new Date().toISOString() });
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

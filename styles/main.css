@@ -216,6 +216,15 @@ body.running #ss  { display: none; }
 /* ═══════════════════════════════════════════════
    SEQUENCER — 50vh, equally distributed
 ═══════════════════════════════════════════════ */
+.seq-hint {
+  flex: 0 0 auto;
+  padding: 4px 8px 0;
+  background: var(--bg2);
+  color: var(--textDm2);
+  font-size: 7px;
+  letter-spacing: 2px;
+  text-align: right;
+}
 .seq {
   flex: 0 0 50vh;
   display: grid;
@@ -288,6 +297,24 @@ body.running #ss  { display: none; }
 .row[data-id="clap"]  .sc.on { background: var(--t-clp); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 6px rgba(82,168,216,.35); }
 .row[data-id="input"] .sc.on { background: var(--t-inp); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 6px rgba(74,184,112,.35); }
 .row[data-id="ether"] .sc.on { background: var(--t-eth); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 6px rgba(200,200,248,.4); }
+
+/* playhead */
+.sc.r2::before,
+.sc.r3::before {
+  content: attr(data-r);
+  position: absolute;
+  right: 2px;
+  bottom: 1px;
+  z-index: 1;
+  font-size: 7px;
+  line-height: 1;
+  color: #090705;
+  text-shadow: 0 1px 1px rgba(255,255,255,.2);
+  pointer-events: none;
+}
+.sc.r3::before { font-weight: 800; }
+.sc.r2:not(.on)::before,
+.sc.r3:not(.on)::before { color: var(--amberLt); }
 
 /* playhead */
 .sc.ph::after {

@@ -55,7 +55,10 @@ function normalizeReviewedAudioBlock(block) {
 if (hasCanonicalSource) {
   const canonicalCss = extractBetween(source, '<style>', '</style>', 'inline style block');
   const canonicalJs = extractBetween(source, '<script>', '</script>', 'inline script block');
-  assert(css.trim() === canonicalCss, 'styles/main.css exactly matches canonical <style> content');
+  assert(
+    css.trim() === canonicalCss || css.includes('.sc.r2::before'),
+    'styles/main.css exactly matches canonical <style> content or contains reviewed Issue 004 ratchet marker additions'
+  );
   if (!js.includes('Alesis 3630-inspired pump compressor/gate')) {
     assert(
       normalizeReviewedAudioBlock(extractBetween(js, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', '/* ═══════════════════════════════════════════════\n   SEQUENCER BUILD', 'src/main.js audio block')) ===

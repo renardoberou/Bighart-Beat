@@ -14,9 +14,21 @@
     }
   }
 
+  function assertRatchetCount(count) {
+    if (count !== 1 && count !== 2 && count !== 3) {
+      throw new Error('Ratchet count must be integer 1, 2, or 3');
+    }
+  }
+
   function createEmptyGrid() {
     const grid = {};
     TRACK_IDS.forEach(id => { grid[id] = Array(STEP_COUNT).fill(0); });
+    return grid;
+  }
+
+  function createDefaultRatchetGrid() {
+    const grid = {};
+    TRACK_IDS.forEach(id => { grid[id] = Array(STEP_COUNT).fill(1); });
     return grid;
   }
 
@@ -31,23 +43,69 @@
     return clone;
   }
 
-  function toggleStep(grid, trackId, stepIndex) {
+  function cloneRatchetGrid(ratchetGrid) {
+    const clone = createDefaultRatchetGrid();
+    TRACK_IDS.forEach(id => {
+      const steps = ratchetGrid && ratchetGrid[id];
+      if (!Array.isArray(steps)) return;
+      for (let i = 0; i < Math.min(STEP_COUNT, steps.length); i++) {
+        if (steps[i] === 1 || steps[i] === 2 || steps[i] === 3) clone[id][i] = steps[i];
+      }
+    });
+    return clone;
+  }
+
+  function getRatchetCount(ratchetGrid, trackId, stepIndex) {
+    assertKnownTrack(trackId);
+    assertStepIndex(stepIndex);
+    const steps = ratchetGrid && ratchetGrid[trackId];
+    const count = Array.isArray(steps) ? steps[stepIndex] : 1;
+    return count === 2 || count === 3 ? count : 1;
+  }
+
+  function setRatchetCount(ratchetGrid, trackId, stepIndex, count) {
+    assertKnownTrack(trackId);
+    assertStepIndex(stepIndex);
+    assertRatchetCount(count);
+    const next = cloneRatchetGrid(ratchetGrid);
+    next[trackId][stepIndex] = count;
+    return next;
+  }
+
+  function cycleRatchetCount(ratchetGrid, trackId, stepIndex) {
+    const current = getRatchetCount(ratchetGrid, trackId, stepIndex);
+    return setRatchetCount(ratchetGrid, trackId, stepIndex, current === 3 ? 1 : current + 1);
+  }
+
+  function toggleStep(grid, trackId, stepIndex, ratchetGrid) {
     assertKnownTrack(trackId);
     assertStepIndex(stepIndex);
     const next = clonePatternGrid(grid);
     next[trackId][stepIndex] = next[trackId][stepIndex] ? 0 : 1;
+    if (ratchetGrid !== undefined) {
+      let nextRatchets = cloneRatchetGrid(ratchetGrid);
+      if (!next[trackId][stepIndex]) nextRatchets = setRatchetCount(nextRatchets, trackId, stepIndex, 1);
+      return { pattern: next, ratchets: nextRatchets };
+    }
     return next;
   }
 
-  function clearPattern() {
-    return createEmptyGrid();
+  function clearPattern(grid, ratchetGrid) {
+    const pattern = createEmptyGrid();
+    if (ratchetGrid !== undefined) return { pattern, ratchets: createDefaultRatchetGrid() };
+    return pattern;
   }
 
   const api = {
     TRACK_IDS,
     STEP_COUNT,
     createEmptyGrid,
+    createDefaultRatchetGrid,
     clonePatternGrid,
+    cloneRatchetGrid,
+    getRatchetCount,
+    setRatchetCount,
+    cycleRatchetCount,
     toggleStep,
     clearPattern,
   };

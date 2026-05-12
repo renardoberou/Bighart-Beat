@@ -66,6 +66,24 @@
     });
   }
 
+  function createDefaultRatchetGrid() {
+    const grid = {};
+    TRACK_IDS.forEach(id => { grid[id] = Array(STEP_COUNT).fill(1); });
+    return grid;
+  }
+
+  function createRatchetBanks() {
+    return Array.from({ length: BANK_COUNT }, createDefaultRatchetGrid);
+  }
+
+  function cloneRatchets(ratchets) {
+    return ratchets.map(bank => {
+      const out = {};
+      TRACK_IDS.forEach(id => { out[id] = bank[id].slice(); });
+      return out;
+    });
+  }
+
   function serializeTracks(tracks) {
     return tracks.map(t => ({
       id: t.id,
@@ -82,7 +100,7 @@
     const meta = { app: PROJECT_APP };
     const timestamp = input.timestamp !== undefined ? input.timestamp : input.meta && input.meta.ts;
     if (timestamp !== undefined) meta.ts = timestamp;
-    return {
+    const project = {
       schemaVersion: SCHEMA_VERSION,
       bpm: appState.bpm,
       patt: appState.patt,
@@ -93,6 +111,8 @@
       fx: cloneValue(input.fx),
       meta,
     };
+    if (input.ratchets !== undefined) project.ratchets = cloneRatchets(input.ratchets);
+    return project;
   }
 
   function validateProjectData(data) {
@@ -117,6 +137,7 @@
     validateNumberInRange(data.mstVol, 0, 1, errors, 'mstVol');
 
     validatePatterns(data.patterns, errors);
+    validateRatchets(data.ratchets, errors);
     validateTracks(data.tracks, errors);
     validateFx(data.fx, errors);
 
@@ -161,6 +182,35 @@
         steps.forEach((step, stepIndex) => {
           if (step !== 0 && step !== 1) {
             errors.push('patterns[' + bankIndex + '].' + trackId + '[' + stepIndex + '] must be 0/1');
+          }
+        });
+      });
+    });
+  }
+
+  function validateRatchets(ratchets, errors) {
+    if (ratchets === undefined) return;
+    if (!Array.isArray(ratchets) || ratchets.length !== BANK_COUNT) {
+      errors.push('ratchets must contain exactly 4 banks');
+      return;
+    }
+    ratchets.forEach((bank, bankIndex) => {
+      if (!bank || typeof bank !== 'object' || Array.isArray(bank)) {
+        errors.push('ratchets[' + bankIndex + '] must be an object');
+        return;
+      }
+      Object.keys(bank).forEach(trackId => {
+        if (!TRACK_IDS.includes(trackId)) errors.push('ratchets[' + bankIndex + '] has unknown track key: ' + trackId);
+      });
+      TRACK_IDS.forEach(trackId => {
+        const steps = bank[trackId];
+        if (!Array.isArray(steps) || steps.length !== STEP_COUNT) {
+          errors.push('ratchets[' + bankIndex + '].' + trackId + ' must contain 16 counts');
+          return;
+        }
+        steps.forEach((count, stepIndex) => {
+          if (count !== 1 && count !== 2 && count !== 3) {
+            errors.push('ratchets[' + bankIndex + '].' + trackId + '[' + stepIndex + '] must be integer 1/2/3');
           }
         });
       });
@@ -298,6 +348,7 @@
     if (!validation.ok) return validation;
     const value = cloneValue(data);
     if (value.engine === undefined) value.engine = 'aphex';
+    if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
     return { ok: true, value, errors: [] };
   }
 
