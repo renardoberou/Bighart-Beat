@@ -185,7 +185,7 @@ function routeVoice(t, ti) {
   }
   if (tr.revS) {
     const rs = A.createGain(); rs.gain.value = 1;
-    out.connect(rs); rs.connect(N.conv);
+    out.connect(rs); rs.connect(N.revGate);
     triggerGate(t);
   }
   return out;

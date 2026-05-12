@@ -43,10 +43,17 @@ function extractFromMarker(text, marker, label) {
 const canonicalCss = extractBetween(source, '<style>', '</style>', 'inline style block');
 const canonicalJs = extractBetween(source, '<script>', '</script>', 'inline script block');
 assert(css.trim() === canonicalCss, 'styles/main.css exactly matches canonical <style> content');
+function normalizeReviewedAudioBlock(block) {
+  // Mission 006 intentionally routes per-hit reverb sends through the gate
+  // instead of directly into the convolver; preserve parity for the rest of
+  // the canonical audio block while allowing that safety fix.
+  return block.replace('out.connect(rs); rs.connect(N.conv);', 'out.connect(rs); rs.connect(N.revGate);');
+}
+
 assert(
-  extractBetween(js, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', '/* ═══════════════════════════════════════════════\n   SEQUENCER BUILD', 'src/main.js audio block') ===
-  extractBetween(canonicalJs, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', '/* ═══════════════════════════════════════════════\n   SEQUENCER BUILD', 'canonical JS audio block'),
-  'src/main.js preserves canonical audio engine block after state block'
+  normalizeReviewedAudioBlock(extractBetween(js, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', '/* ═══════════════════════════════════════════════\n   SEQUENCER BUILD', 'src/main.js audio block')) ===
+  normalizeReviewedAudioBlock(extractBetween(canonicalJs, '/* ═══════════════════════════════════════════════\n   AUDIO ENGINE', '/* ═══════════════════════════════════════════════\n   SEQUENCER BUILD', 'canonical JS audio block')),
+  'src/main.js preserves canonical audio engine block after reviewed Mission 006 graph safety fix'
 );
 
 assert(index.includes('<link rel="stylesheet" href="styles/main.css">'), 'index links styles/main.css');
