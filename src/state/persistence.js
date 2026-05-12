@@ -19,6 +19,7 @@
   const FX_RANGES = {
     dly: { mult:[0.25,1.5], fb:[0,1], tone:[0,1], wet:[0,1] },
     rev: { size:[0,1], damp:[0,1], gate:[40,600], wet:[0,1] },
+    comp: { threshold:[-80,0], ratio:[1,20], attack:[1,200], release:[20,2000], gateThreshold:[-80,0], gateRate:[10,2000] },
   };
 
   function getDefaultTracks() {
@@ -38,7 +39,7 @@
     if (typeof require === 'function') {
       return require('./fx-state.js').createDefaultFxState();
     }
-    return { dly: {}, rev: {} };
+    return { dly: {}, rev: {}, comp: {} };
   }
 
   function isDangerousKey(key) {
@@ -237,7 +238,7 @@
     Object.keys(fx).forEach(key => {
       if (!Object.prototype.hasOwnProperty.call(schema, key)) errors.push('fx.' + key + ' is unknown');
     });
-    ['dly', 'rev'].forEach(key => {
+    ['dly', 'rev', 'comp'].forEach(key => {
       if (fx[key] === undefined) {
         errors.push('fx.' + key + ' must be an object');
         return;
@@ -257,8 +258,10 @@
         return;
       }
       const value = section[field];
-      if (field === 'on') {
+      if (field === 'on' || field === 'gateOn') {
         if (typeof value !== 'boolean') errors.push('fx.' + sectionName + '.on must be a boolean');
+      } else if (field === 'detector') {
+        if (value !== 'peak' && value !== 'rms') errors.push('fx.' + sectionName + '.detector must be peak or rms');
       } else {
         const range = FX_RANGES[sectionName] && FX_RANGES[sectionName][field];
         validateNumberInRange(value, range && range[0], range && range[1], errors, 'fx.' + sectionName + '.' + field);

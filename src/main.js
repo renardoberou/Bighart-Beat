@@ -86,20 +86,25 @@ function buildGraph() {
   N.dlyWet.connect(N.mstSum);
   N.revWet.connect(N.mstSum);
 
-  // glue compressor — wider knee, faster attack to catch drum transients cleanly
+  // Alesis 3630-inspired pump compressor/gate: master sum → gate → compressor → auto makeup → saturation.
+  // No manual output/makeup gain is exposed; makeup is computed from threshold/ratio and clamped safe.
+  N.compGate = A.createGain(); N.compGate.gain.value = FX.comp.gateOn ? 0 : 1;
   N.mstComp = A.createDynamicsCompressor();
-  N.mstComp.threshold.value = -16;
-  N.mstComp.knee.value      = 8;
-  N.mstComp.ratio.value     = 3;
-  N.mstComp.attack.value    = .004;
-  N.mstComp.release.value   = .090;
-  N.mstSum.connect(N.mstComp);
+  N.mstComp.threshold.value = FX.comp.on ? FX.comp.threshold : 0;
+  N.mstComp.knee.value      = FX.comp.detector === 'peak' ? 6 : 12;
+  N.mstComp.ratio.value     = FX.comp.on ? FX.comp.ratio : 1;
+  N.mstComp.attack.value    = FX.comp.attack / 1000;
+  N.mstComp.release.value   = FX.comp.release / 1000;
+  N.compMakeup = A.createGain(); N.compMakeup.gain.value = dbToGain(autoMakeupGainDb(FX.comp));
+  N.mstSum.connect(N.compGate);
+  N.compGate.connect(N.mstComp);
+  N.mstComp.connect(N.compMakeup);
 
   // gentle warmth saturation, AFTER comp
   N.mstSat = A.createWaveShaper();
   N.mstSat.curve = mkSatCurve(.05);
   N.mstSat.oversample = '2x';
-  N.mstComp.connect(N.mstSat);
+  N.compMakeup.connect(N.mstSat);
 
   // master volume
   N.mstVol = A.createGain(); N.mstVol.gain.value = S.mstVol;
@@ -138,6 +143,19 @@ function mkSatCurve(amt) {
 
 function toneHz(v) { // 0..1 → 800 Hz..16 kHz exp
   return 800 * Math.pow(20, v);
+}
+
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+function dbToGain(db) {
+  return Math.pow(10, db / 20);
+}
+
+function autoMakeupGainDb(comp) {
+  if (!comp || !comp.on) return 0;
+  const thresholdAbs = Math.abs(Math.min(0, comp.threshold));
+  const ratio = Math.max(1, comp.ratio || 1);
+  return clamp(thresholdAbs * (1 - 1 / ratio) * 0.45, 0, 12);
 }
 
 function dlyTimeSec() {
@@ -208,6 +226,22 @@ function triggerGate(t) {
   g.linearRampToValueAtTime(1, t + atk);
   g.setValueAtTime(1, t + atk + hold);
   g.linearRampToValueAtTime(0, t + atk + hold + rel);
+}
+
+function triggerCompGate(t) {
+  if (!FX.comp.gateOn || !N.compGate) return;
+  const g = N.compGate.gain;
+  const closed = dbToGain(FX.comp.gateThreshold);
+  const atk = .002, hold = .006, rel = FX.comp.gateRate / 1000;
+  if (g.cancelAndHoldAtTime) {
+    g.cancelAndHoldAtTime(t);
+  } else {
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value, t);
+  }
+  g.linearRampToValueAtTime(1, t + atk);
+  g.setValueAtTime(1, t + atk + hold);
+  g.setTargetAtTime(closed, t + atk + hold, Math.max(.005, rel / 3));
 }
 
 // ── KICK ── deep thump with click and saturation
@@ -437,6 +471,7 @@ function synthEther(t, v, p) {
 function fire(ti, t) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
+  triggerCompGate(t);
   const v = tr.vol;
   switch (tr.id) {
     case 'kick':  synthKick(t, v, tr.p); break;
@@ -745,6 +780,14 @@ function applyFXState() {
   N.dlyWet.gain.setTargetAtTime(FX.dly.on ? FX.dly.wet : 0, A.currentTime, .04);
   // reverb
   N.revWet.gain.setTargetAtTime(FX.rev.on ? FX.rev.wet : 0, A.currentTime, .04);
+  // compressor / gate
+  N.compGate.gain.setTargetAtTime(FX.comp.gateOn ? dbToGain(FX.comp.gateThreshold) : 1, A.currentTime, .02);
+  N.mstComp.threshold.setTargetAtTime(FX.comp.on ? FX.comp.threshold : 0, A.currentTime, .02);
+  N.mstComp.ratio.setTargetAtTime(FX.comp.on ? FX.comp.ratio : 1, A.currentTime, .02);
+  N.mstComp.attack.setTargetAtTime(FX.comp.attack / 1000, A.currentTime, .02);
+  N.mstComp.release.setTargetAtTime(FX.comp.release / 1000, A.currentTime, .02);
+  N.mstComp.knee.setTargetAtTime(FX.comp.detector === 'peak' ? 6 : 12, A.currentTime, .02);
+  N.compMakeup.gain.setTargetAtTime(dbToGain(autoMakeupGainDb(FX.comp)), A.currentTime, .02);
   // master
   N.mstVol.gain.setTargetAtTime(S.mstVol, A.currentTime, .02);
 }
@@ -790,6 +833,17 @@ function syncFxControls() {
   setFdr('revDamp', Math.round(FX.rev.damp * 100), v => v + '%');
   setFdr('revGate', FX.rev.gate, v => v + ' ms');
   setFdr('revWet',  Math.round(FX.rev.wet * 100),  v => v + '%');
+  $('togComp').classList.toggle('on', FX.comp.on);
+  $('togCompGate').classList.toggle('on', FX.comp.gateOn);
+  $('compDetector').querySelectorAll('.div-b').forEach(b =>
+    b.classList.toggle('on', b.dataset.det === FX.comp.detector)
+  );
+  setFdr('compThresh', FX.comp.threshold, v => v + ' dB');
+  setFdr('compRatio', FX.comp.ratio, v => v + ':1');
+  setFdr('compAttack', FX.comp.attack, v => v + ' ms');
+  setFdr('compRelease', FX.comp.release, v => v + ' ms');
+  setFdr('compGateThresh', FX.comp.gateThreshold, v => v + ' dB');
+  setFdr('compGateRate', FX.comp.gateRate, v => v + ' ms');
 }
 
 function syncMasterControls() {
@@ -814,6 +868,7 @@ function applyProjectData(d) {
   if (d.fx) {
     if (d.fx.dly) Object.assign(FX.dly, d.fx.dly);
     if (d.fx.rev) Object.assign(FX.rev, d.fx.rev);
+    if (d.fx.comp) Object.assign(FX.comp, d.fx.comp);
     if (A) genRevIR();
   }
 }
@@ -879,6 +934,35 @@ function wire() {
   bindF('revDamp', v => { FX.rev.damp = v / 100; if (A) genRevIR(); }, v => v + '%');
   bindF('revGate', v => { FX.rev.gate = v; }, v => v + ' ms');
   bindF('revWet',  v => { FX.rev.wet  = v / 100; applyFXState(); }, v => v + '%');
+
+  // pump compressor / gate
+  $('togComp').addEventListener('click', () => {
+    FX.comp.on = !FX.comp.on;
+    $('togComp').classList.toggle('on', FX.comp.on);
+    applyFXState();
+    autosave();
+  });
+  $('togCompGate').addEventListener('click', () => {
+    FX.comp.gateOn = !FX.comp.gateOn;
+    $('togCompGate').classList.toggle('on', FX.comp.gateOn);
+    applyFXState();
+    autosave();
+  });
+  $('compDetector').querySelectorAll('.div-b').forEach(b => {
+    b.addEventListener('click', () => {
+      FX.comp.detector = b.dataset.det;
+      $('compDetector').querySelectorAll('.div-b').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      applyFXState();
+      autosave();
+    });
+  });
+  bindF('compThresh', v => { FX.comp.threshold = v; applyFXState(); }, v => v + ' dB');
+  bindF('compRatio', v => { FX.comp.ratio = v; applyFXState(); }, v => v + ':1');
+  bindF('compAttack', v => { FX.comp.attack = v; applyFXState(); }, v => v + ' ms');
+  bindF('compRelease', v => { FX.comp.release = v; applyFXState(); }, v => v + ' ms');
+  bindF('compGateThresh', v => { FX.comp.gateThreshold = v; applyFXState(); }, v => v + ' dB');
+  bindF('compGateRate', v => { FX.comp.gateRate = v; applyFXState(); }, v => v + ' ms');
 
   // master
   bindF('mstVol', v => { S.mstVol = v / 100; applyFXState(); }, v => v + '%');

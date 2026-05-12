@@ -67,8 +67,9 @@ const fx = createDefaultFxState();
 assert.deepStrictEqual(fx, {
   dly: { on:false, mult:0.75, fb:.32, tone:.55, wet:.26 },
   rev: { on:false, size:.60, damp:.55, gate:180, wet:.28 },
-}, 'createDefaultFxState returns canonical delay/reverb defaults');
-assertIndependent(createDefaultFxState, null, f => { f.dly.on = true; f.rev.wet = .99; }, f => [f.dly.on, f.rev.wet], 'createDefaultFxState');
+  comp: { on:false, threshold:-24, ratio:4, attack:8, release:280, detector:'rms', gateOn:false, gateThreshold:-60, gateRate:120 },
+}, 'createDefaultFxState returns canonical delay/reverb/compressor defaults');
+assertIndependent(createDefaultFxState, null, f => { f.dly.on = true; f.rev.wet = .99; f.comp.release = 900; }, f => [f.dly.on, f.rev.wet, f.comp.release], 'createDefaultFxState');
 
 const appState = createAppState();
 assert.deepStrictEqual(appState, {

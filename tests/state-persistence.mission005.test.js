@@ -25,6 +25,19 @@ tracks[0].mute = true;
 tracks[0].p.pitch = 123;
 const fx = createDefaultFxState();
 fx.dly.on = true;
+assert.deepStrictEqual(fx.comp, {
+  on: false,
+  threshold: -24,
+  ratio: 4,
+  attack: 8,
+  release: 280,
+  detector: 'rms',
+  gateOn: false,
+  gateThreshold: -60,
+  gateRate: 120,
+}, 'default fx includes Alesis 3630-inspired compressor/gate state with auto makeup only');
+assert.strictEqual(Object.prototype.hasOwnProperty.call(fx.comp, 'makeup'), false, 'compressor state does not expose manual makeup gain');
+assert.strictEqual(Object.prototype.hasOwnProperty.call(fx.comp, 'output'), false, 'compressor state does not expose manual output gain');
 const patterns = createPatternBanks();
 patterns[2].ether[15] = 1;
 
@@ -84,6 +97,7 @@ assertImportRejected({ ...serialized, fx: undefined }, /fx/i, 'missing top-level
 assertImportRejected({ ...serialized, fx: null }, /fx.*object/i, 'non-object top-level fx');
 assertImportRejected({ ...serialized, fx: { dly: serialized.fx.dly } }, /fx\.rev|missing/i, 'missing fx.rev object');
 assertImportRejected({ ...serialized, fx: { rev: serialized.fx.rev } }, /fx\.dly|missing/i, 'missing fx.dly object');
+assertImportRejected({ ...serialized, fx: { dly: serialized.fx.dly, rev: serialized.fx.rev } }, /fx\.comp|missing/i, 'missing fx.comp object');
 
 assertImportRejected({ ...serialized, tracks: serialized.tracks.slice(0, 5) }, /six|6|exactly/i, 'short tracks array');
 assertImportRejected({ ...serialized, tracks: [...serialized.tracks, { ...serialized.tracks[0] }] }, /six|6|exactly/i, 'long tracks array');
@@ -131,12 +145,20 @@ const badFxReverbField = serializeProject({ appState, tracks, fx, patterns });
 badFxReverbField.fx.rev.gate = Infinity;
 assertImportRejected(badFxReverbField, /fx\.rev\.gate|finite number/i, 'malformed reverb gate field');
 
+const badFxCompDetector = serializeProject({ appState, tracks, fx, patterns });
+badFxCompDetector.fx.comp.detector = 'vca';
+assertImportRejected(badFxCompDetector, /fx\.comp\.detector|peak|rms/i, 'malformed compressor detector mode');
+
+const badFxCompToggle = serializeProject({ appState, tracks, fx, patterns });
+badFxCompToggle.fx.comp.gateOn = 1;
+assertImportRejected(badFxCompToggle, /fx\.comp\.gateOn|boolean/i, 'malformed compressor gate toggle');
+
 const unknownFxField = serializeProject({ appState, tracks, fx, patterns });
 unknownFxField.fx.dly.extra = 0.2;
 assertImportRejected(unknownFxField, /fx\.dly\.extra|unknown/i, 'unknown delay field');
 
 const partialFx = serializeProject({ appState, tracks, fx, patterns });
-partialFx.fx = { dly: { fb: 0.25 }, rev: { on: false } };
+partialFx.fx = { dly: { fb: 0.25 }, rev: { on: false }, comp: { on: false } };
 assert.strictEqual(parseProjectImport(partialFx).ok, true, 'parseProjectImport allows valid partial fx subfields for legacy saves');
 
 function assertImportRejectedAt(pathLabel, mutate, pattern) {
@@ -152,6 +174,12 @@ assertImportRejectedAt('tracks[0].vol', p => { p.tracks[0].vol = -0.01; }, /trac
 assertImportRejectedAt('fx.dly.mult', p => { p.fx.dly.mult = 0.125; }, /fx\.dly\.mult|range|between/i);
 assertImportRejectedAt('fx.dly.fb', p => { p.fx.dly.fb = 1.01; }, /fx\.dly\.fb|range|between/i);
 assertImportRejectedAt('fx.rev.gate', p => { p.fx.rev.gate = 601; }, /fx\.rev\.gate|range|between/i);
+assertImportRejectedAt('fx.comp.threshold', p => { p.fx.comp.threshold = -81; }, /fx\.comp\.threshold|range|between/i);
+assertImportRejectedAt('fx.comp.ratio', p => { p.fx.comp.ratio = 25; }, /fx\.comp\.ratio|range|between/i);
+assertImportRejectedAt('fx.comp.attack', p => { p.fx.comp.attack = 0; }, /fx\.comp\.attack|range|between/i);
+assertImportRejectedAt('fx.comp.release', p => { p.fx.comp.release = 2001; }, /fx\.comp\.release|range|between/i);
+assertImportRejectedAt('fx.comp.gateThreshold', p => { p.fx.comp.gateThreshold = 1; }, /fx\.comp\.gateThreshold|range|between/i);
+assertImportRejectedAt('fx.comp.gateRate', p => { p.fx.comp.gateRate = 2001; }, /fx\.comp\.gateRate|range|between/i);
 assertImportRejectedAt('tracks[0].p.pitch', p => { p.tracks[0].p.pitch = 59; }, /tracks\[0\]\.p\.pitch|range|between/i);
 assertImportRejectedAt('tracks[1].p.decay', p => { p.tracks[1].p.decay = 0.51; }, /tracks\[1\]\.p\.decay|range|between/i);
 assertImportRejectedAt('tracks[2].p.freq', p => { p.tracks[2].p.freq = 14001; }, /tracks\[2\]\.p\.freq|range|between/i);

@@ -44,6 +44,41 @@ assert(/clearTimeout\(schTimer\)/.test(stopPlay), 'stopPlay() clears scheduler t
 const maxSampleBytesIndex = js.indexOf('MAX_SAMPLE_BYTES');
 assert(maxSampleBytesIndex !== -1, 'sample loader defines a mobile-safe file size limit');
 
+assert(/function\s+autoMakeupGainDb\s*\(/.test(js), 'runtime defines autoMakeupGainDb helper');
+assert(!/compMakeup[^\n]*(?:makeup|output)[^\n]*=/.test(js), 'runtime does not expose manual compressor makeup/output gain');
+
+const buildGraph = extractFunction('buildGraph');
+assert(/N\.compGate\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master chain creates compressor gate gain node');
+assert(/N\.mstComp\s*=\s*A\.createDynamicsCompressor\(\)/.test(buildGraph), 'master chain creates pump compressor node');
+assert(/N\.compMakeup\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master chain creates auto-makeup gain node');
+assert(/N\.mstSum\.connect\(N\.compGate\)/.test(buildGraph), 'master sum feeds compressor gate first');
+assert(/N\.compGate\.connect\(N\.mstComp\)/.test(buildGraph), 'compressor gate feeds compressor');
+assert(/N\.mstComp\.connect\(N\.compMakeup\)/.test(buildGraph), 'compressor feeds auto-makeup gain');
+assert(/N\.compMakeup\.connect\(N\.mstSat\)/.test(buildGraph), 'auto-makeup feeds saturation before master fader');
+assert(!/N\.mstComp\.connect\(N\.mstSat\)/.test(buildGraph), 'compressor no longer bypasses auto-makeup node');
+
+const applyFXState = extractFunction('applyFXState');
+assert(/N\.mstComp\.threshold\.setTargetAtTime\(FX\.comp\.on\s*\?\s*FX\.comp\.threshold\s*:\s*0/.test(applyFXState), 'compressor threshold follows enabled state');
+assert(/N\.mstComp\.ratio\.setTargetAtTime\(FX\.comp\.on\s*\?\s*FX\.comp\.ratio\s*:\s*1/.test(applyFXState), 'compressor ratio follows enabled state');
+assert(/N\.mstComp\.attack\.setTargetAtTime\(FX\.comp\.attack\s*\/\s*1000/.test(applyFXState), 'compressor attack maps ms to seconds');
+assert(/N\.mstComp\.release\.setTargetAtTime\(FX\.comp\.release\s*\/\s*1000/.test(applyFXState), 'compressor release maps ms to seconds for pump');
+assert(/N\.mstComp\.knee\.setTargetAtTime\(FX\.comp\.detector\s*===\s*['"]peak['"]\s*\?\s*6\s*:\s*12/.test(applyFXState), 'detector mode is represented as peak/rms knee response');
+assert(/N\.compMakeup\.gain\.setTargetAtTime\(dbToGain\(autoMakeupGainDb\(FX\.comp\)\)/.test(applyFXState), 'auto makeup gain is applied after compressor');
+
+const fire = extractFunction('fire');
+assert(/triggerCompGate\(t\)/.test(fire), 'scheduled hits trigger compressor gate envelope');
+
+const triggerCompGate = extractFunction('triggerCompGate');
+assert(/if\s*\(\s*!FX\.comp\.gateOn\s*\|\|\s*!N\.compGate\s*\)\s*return;/.test(triggerCompGate), 'compressor gate can be disabled safely');
+assert(/FX\.comp\.gateRate\s*\/\s*1000/.test(triggerCompGate), 'compressor gate rate maps ms to seconds');
+
+['togComp','compDetector','togCompGate'].forEach(id => {
+  assert(js.includes(`$('${id}')`), `runtime wires compressor UI control ${id}`);
+});
+['compThresh','compRatio','compAttack','compRelease','compGateThresh','compGateRate'].forEach(id => {
+  assert(js.includes(`bindF('${id}'`) && js.includes(`setFdr('${id}'`), `runtime binds and syncs compressor fader ${id}`);
+});
+
 const sampleHandlerStart = js.indexOf("$('smpFile').addEventListener('change'");
 assert(sampleHandlerStart !== -1, 'sample file change handler exists');
 const sampleHandler = js.slice(sampleHandlerStart, js.indexOf("  });", sampleHandlerStart) + 6);

@@ -163,6 +163,53 @@
           <div class="fx-val" id="vRevWet">28%</div>
         </div>
       </div>
+
+      <!-- PUMP COMPRESSOR / GATE -->
+      <div class="fx-pan">
+        <div class="fx-hd">
+          <div class="fx-nm">3630 PUMP COMP/GATE</div>
+          <button class="fx-tog" id="togComp"></button>
+        </div>
+        <div class="div-row" id="compDetector">
+          <button class="div-b" data-det="peak">PEAK</button>
+          <button class="div-b on" data-det="rms">RMS</button>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">THRESH</div>
+          <input type="range" class="fdr a" id="compThresh" min="-80" max="0" value="-24">
+          <div class="fx-val" id="vCompThresh">-24 dB</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">RATIO</div>
+          <input type="range" class="fdr a" id="compRatio" min="1" max="20" step="0.5" value="4">
+          <div class="fx-val" id="vCompRatio">4:1</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">ATTACK</div>
+          <input type="range" class="fdr a" id="compAttack" min="1" max="200" value="8">
+          <div class="fx-val" id="vCompAttack">8 ms</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">RELEASE</div>
+          <input type="range" class="fdr a" id="compRelease" min="20" max="2000" value="280">
+          <div class="fx-val" id="vCompRelease">280 ms</div>
+        </div>
+        <div class="fx-hd" style="margin-top:8px">
+          <div class="fx-nm">GATE</div>
+          <button class="fx-tog" id="togCompGate"></button>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">G THR</div>
+          <input type="range" class="fdr a" id="compGateThresh" min="-80" max="0" value="-60">
+          <div class="fx-val" id="vCompGateThresh">-60 dB</div>
+        </div>
+        <div class="fx-row">
+          <div class="fx-lbl">G RATE</div>
+          <input type="range" class="fdr a" id="compGateRate" min="10" max="2000" value="120">
+          <div class="fx-val" id="vCompGateRate">120 ms</div>
+        </div>
+        <div class="p-sub">AUTO MAKEUP · MASTER LEVEL SEPARATE</div>
+      </div>
     </div>
 
     <!-- MASTER -->
