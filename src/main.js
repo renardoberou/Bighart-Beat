@@ -5,6 +5,7 @@ const $ = id => document.getElementById(id);
    STATE
 ═══════════════════════════════════════════════ */
 const State = globalThis.BighartBeatState;
+const Rhythm = globalThis.BighartBeatRhythm;
 const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
 const PATTERNS = State.createPatternBanks();
@@ -569,12 +570,32 @@ function buildSeq() {
         PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
         if (PATTERNS[S.patt][tr.id][i]) c.classList.add('on');
         else c.classList.remove('on');
+        renderRhythmIntelligence();
         autosave();
       });
       row.appendChild(c);
     }
     seq.appendChild(row);
   }
+}
+
+/* ═══════════════════════════════════════════════
+   RHYTHM INTELLIGENCE
+═══════════════════════════════════════════════ */
+function renderRhythmIntelligence() {
+  if (!Rhythm || !Rhythm.analyzeRhythm || !$('riPanel')) return;
+  const labels = Rhythm.analyzeRhythm({
+    bpm: S.bpm,
+    swing: 0,
+    tracks: TRACKS,
+    pattern: PATTERNS[S.patt],
+    stepsPerBar: 16,
+  }).labels;
+  $('riSync').textContent = labels.sync.toUpperCase();
+  $('riAnchor').textContent = labels.anchor.toUpperCase();
+  $('riTension').textContent = labels.tension.toUpperCase();
+  $('riRecover').textContent = labels.recover.toUpperCase();
+  $('riDrive').textContent = labels.drive.toUpperCase();
 }
 
 /* ═══════════════════════════════════════════════
@@ -821,6 +842,7 @@ function wire() {
       S.patt = parseInt(b.dataset.p);
       syncPatternButtons();
       buildSeq();
+      renderRhythmIntelligence();
       autosave();
     });
   });
@@ -865,6 +887,7 @@ function wire() {
     if (!confirm('Clear pattern ' + 'ABCD'[S.patt] + '?')) return;
     PATTERNS[S.patt] = State.clearPattern();
     buildSeq();
+    renderRhythmIntelligence();
     autosave();
     toast('Pattern ' + 'ABCD'[S.patt] + ' cleared');
   });
@@ -918,6 +941,7 @@ function bindF(id, fn, valFn) {
 function chgBPM(d) {
   S.bpm = Math.min(240, Math.max(40, S.bpm + d));
   $('bpmD').textContent = S.bpm;
+  renderRhythmIntelligence();
   if (A) N.dlyLine.delayTime.setTargetAtTime(dlyTimeSec(), A.currentTime, .03);
   autosave();
 }
@@ -937,6 +961,7 @@ function doTap() {
     const bpm = Math.round(60000 / avg);
     if (bpm >= 40 && bpm <= 240) {
       S.bpm = bpm; $('bpmD').textContent = bpm;
+      renderRhythmIntelligence();
       if (A) N.dlyLine.delayTime.setTargetAtTime(dlyTimeSec(), A.currentTime, .03);
       autosave();
     }
@@ -966,6 +991,7 @@ async function importJSON(e) {
     syncMasterControls();
     syncFxControls();
     buildSeq(); buildMix(); buildVE();
+    renderRhythmIntelligence();
     applyFXState();
     autosave();
     toast('Imported');
@@ -1001,6 +1027,7 @@ function launch() {
   syncMasterControls();
   syncPatternButtons();
   syncFxControls();
+  renderRhythmIntelligence();
   wire();
   requestAnimationFrame(uiLoop);
   // resume audio context on first gesture (iOS)

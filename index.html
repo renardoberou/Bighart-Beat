@@ -16,6 +16,7 @@
 <script src="src/state/app-state.js" defer></script>
 <script src="src/state/pattern-operations.js" defer></script>
 <script src="src/state/persistence.js" defer></script>
+<script src="src/rhythm/rhythm-intelligence.js" defer></script>
 <script src="src/main.js" defer></script>
 </head>
 <body>
@@ -85,6 +86,21 @@
         <div class="ve-hd"><b id="veName">KICK</b></div>
       </div>
       <div id="vePanel" class="ve"></div>
+    </div>
+
+    <!-- RHYTHM INTELLIGENCE -->
+    <div class="panel ri-panel" aria-live="polite">
+      <div class="p-hdr">
+        <div class="p-t">RHYTHM INTELLIGENCE</div>
+        <div class="p-sub">STATIC · CURRENT PATTERN</div>
+      </div>
+      <div class="ve" id="riPanel">
+        <div class="ve-row"><div class="ve-lbl">SYNC</div><div></div><div class="ve-val" id="riSync">--</div></div>
+        <div class="ve-row"><div class="ve-lbl">ANCHOR</div><div></div><div class="ve-val" id="riAnchor">--</div></div>
+        <div class="ve-row"><div class="ve-lbl">TENSION</div><div></div><div class="ve-val" id="riTension">--</div></div>
+        <div class="ve-row"><div class="ve-lbl">RECOVER</div><div></div><div class="ve-val" id="riRecover">--</div></div>
+        <div class="ve-row"><div class="ve-lbl">DRIVE</div><div></div><div class="ve-val" id="riDrive">--</div></div>
+      </div>
     </div>
 
     <!-- FX -->
