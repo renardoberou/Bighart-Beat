@@ -110,8 +110,9 @@ Pass criteria:
 - No major control is hidden, untappable, or dependent on desktop-only gestures.
 - No mobile console errors if remote debugging is available.
 
-## Current known MVP blockers to check before Bernado test
+## Current known MVP caveats to check before Bernado test
 
-- Rhythm intelligence UI/logic is required by the MVP scope and Gate 7; a candidate without it is not full MVP-pass.
-- Reverb gate routing must be manually verified: per-hit reverb sends should pass through the gate path rather than bypassing it.
+- Rhythm intelligence UI/logic is now implemented and covered by automated fixtures, but still needs a real browser visual check.
+- Reverb gate routing is covered by an automated runtime guard and still deserves an audible FX sanity check.
 - Mobile mute usability must be verified: row-label double-click exists, but explicit mixer `M` buttons are the acceptable mobile path.
+- Full MVP confidence still requires at least one actual mobile-browser pass.
