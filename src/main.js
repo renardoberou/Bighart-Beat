@@ -1252,6 +1252,7 @@ function wire() {
   // drum-machine engine: changes synthesis immediately and does not stop playback
   $('engineSel').querySelectorAll('[data-engine]').forEach(b => {
     b.addEventListener('click', () => {
+      if (!State.ENGINES.includes(b.dataset.engine)) return;
       S.engine = b.dataset.engine;
       syncEngineSelector();
       autosave();
