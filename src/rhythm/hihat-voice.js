@@ -81,9 +81,7 @@
     const metal = clamp(finiteOr(p.metal, 0), 0, 1);
     const instability = clamp(profile.instability || 0, 0, 0.08);
     const openBoost = open > 0.5 ? Math.max(requestedDecay, 0.22 + open * 0.25) : requestedDecay;
-    const closedMax = 0.15;
-    const decayMax = open > 0.5 ? 0.70 : closedMax;
-    const decaySec = clamp(openBoost * profile.decay * jitter(rand, instability), 0.006, decayMax);
+    const decaySec = clamp(openBoost * profile.decay * jitter(rand, instability), 0.006, 0.70);
     const highpassHz = clamp(freq * profile.bright * jitter(rand, instability), 2500, 17000);
     const bandpassHz = clamp(10500 * profile.bright * jitter(rand, instability), 4500, 18000);
     const bandpassQ = clamp(0.7 + instability * 8, 0.5, 2.5);

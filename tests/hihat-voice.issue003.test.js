@@ -46,9 +46,17 @@ for (const engine of ['808', '909', 'reznor', 'aphex', 'mystery']) {
 
 const closed = resolveHihatVoiceSpec('909', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5);
 const open = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5);
-assert(closed.decaySec >= 0.006 && closed.decaySec <= 0.15, 'closed hihat decay is short and bounded');
-assert(open.decaySec > closed.decaySec, 'open hihat decay is longer than closed');
+assert(closed.decaySec >= 0.006 && closed.decaySec <= 0.70, 'closed hihat decay has same safe upper bound as open');
+assert(open.decaySec > closed.decaySec, 'open hihat decay is longer than closed for the same base decay');
 assert(open.decaySec <= 0.70, 'open hihat decay has safe upper bound');
+
+for (const engine of ['808', '909', 'reznor', 'aphex']) {
+  const highClosed = resolveHihatVoiceSpec(engine, { ...baseParams, open: 0, decay: 0.40 }, () => 0.5);
+  const expectedLegacyDecay = 0.40 * HIHAT_ENGINE_PROFILES[engine].decay;
+  assert.strictEqual(highClosed.decaySec, expectedLegacyDecay, `${engine}: closed hihat preserves legacy decay parity without 0.15s cap`);
+  assert(highClosed.decaySec > 0.15, `${engine}: high closed hihat decay is not artificially capped at 0.15s`);
+  assertFiniteBounded(highClosed, `${engine} high closed decay`);
+}
 
 const hat808 = resolveHihatVoiceSpec('808', baseParams, () => 0.5);
 const hat909 = resolveHihatVoiceSpec('909', baseParams, () => 0.5);
