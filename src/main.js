@@ -1,5 +1,6 @@
 'use strict';
 const $ = id => document.getElementById(id);
+const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
 
 /* ═══════════════════════════════════════════════
    STATE
@@ -898,6 +899,11 @@ function wire() {
   // sample load for input track
   $('smpFile').addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
+    if (f.size > MAX_SAMPLE_BYTES) {
+      toast('Sample too large (10 MB max)');
+      e.target.value = '';
+      return;
+    }
     initAudio();
     try {
       const buf = await f.arrayBuffer();

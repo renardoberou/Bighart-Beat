@@ -41,4 +41,21 @@ assert(/if\s*\(!S\.playing\)\s*return;/.test(stopPlay), 'stopPlay() is idempoten
 assert(/S\.playing\s*=\s*false/.test(stopPlay), 'stopPlay() marks transport stopped');
 assert(/clearTimeout\(schTimer\)/.test(stopPlay), 'stopPlay() clears scheduler timer');
 
+const maxSampleBytesIndex = js.indexOf('MAX_SAMPLE_BYTES');
+assert(maxSampleBytesIndex !== -1, 'sample loader defines a mobile-safe file size limit');
+
+const sampleHandlerStart = js.indexOf("$('smpFile').addEventListener('change'");
+assert(sampleHandlerStart !== -1, 'sample file change handler exists');
+const sampleHandler = js.slice(sampleHandlerStart, js.indexOf("  });", sampleHandlerStart) + 6);
+const sizeGuardIndex = sampleHandler.search(/f\.size\s*>\s*MAX_SAMPLE_BYTES/);
+const initAudioIndex = sampleHandler.indexOf('initAudio()');
+const arrayBufferIndex = sampleHandler.indexOf('f.arrayBuffer()');
+assert(sizeGuardIndex !== -1, 'sample loader rejects files larger than MAX_SAMPLE_BYTES');
+assert(initAudioIndex !== -1, 'sample loader still initializes audio for accepted samples');
+assert(arrayBufferIndex !== -1, 'sample loader still decodes accepted sample files');
+assert(sizeGuardIndex < initAudioIndex, 'sample size guard runs before unlocking/initializing audio');
+assert(sizeGuardIndex < arrayBufferIndex, 'sample size guard runs before reading large files into memory');
+assert(/toast\(['"]Sample too large/.test(sampleHandler), 'oversized sample rejection gives clear user feedback');
+assert(/e\.target\.value\s*=\s*['"]['"]/.test(sampleHandler), 'oversized sample rejection clears file input for retry');
+
 console.log('Mission 006 audio runtime checks passed.');
