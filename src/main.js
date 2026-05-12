@@ -881,6 +881,7 @@ function renderRhythmIntelligence() {
     tracks: TRACKS,
     pattern: PATTERNS[S.patt],
     stepsPerBar: 16,
+    fx: { comp: FX.comp },
   });
   const labels = analysis.labels;
   $('riSync').textContent = labels.sync.toUpperCase();
@@ -888,6 +889,7 @@ function renderRhythmIntelligence() {
   $('riTension').textContent = labels.tension.toUpperCase();
   $('riRecover').textContent = labels.recover.toUpperCase();
   $('riDrive').textContent = labels.drive.toUpperCase();
+  $('riBreath').textContent = analysis.pumpArousal.value;
   $('riInterpretation').textContent = analysis.interpretation || '';
 }
 
@@ -1054,6 +1056,7 @@ function buildVE() {
    FX STATE APPLY
 ═══════════════════════════════════════════════ */
 function applyFXState() {
+  renderRhythmIntelligence();
   if (!A) return;
   // delay
   N.dlyLine.delayTime.setTargetAtTime(dlyTimeSec(), A.currentTime, .02);

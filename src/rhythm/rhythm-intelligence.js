@@ -27,6 +27,47 @@
     return Math.round(clamp01(v) * 1000) / 1000;
   }
 
+  function clampRange(v, min, max, fallback) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function analyzePumpArousal(comp) {
+    const c = comp || {};
+    if (!c.on) {
+      return {
+        arousal: 0,
+        breath: 'still',
+        value: '--',
+        cue: 'Natural dynamics; no pump breath is active.',
+      };
+    }
+
+    const threshold = clampRange(c.threshold, -80, 0, -24);
+    const ratio = clampRange(c.ratio, 1, 20, 4);
+    const attack = clampRange(c.attack, 1, 200, 8);
+    const release = clampRange(c.release, 20, 2000, 280);
+    const gateRate = clampRange(c.gateRate, 10, 2000, release);
+    const thresholdDrive = Math.abs(threshold) / 80;
+    const ratioDrive = (ratio - 1) / 19;
+    const fastAttack = 1 - ((attack - 1) / 199);
+    const gateDrive = c.gateOn ? 0.25 : 0;
+    const arousal = round3((thresholdDrive * 0.34) + (ratioDrive * 0.36) + (fastAttack * 0.12) + gateDrive);
+    const breath = arousal >= 0.75 ? 'heaving'
+      : arousal >= 0.50 ? 'pumping'
+      : arousal >= 0.25 ? 'lifted'
+      : 'still';
+    const value = c.gateOn ? `${Math.round(gateRate)}ms EXHALE` : breath.toUpperCase();
+    const cue = c.gateOn
+      ? `Pump cues a ${Math.round(gateRate)}ms exhale after each kick.`
+      : breath === 'still'
+        ? 'Compression is subtle; the groove keeps its natural breath.'
+        : 'Compression lifts the groove into a shared breath.';
+
+    return { arousal, breath, value, cue };
+  }
+
   function hasHit(pattern, trackId, step) {
     return !!(pattern && pattern[trackId] && pattern[trackId][step]);
   }
@@ -139,6 +180,7 @@
       movementDrive: metrics.movementDrive,
       labels,
       interpretation: makeInterpretation(metrics, labels, totalWeight),
+      pumpArousal: analyzePumpArousal(opts.fx && opts.fx.comp),
       stepMetrics,
     };
   }
@@ -198,7 +240,7 @@
     return 'Feels loose; add a stronger landing point to clarify the pulse.';
   }
 
-  const api = { analyzeRhythm, METER_SALIENCE, TRACK_WEIGHTS };
+  const api = { analyzeRhythm, analyzePumpArousal, METER_SALIENCE, TRACK_WEIGHTS };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.BighartBeatRhythm = Object.assign(root.BighartBeatRhythm || {}, api);
