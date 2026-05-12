@@ -129,13 +129,16 @@
       density: round3(density),
     };
 
+    const labels = makeLabels(metrics, totalWeight);
+
     return {
       syncopation: metrics.syncopation,
       meterConfidence: metrics.meterConfidence,
       surpriseTension: metrics.surpriseTension,
       recoverability: metrics.recoverability,
       movementDrive: metrics.movementDrive,
-      labels: makeLabels(metrics, totalWeight),
+      labels,
+      interpretation: makeInterpretation(metrics, labels, totalWeight),
       stepMetrics,
     };
   }
@@ -172,6 +175,27 @@
       : 'flat';
 
     return { sync, anchor, tension, recover, drive };
+  }
+
+  function makeInterpretation(metrics, labels, totalWeight) {
+    if (!totalWeight) return 'Add a kick or snare anchor to give the rhythm a center.';
+    if (metrics.density > 0.85 || labels.tension === 'red') return 'Feels overloaded; the main pulse is hard to read.';
+    if (labels.tension === 'high' || labels.sync === 'tense') {
+      if (labels.recover === 'wobbles' || labels.recover === 'recovers') {
+        return 'Feels off-center and tense, but still has a recoverable pulse.';
+      }
+      return 'Feels tense and unstable; add an anchor so the beat can return.';
+    }
+    if (labels.drive === 'peak' || labels.drive === 'locked') {
+      return 'Strong movement: surprise and meter are working together.';
+    }
+    if (labels.anchor === 'locked' && labels.tension === 'low') {
+      return 'Feels steady and clear; the beat is easy to follow.';
+    }
+    if (labels.anchor === 'locked' || labels.anchor === 'bending') {
+      return 'Feels locked with a little push; it resolves back into the beat.';
+    }
+    return 'Feels loose; add a stronger landing point to clarify the pulse.';
   }
 
   const api = { analyzeRhythm, METER_SALIENCE, TRACK_WEIGHTS };

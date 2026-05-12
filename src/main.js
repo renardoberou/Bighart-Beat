@@ -875,18 +875,20 @@ function buildSeq() {
 ═══════════════════════════════════════════════ */
 function renderRhythmIntelligence() {
   if (!Rhythm || !Rhythm.analyzeRhythm || !$('riPanel')) return;
-  const labels = Rhythm.analyzeRhythm({
+  const analysis = Rhythm.analyzeRhythm({
     bpm: S.bpm,
     swing: 0,
     tracks: TRACKS,
     pattern: PATTERNS[S.patt],
     stepsPerBar: 16,
-  }).labels;
+  });
+  const labels = analysis.labels;
   $('riSync').textContent = labels.sync.toUpperCase();
   $('riAnchor').textContent = labels.anchor.toUpperCase();
   $('riTension').textContent = labels.tension.toUpperCase();
   $('riRecover').textContent = labels.recover.toUpperCase();
   $('riDrive').textContent = labels.drive.toUpperCase();
+  $('riInterpretation').textContent = analysis.interpretation || '';
 }
 
 /* ═══════════════════════════════════════════════
