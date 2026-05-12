@@ -880,6 +880,7 @@ function renderRhythmIntelligence() {
     swing: 0,
     tracks: TRACKS,
     pattern: PATTERNS[S.patt],
+    ratchets: RATCHETS[S.patt],
     stepsPerBar: 16,
     fx: { comp: FX.comp },
   });

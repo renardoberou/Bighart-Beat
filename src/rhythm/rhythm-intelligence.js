@@ -72,9 +72,20 @@
     return !!(pattern && pattern[trackId] && pattern[trackId][step]);
   }
 
+  function ratchetCount(ratchets, trackId, step) {
+    const raw = ratchets && ratchets[trackId] ? Number(ratchets[trackId][step]) : 1;
+    if (!Number.isInteger(raw)) return 1;
+    return Math.max(1, Math.min(3, raw));
+  }
+
+  function ratchetWeightMultiplier(count) {
+    return 1 + ((count - 1) * 0.35);
+  }
+
   function analyzeRhythm(input) {
     const opts = input || {};
     const pattern = opts.pattern || {};
+    const ratchets = opts.ratchets || null;
     const stepsPerBar = Number.isInteger(opts.stepsPerBar) && opts.stepsPerBar > 0 ? opts.stepsPerBar : DEFAULT_STEPS;
     const salience = METER_SALIENCE.slice(0, stepsPerBar);
     while (salience.length < stepsPerBar) salience.push(METER_SALIENCE[salience.length % METER_SALIENCE.length]);
@@ -90,11 +101,14 @@
     for (let step = 0; step < stepsPerBar; step++) {
       let stepWeight = 0;
       const hits = [];
+      const ratchetMetrics = {};
       for (const trackId of TRACK_IDS) {
         if (hasHit(pattern, trackId, step)) {
-          const weight = TRACK_WEIGHTS[trackId] || 0.5;
+          const count = ratchetCount(ratchets, trackId, step);
+          const weight = (TRACK_WEIGHTS[trackId] || 0.5) * ratchetWeightMultiplier(count);
           stepWeight += weight;
           hits.push(trackId);
+          if (count > 1) ratchetMetrics[trackId] = count;
         }
       }
       const meter = clamp01(salience[step]);
@@ -105,13 +119,15 @@
       surpriseWeight += stepWeight * surprise;
       if (meter >= 0.45) strongWeight += stepWeight;
       else offbeatWeight += stepWeight;
-      stepMetrics.push({
+      const metric = {
         step,
         hits,
         weight: round3(stepWeight / 3.9),
         salience: round3(meter),
         surprise: round3(stepWeight ? surprise : 0),
-      });
+      };
+      if (Object.keys(ratchetMetrics).length) metric.ratchets = ratchetMetrics;
+      stepMetrics.push(metric);
     }
 
     const maxWeight = stepsPerBar * TRACK_IDS.reduce((sum, id) => sum + (TRACK_WEIGHTS[id] || 0), 0);
@@ -178,6 +194,7 @@
       surpriseTension: metrics.surpriseTension,
       recoverability: metrics.recoverability,
       movementDrive: metrics.movementDrive,
+      density: metrics.density,
       labels,
       interpretation: makeInterpretation(metrics, labels, totalWeight),
       pumpArousal: analyzePumpArousal(opts.fx && opts.fx.comp),
