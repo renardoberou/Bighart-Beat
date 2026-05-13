@@ -35,6 +35,27 @@ const GATE_ANALOG_CLOSED_DB = 3;
 const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
 const hihatChokeState = { gain: null, open: false };
 
+function setHihatPlacement(value) {
+  const next = parseFloat(value);
+  if (![0, .45, 1].includes(next)) return;
+  HHT_PLACE = next;
+  syncHihatPlacementControls();
+}
+
+function syncHihatPlacementControls() {
+  document.querySelectorAll('[data-place], [data-quick-hht-place]').forEach(b => {
+    const raw = b.dataset.quickHhtPlace || b.dataset.place;
+    b.classList.toggle('on', parseFloat(raw) === HHT_PLACE);
+  });
+}
+
+function wireQuickHihatPlacement() {
+  document.querySelectorAll('[data-quick-hht-place]').forEach(b => {
+    b.addEventListener('click', () => setHihatPlacement(b.dataset.quickHhtPlace));
+  });
+  syncHihatPlacementControls();
+}
+
 function initAudio() {
   if (A) { A.resume(); return; }
   A = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
@@ -994,12 +1015,9 @@ function buildVE() {
     hatTest.querySelector('[data-open=".45"]').addEventListener('click', () => previewHihat(.45));
     hatTest.querySelector('[data-open="1"]').addEventListener('click', () => previewHihat(1));
     hatTest.querySelectorAll('[data-place]').forEach(b => {
-      b.addEventListener('click', () => {
-        HHT_PLACE = parseFloat(b.dataset.place);
-        hatTest.querySelectorAll('.hat-place-b').forEach(x => x.classList.remove('on'));
-        b.classList.add('on');
-      });
+      b.addEventListener('click', () => setHihatPlacement(b.dataset.place));
     });
+    syncHihatPlacementControls();
     mkRow('FREQ',  4000, 14000, 100, tr.p.freq, x=>`${(x/1000).toFixed(1)} kHz`, v=>tr.p.freq=v, c);
     mkRow('DECAY', 2, 40, 1, Math.round(tr.p.decay*1000), x=>`${x} ms`, v=>tr.p.decay=v/1000, c);
     mkRow('OPEN',  0, 100, 1, Math.round(tr.p.open*100), x=>`${x}%`, v=>tr.p.open=v/100, c);
@@ -1531,6 +1549,7 @@ function launch() {
   syncFxControls();
   syncEngineSelector();
   renderRhythmIntelligence();
+  wireQuickHihatPlacement();
   wire();
   requestAnimationFrame(uiLoop);
   // resume audio context on first gesture (iOS)

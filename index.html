@@ -77,7 +77,15 @@
   </div>
 
   <!-- SEQUENCER -->
-  <div class="seq-hint">LONG PRESS STEP = 2x/3x</div>
+  <div class="seq-tools">
+    <div class="seq-hint">LONG PRESS STEP = 2x/3x</div>
+    <div class="hht-place-strip" id="quickHhtPlace" aria-label="HHT place">
+      <span>HHT PLACE</span>
+      <button class="hht-place-b on" data-quick-hht-place="0">CLOSED</button>
+      <button class="hht-place-b" data-quick-hht-place=".45">TIGHT</button>
+      <button class="hht-place-b" data-quick-hht-place="1">OPEN</button>
+    </div>
+  </div>
   <div class="seq" id="seq"></div>
 
   <!-- CONTROLS -->
