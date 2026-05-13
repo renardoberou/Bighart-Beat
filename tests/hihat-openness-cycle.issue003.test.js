@@ -23,12 +23,20 @@ assert(clickEnd > clickStart, 'sequencer click handler block can be inspected');
 const clickBlock = main.slice(clickStart, clickEnd + 3);
 
 assert(
-  /if\s*\(\s*tr\.id\s*===\s*['"]hihat['"]\s*&&\s*wasOn\s*&&\s*TRACKS\.indexOf\(tr\)\s*===\s*S\.sel\s*\)[\s\S]*State\.cycleHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)[\s\S]*return;[\s\S]*State\.toggleStep\(PATTERNS\[S\.patt\],\s*tr\.id,\s*i,\s*RATCHETS\[S\.patt\]\)/.test(clickBlock),
-  'tapping an already-on hihat cell while HHT is selected cycles closed/tight/open before any toggle can turn it off'
+  /const\s+currentOpen\s*=\s*State\.getHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)/.test(clickBlock),
+  'selected active hihat clicks inspect the current openness before deciding whether to edit or delete'
 );
 assert(
-  /tr\.id\s*===\s*['"]hihat['"][\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)/.test(clickBlock),
-  'tapping an off hihat cell still turns it on with the selected placement'
+  /if\s*\(\s*currentOpen\s*!==\s*HHT_PLACE\s*\)[\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)[\s\S]*return;[\s\S]*State\.toggleStep\(PATTERNS\[S\.patt\],\s*tr\.id,\s*i,\s*RATCHETS\[S\.patt\]\)/.test(clickBlock),
+  'tapping an already-on hihat with different openness changes it to selected placement before any toggle'
+);
+assert(
+  /State\.toggleStep\(PATTERNS\[S\.patt\],\s*tr\.id,\s*i,\s*RATCHETS\[S\.patt\]\)[\s\S]*wasOn[\s\S]*State\.clearHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)[\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)/.test(clickBlock),
+  'tapping an already-on hihat that already matches the selected placement toggles it off and clears openness; off cells still use selected placement'
+);
+assert(
+  !/State\.cycleHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)/.test(clickBlock),
+  'selected active hihat clicks no longer cycle endlessly and block deletion'
 );
 
 console.log('Issue 003 hihat openness cycle checks passed.');

@@ -839,11 +839,14 @@ function buildSeq() {
         if (longPressFired) { longPressFired = false; return; }
         const wasOn = !!PATTERNS[S.patt][tr.id][i];
         if (tr.id === 'hihat' && wasOn && TRACKS.indexOf(tr) === S.sel) {
-          HHT_OPENNESS[S.patt] = State.cycleHihatOpenness(HHT_OPENNESS[S.patt], i);
-          refreshCell();
-          renderRhythmIntelligence();
-          autosave();
-          return;
+          const currentOpen = State.getHihatOpenness(HHT_OPENNESS[S.patt], i);
+          if (currentOpen !== HHT_PLACE) {
+            HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
+            refreshCell();
+            renderRhythmIntelligence();
+            autosave();
+            return;
+          }
         }
         const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
         PATTERNS[S.patt] = result.pattern;
