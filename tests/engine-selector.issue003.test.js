@@ -31,6 +31,20 @@ for (const engine of ENGINES) {
   assert(index.includes(`data-engine="${engine}"`), `index exposes an engine selector button for ${engine}`);
 }
 
+[
+  '808-inspired',
+  '909-inspired',
+  'Reznor/NIN-inspired',
+  'Aphex-inspired',
+].forEach(label => {
+  assert(index.includes(label), `engine selector uses legally safe, descriptive label: ${label}`);
+});
+
+assert(
+  !/>\s*(REZNOR|APHEX)\s*</.test(index),
+  'engine selector avoids clone-brand shorthand labels without the inspired qualifier'
+);
+
 const wire = extractFunction('wire');
 const engineSelectorStart = wire.indexOf("$('engineSel')");
 assert(engineSelectorStart !== -1, 'wire binds the engine selector');

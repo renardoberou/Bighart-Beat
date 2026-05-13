@@ -178,7 +178,7 @@ for (const [regex, label] of requiredMission005RuntimeRegexes) {
 }
 
 assert(index.includes('id="engineSel"'), 'index exposes compact drum-machine engine selector');
-['data-engine="808"', 'data-engine="909"', 'data-engine="reznor"', 'data-engine="aphex"', '>APHEX<'].forEach(marker => {
+['data-engine="808"', 'data-engine="909"', 'data-engine="reznor"', 'data-engine="aphex"', 'Aphex-inspired'].forEach(marker => {
   assert(index.includes(marker), `index exposes engine selector marker ${marker}`);
 });
 const requiredIssue003RuntimeRegexes = [
