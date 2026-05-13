@@ -9,6 +9,7 @@ const State = globalThis.BighartBeatState;
 const Rhythm = globalThis.BighartBeatRhythm;
 const HihatVoice = globalThis.BighartBeatHihat;
 const KickVoice = window.BighartBeatKick;
+const SnareVoice = window.BighartBeatSnare;
 const EngineProfiles = globalThis.BighartBeatEngineProfiles;
 const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
@@ -396,35 +397,35 @@ function synthKick(t, v, p) {
 // ── SNARE ── noise + pitched shell + crack
 function synthSnare(t, v, p) {
   const dest = routeVoice(t, 1);
-  const ep = engineProfile().snare;
+  const spec = SnareVoice.resolveSnareVoiceSpec(S.engine, p, v);
   // noise body (bandpass 1.5–4kHz)
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
-  const nf = A.createBiquadFilter();  nf.type = 'bandpass'; nf.frequency.value = 2200 * ep.tone; nf.Q.value = .5;
-  const nhp = A.createBiquadFilter(); nhp.type = 'highpass'; nhp.frequency.value = 800 * ep.tone;
+  const nf = A.createBiquadFilter();  nf.type = 'bandpass'; nf.frequency.value = spec.noiseBandpassHz; nf.Q.value = .5;
+  const nhp = A.createBiquadFilter(); nhp.type = 'highpass'; nhp.frequency.value = spec.noiseHighpassHz;
   const ng = A.createGain();
   ng.gain.setValueAtTime(0, t);
-  ng.gain.linearRampToValueAtTime(v * .58 * ep.noise, t + .0018);
-  ng.gain.exponentialRampToValueAtTime(.001, t + p.decay);
+  ng.gain.linearRampToValueAtTime(spec.noisePeakGain, t + .0018);
+  ng.gain.exponentialRampToValueAtTime(.001, t + spec.noiseDecaySec);
   ns.connect(nf); nf.connect(nhp); nhp.connect(ng); ng.connect(dest);
-  ns.start(t); ns.stop(t + p.decay + .04);
+  ns.start(t); ns.stop(t + spec.noiseStopSec);
   // pitched shell — two triangles an octave apart
-  const t1 = A.createOscillator(); t1.type = 'triangle'; t1.frequency.value = p.tone * ep.tone;
-  const t2 = A.createOscillator(); t2.type = 'triangle'; t2.frequency.value = p.tone * 1.5 * ep.tone;
+  const t1 = A.createOscillator(); t1.type = 'triangle'; t1.frequency.value = spec.shellFundHz;
+  const t2 = A.createOscillator(); t2.type = 'triangle'; t2.frequency.value = spec.shellOvertoneHz;
   const tg = A.createGain();
   tg.gain.setValueAtTime(0, t);
-  tg.gain.linearRampToValueAtTime(v * p.body * .68 * ep.body, t + .0015);
-  tg.gain.exponentialRampToValueAtTime(.001, t + p.decay * .45);
+  tg.gain.linearRampToValueAtTime(spec.shellPeakGain, t + .0015);
+  tg.gain.exponentialRampToValueAtTime(.001, t + spec.shellDecaySec);
   t1.connect(tg); t2.connect(tg); tg.connect(dest);
-  t1.start(t); t1.stop(t + p.decay * .6);
-  t2.start(t); t2.stop(t + p.decay * .6);
+  t1.start(t); t1.stop(t + spec.shellStopSec);
+  t2.start(t); t2.stop(t + spec.shellStopSec);
   // transient crack — very short noise burst HP
   const cr = A.createBufferSource(); cr.buffer = nz; cr.loop = true;
-  const cf = A.createBiquadFilter();  cf.type = 'highpass'; cf.frequency.value = 4500 * ep.tone;
+  const cf = A.createBiquadFilter();  cf.type = 'highpass'; cf.frequency.value = spec.crackHighpassHz;
   const cg = A.createGain();
-  cg.gain.setValueAtTime(v * p.snap * .55 * ep.snap, t);
-  cg.gain.exponentialRampToValueAtTime(.001, t + .012);
+  cg.gain.setValueAtTime(spec.crackPeakGain, t);
+  cg.gain.exponentialRampToValueAtTime(.001, t + spec.crackDecaySec);
   cr.connect(cf); cf.connect(cg); cg.connect(dest);
-  cr.start(t); cr.stop(t + .02);
+  cr.start(t); cr.stop(t + spec.crackStopSec);
 }
 
 function triggerHihatChoke(t, openAmount, choke, spec) {
