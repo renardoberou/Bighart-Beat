@@ -453,6 +453,21 @@ body.running #ss  { display: none; }
   align-items: center; gap: 8px;
   margin-bottom: 2px;
 }
+.hat-help {
+  grid-column: 1 / -1;
+  padding: 7px 8px;
+  border: 1px solid rgba(232,184,75,.28);
+  background: rgba(232,184,75,.07);
+  color: var(--textDim);
+  font-size: 8px;
+  line-height: 1.45;
+  letter-spacing: .9px;
+}
+.hat-help-engine {
+  color: var(--amberLt);
+  font-size: 9px;
+  letter-spacing: 1.3px;
+}
 .hat-test-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .hat-test-b,
 .hat-place-b {

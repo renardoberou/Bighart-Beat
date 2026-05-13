@@ -964,7 +964,12 @@ function buildVE() {
   } else if (tr.id === 'hihat') {
     const hatTest = document.createElement('div');
     hatTest.className = 'hat-test';
-    hatTest.innerHTML = `<div class="ve-lbl">HAT TEST</div>
+    hatTest.innerHTML = `<div class="hat-help">
+        <div class="hat-help-engine">ENGINE: ${S.engine.toUpperCase()}</div>
+        <div>HAT TEST USES SELECTED ENGINE</div>
+        <div>PLACE THEN TAP/HOLD HHT STEPS</div>
+      </div>
+      <div class="ve-lbl">HAT TEST</div>
       <div class="hat-test-btns">
         <button class="hat-test-b" data-open="0">CLOSED</button>
         <button class="hat-test-b" data-open=".45">TIGHT</button>
@@ -1235,6 +1240,7 @@ function wire() {
       if (!State.ENGINES.includes(b.dataset.engine)) return;
       S.engine = b.dataset.engine;
       syncEngineSelector();
+      if (TRACKS[S.sel].id === 'hihat') buildVE();
       autosave();
     });
   });
