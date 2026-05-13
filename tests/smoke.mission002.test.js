@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, '..');
 const sourcePath = '/storage/emulated/0/Download/bighart-beat-v4-studio-2.html';
 const indexPath = path.join(root, 'index.html');
 const jsPath = path.join(root, 'src', 'main.js');
+const engineProfilesPath = path.join(root, 'src', 'rhythm', 'engine-profiles.js');
 const cssPath = path.join(root, 'styles', 'main.css');
 
 function assert(condition, message) {
@@ -33,6 +34,8 @@ const hasCanonicalSource = fs.existsSync(sourcePath);
 const source = hasCanonicalSource ? readRequired(sourcePath) : '';
 const index = readRequired(indexPath);
 const js = readRequired(jsPath);
+const engineProfilesJs = readRequired(engineProfilesPath);
+const issue003RuntimeSource = `${engineProfilesJs}\n${js}`;
 const css = readRequired(cssPath);
 
 function assertCanonical(condition, message) {
@@ -189,7 +192,7 @@ const requiredIssue003RuntimeRegexes = [
   [/applyProjectData\(parsed\.value\);[\s\S]*?syncPatternButtons\(\)[\s\S]*?syncMasterControls\(\)[\s\S]*?syncFxControls\(\)[\s\S]*?syncEngineSelector\(\)/, 'runtime import syncs engine selector after applying project'],
 ];
 for (const [regex, label] of requiredIssue003RuntimeRegexes) {
-  assert(regex.test(js), `src/main.js Issue 003 runtime wiring: ${label}`);
+  assert(regex.test(issue003RuntimeSource), `src/main.js Issue 003 runtime wiring: ${label}`);
 }
 
 const requiredCssRegexes = [

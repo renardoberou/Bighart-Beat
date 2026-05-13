@@ -8,6 +8,7 @@ const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
 const State = globalThis.BighartBeatState;
 const Rhythm = globalThis.BighartBeatRhythm;
 const HihatVoice = globalThis.BighartBeatHihat;
+const EngineProfiles = globalThis.BighartBeatEngineProfiles;
 const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
 const PATTERNS = State.createPatternBanks();
@@ -27,29 +28,7 @@ const KICK_PUMP_WEIGHT = 1;
 const NON_KICK_PUMP_WEIGHT = 0.35;
 const GATE_ANALOG_JITTER_MS = 6;
 const GATE_ANALOG_CLOSED_DB = 3;
-const ENGINE_PROFILES = {
-  '808': {
-    kick: { pitch: .92, decay: 1.18, click: .62, drive: .62 },
-    snare: { tone: .88, noise: .82, body: 1.15, snap: .75 },
-    hihat: { noise: .78, tone: .12, bright: .82, decay: 1.05, ratios: [2.00, 2.74, 3.00, 4.17, 4.36, 6.42], osc: 'square', instability: 0, glitch: 0, chokeClosed: .018, chokeOpen: .060 },
-  },
-  '909': {
-    kick: { pitch: 1.06, decay: .86, click: 1.18, drive: .88 },
-    snare: { tone: 1.12, noise: 1.12, body: .92, snap: 1.18 },
-    hihat: { noise: 1.08, tone: .20, bright: 1.24, decay: .86, ratios: [2.00, 2.33, 3.01, 3.88, 4.61, 5.97], osc: 'square', instability: .01, glitch: 0, chokeClosed: .014, chokeOpen: .050 },
-  },
-  reznor: {
-    kick: { pitch: .82, decay: .95, click: 1.05, drive: 1.55 },
-    snare: { tone: .72, noise: 1.28, body: .70, snap: 1.25 },
-    hihat: { noise: 1.18, tone: .30, bright: .72, decay: 1.18, ratios: [1.41, 1.93, 2.79, 3.76, 5.11, 7.23], osc: 'sawtooth', instability: .025, glitch: .10, chokeClosed: .012, chokeOpen: .070 },
-  },
-  aphex: {
-    // inharmonic metallic hihat ratios + bounded instability + optional tiny glitch tick.
-    kick: { pitch: 1.18, decay: .78, click: 1.35, drive: 1.10 },
-    snare: { tone: 1.28, noise: 1.05, body: .62, snap: 1.45 },
-    hihat: { noise: .96, tone: .44, bright: 1.34, decay: .92, ratios: [1.00, 1.618, 2.414, 3.732, 5.387, 8.09], osc: 'triangle', instability: .045, glitch: .22, chokeClosed: .010, chokeOpen: .085 },
-  },
-};
+const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
 const hihatChokeState = { gain: null, open: false };
 
 function initAudio() {

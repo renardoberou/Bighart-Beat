@@ -1,56 +1,10 @@
 'use strict';
 
 (function (root) {
-  const HIHAT_ENGINE_PROFILES = {
-    '808': {
-      noise: 0.78,
-      tone: 0.12,
-      bright: 0.82,
-      decay: 1.05,
-      ratios: [2.00, 2.74, 3.00, 4.17, 4.36, 6.42],
-      oscType: 'square',
-      instability: 0,
-      glitchChance: 0,
-      chokeClosedTau: 0.018,
-      chokeOpenTau: 0.060,
-    },
-    '909': {
-      noise: 1.08,
-      tone: 0.20,
-      bright: 1.24,
-      decay: 0.86,
-      ratios: [2.00, 2.33, 3.01, 3.88, 4.61, 5.97],
-      oscType: 'square',
-      instability: 0.01,
-      glitchChance: 0,
-      chokeClosedTau: 0.014,
-      chokeOpenTau: 0.050,
-    },
-    reznor: {
-      noise: 1.18,
-      tone: 0.30,
-      bright: 0.72,
-      decay: 1.18,
-      ratios: [1.41, 1.93, 2.79, 3.76, 5.11, 7.23],
-      oscType: 'sawtooth',
-      instability: 0.025,
-      glitchChance: 0.10,
-      chokeClosedTau: 0.012,
-      chokeOpenTau: 0.070,
-    },
-    aphex: {
-      noise: 0.96,
-      tone: 0.44,
-      bright: 1.34,
-      decay: 0.92,
-      ratios: [1.00, 1.618, 2.414, 3.732, 5.387, 8.09],
-      oscType: 'triangle',
-      instability: 0.045,
-      glitchChance: 0.22,
-      chokeClosedTau: 0.010,
-      chokeOpenTau: 0.085,
-    },
-  };
+  const sharedEngineProfiles = root && root.BighartBeatEngineProfiles
+    ? root.BighartBeatEngineProfiles
+    : (typeof require === 'function' ? require('./engine-profiles.js') : null);
+  const HIHAT_ENGINE_PROFILES = sharedEngineProfiles.HIHAT_ENGINE_PROFILES;
 
   function finiteOr(v, fallback) {
     return Number.isFinite(v) ? v : fallback;

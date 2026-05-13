@@ -1,0 +1,53 @@
+'use strict';
+
+(function (root) {
+  const ENGINE_PROFILES = {
+    '808': {
+      kick: { pitch: 0.92, decay: 1.18, click: 0.62, drive: 0.62 },
+      snare: { tone: 0.88, noise: 0.82, body: 1.15, snap: 0.75 },
+      hihat: { noise: 0.78, tone: 0.12, bright: 0.82, decay: 1.05, ratios: [2.00, 2.74, 3.00, 4.17, 4.36, 6.42], osc: 'square', instability: 0, glitch: 0, chokeClosed: 0.018, chokeOpen: 0.060 },
+    },
+    '909': {
+      kick: { pitch: 1.06, decay: 0.86, click: 1.18, drive: 0.88 },
+      snare: { tone: 1.12, noise: 1.12, body: 0.92, snap: 1.18 },
+      hihat: { noise: 1.08, tone: 0.20, bright: 1.24, decay: 0.86, ratios: [2.00, 2.33, 3.01, 3.88, 4.61, 5.97], osc: 'square', instability: 0.01, glitch: 0, chokeClosed: 0.014, chokeOpen: 0.050 },
+    },
+    reznor: {
+      kick: { pitch: 0.82, decay: 0.95, click: 1.05, drive: 1.55 },
+      snare: { tone: 0.72, noise: 1.28, body: 0.70, snap: 1.25 },
+      hihat: { noise: 1.18, tone: 0.30, bright: 0.72, decay: 1.18, ratios: [1.41, 1.93, 2.79, 3.76, 5.11, 7.23], osc: 'sawtooth', instability: 0.025, glitch: 0.10, chokeClosed: 0.012, chokeOpen: 0.070 },
+    },
+    aphex: {
+      // Inharmonic metallic hihat ratios + bounded instability + optional tiny glitch tick.
+      kick: { pitch: 1.18, decay: 0.78, click: 1.35, drive: 1.10 },
+      snare: { tone: 1.28, noise: 1.05, body: 0.62, snap: 1.45 },
+      hihat: { noise: 0.96, tone: 0.44, bright: 1.34, decay: 0.92, ratios: [1.00, 1.618, 2.414, 3.732, 5.387, 8.09], osc: 'triangle', instability: 0.045, glitch: 0.22, chokeClosed: 0.010, chokeOpen: 0.085 },
+    },
+  };
+
+  function hihatProfileFromEngine(profile) {
+    const hihat = profile.hihat;
+    return {
+      noise: hihat.noise,
+      tone: hihat.tone,
+      bright: hihat.bright,
+      decay: hihat.decay,
+      ratios: hihat.ratios.slice(),
+      oscType: hihat.osc,
+      instability: hihat.instability,
+      glitchChance: hihat.glitch,
+      chokeClosedTau: hihat.chokeClosed,
+      chokeOpenTau: hihat.chokeOpen,
+    };
+  }
+
+  const HIHAT_ENGINE_PROFILES = Object.keys(ENGINE_PROFILES).reduce((profiles, engine) => {
+    profiles[engine] = hihatProfileFromEngine(ENGINE_PROFILES[engine]);
+    return profiles;
+  }, {});
+
+  const api = { ENGINE_PROFILES, HIHAT_ENGINE_PROFILES };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  if (root) root.BighartBeatEngineProfiles = Object.assign(root.BighartBeatEngineProfiles || {}, api);
+})(typeof globalThis !== 'undefined' ? globalThis : undefined);
