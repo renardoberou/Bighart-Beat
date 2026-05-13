@@ -334,7 +334,8 @@ function routeVoice(t, ti) {
     const ds = A.createGain(); ds.gain.value = 1;
     out.connect(ds); ds.connect(N.dlyLine);
   }
-  if (tr.revS) {
+  const reverbSendActive = tr.revS && FX.rev.on && FX.rev.wet > 0;
+  if (reverbSendActive) {
     const rs = A.createGain(); rs.gain.value = 1;
     out.connect(rs); rs.connect(N.revSend);
     triggerGate(t);

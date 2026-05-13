@@ -29,7 +29,8 @@ assert(!/N\.bus\.connect\(N\.revGate\)/.test(buildGraph), 'full dry bus must nev
 assert(!/N\.bus\.connect\(N\.conv\)/.test(buildGraph), 'full dry bus must never connect directly to the convolver');
 assert(/N\.revSend\.connect\(N\.revGate\)/.test(buildGraph), 'reverb send remains the only intentional input to the gated convolver path');
 assert(/Reverb input is per-track only/.test(buildGraph), 'code documents intentional per-track-only reverb routing');
-assert(/if\s*\(tr\.revS\)\s*\{[\s\S]*?out\.connect\(rs\);\s*rs\.connect\(N\.revSend\);[\s\S]*?triggerGate\(t\);[\s\S]*?\}/.test(routeVoice), 'routeVoice injects new reverb signal only when track revS is on, through the attenuated revSend');
+assert(/const\s+reverbSendActive\s*=\s*tr\.revS\s*&&\s*FX\.rev\.on\s*&&\s*FX\.rev\.wet\s*>\s*0/.test(routeVoice), 'routeVoice blocks fresh reverb injection when global reverb is off or wet is zero');
+assert(/if\s*\(reverbSendActive\)\s*\{[\s\S]*?out\.connect\(rs\);\s*rs\.connect\(N\.revSend\);[\s\S]*?triggerGate\(t\);[\s\S]*?\}/.test(routeVoice), 'routeVoice injects new reverb signal only when track/global reverb is live, through the attenuated revSend');
 assert(!/rs\.connect\(N\.revGate\)/.test(routeVoice), 'per-hit reverb sends should not bypass revSend attenuation');
 assert(/out\.connect\(N\.bus\)/.test(routeVoice), 'voices still feed the dry bus regardless of reverb send');
 

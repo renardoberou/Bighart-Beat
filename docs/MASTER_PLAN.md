@@ -128,9 +128,10 @@ voices -> dry bus -> master sum -> compressor -> saturation -> master gain -> li
        -> reverb send -> gate -> convolver/wet -> master sum
 ```
 
-Known issue to fix during implementation:
+Routing guard now implemented and covered:
 
-- v4 appears to route per-hit reverb sends directly to the convolver, bypassing the intended reverb gate. Refactor should route sends through `revSend` or `revGate`, not directly to `conv`, if gated reverb is desired.
+- Per-hit reverb sends route through `revSend -> revGate -> conv`, not directly to `conv`.
+- Fresh delay/reverb injection is blocked when the global effect is off or wet is zero; existing delay feedback tails remain intentional.
 
 ## 8. Rhythm-intelligence heuristic MVP
 
