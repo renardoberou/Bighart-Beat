@@ -252,10 +252,14 @@ body.running #ss  { display: none; }
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
   min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
 }
 .row {
   display: grid;
-  grid-template-columns: 44px repeat(16, 1fr);
+  grid-template-columns: 44px repeat(16, minmax(32px, 1fr));
   gap: 2px;
   min-height: 0;
 }
@@ -267,7 +271,9 @@ body.running #ss  { display: none; }
   font-family: var(--display); font-weight: 800;
   font-size: 10px; letter-spacing: 1px;
   cursor: pointer;
-  position: relative;
+  position: sticky;
+  left: 0;
+  z-index: 2;
   overflow: hidden;
 }
 .rlbl.sel { border-color: var(--amber); background: var(--panel2); }
