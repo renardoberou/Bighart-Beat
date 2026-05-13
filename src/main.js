@@ -14,6 +14,7 @@ const FX = State.createDefaultFxState();
 const PATTERNS = State.createPatternBanks();
 const RATCHETS = State.createRatchetBanks();
 const HHT_OPENNESS = State.createHihatOpennessBanks();
+const PATTERN_FX_SCENES = State.createPatternFxScenes();
 const S = State.createAppState();
 let HHT_PLACE = 0;
 let firingStep = 0;
@@ -1113,7 +1114,7 @@ function autosave() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try {
-      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS });
+      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, patternFxScenes: PATTERN_FX_SCENES });
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch(e) {}
   }, 250);
@@ -1129,7 +1130,37 @@ function loadSave() {
 }
 
 function syncPatternButtons() {
-  $('patt').querySelectorAll('.patt-b').forEach(b => b.classList.toggle('on', parseInt(b.dataset.p) === S.patt));
+  $('patt').querySelectorAll('.patt-b').forEach(b => {
+    const patternIndex = parseInt(b.dataset.p);
+    b.classList.toggle('on', parseInt(b.dataset.p) === S.patt);
+    b.classList.toggle('latched', !!PATTERN_FX_SCENES[patternIndex]);
+    b.title = PATTERN_FX_SCENES[patternIndex]
+      ? 'Pattern ' + 'ABCD'[patternIndex] + ' has a latched FX scene'
+      : 'Pattern ' + 'ABCD'[patternIndex];
+  });
+}
+
+function latchCurrentPatternFxScene() {
+  PATTERN_FX_SCENES[S.patt] = State.capturePatternFxScene({ appState: S, tracks: TRACKS, fx: FX });
+  syncPatternButtons();
+  autosave();
+  toast('FX latched to pattern ' + 'ABCD'[S.patt]);
+}
+
+function restorePatternFxScene(patternIndex) {
+  const scene = PATTERN_FX_SCENES[patternIndex];
+  if (!scene) return false;
+  const restored = State.applyPatternFxScene(scene, { appState: S, tracks: TRACKS, fx: FX });
+  if (!restored) return false;
+  if (A) genRevIR();
+  syncMasterControls();
+  syncFxControls();
+  syncEngineSelector();
+  buildMix();
+  if (TRACKS[S.sel].id === 'hihat') buildVE();
+  applyFXState();
+  toast('Restored FX scene ' + 'ABCD'[patternIndex]);
+  return true;
 }
 
 function syncEngineSelector() {
@@ -1186,6 +1217,7 @@ function applyProjectData(d) {
     PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
     RATCHETS[i] = State.cloneRatchetGrid(d.ratchets[i]);
     HHT_OPENNESS[i] = State.cloneHihatOpennessGrid(d.hihatOpenness[i]);
+    PATTERN_FX_SCENES[i] = d.patternFxScenes ? State.clonePatternFxScene(d.patternFxScenes[i]) : null;
   }
   d.tracks.forEach(st => {
     const tr = TRACKS.find(x => x.id === st.id);
@@ -1223,6 +1255,7 @@ function wire() {
   });
 
   $('tapBtn').addEventListener('click', doTap);
+  $('latchFxBtn').addEventListener('click', latchCurrentPatternFxScene);
 
   // patterns
   $('patt').querySelectorAll('.patt-b').forEach(b => {
@@ -1230,6 +1263,7 @@ function wire() {
       S.patt = parseInt(b.dataset.p);
       syncPatternButtons();
       buildSeq();
+      restorePatternFxScene(S.patt);
       renderRhythmIntelligence();
       autosave();
     });
@@ -1432,7 +1466,7 @@ function doTap() {
 }
 
 function exportJSON() {
-  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, timestamp: new Date().toISOString() });
+  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, patternFxScenes: PATTERN_FX_SCENES, timestamp: new Date().toISOString() });
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

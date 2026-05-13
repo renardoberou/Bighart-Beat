@@ -193,6 +193,7 @@ body.running #ss  { display: none; }
   font-size: 12px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
+  position: relative;
   transition: all .1s;
 }
 .patt-b.on {
@@ -200,6 +201,23 @@ body.running #ss  { display: none; }
   border-color: var(--amberLt);
   box-shadow: 0 0 6px rgba(200,146,42,.35);
 }
+.patt-b.latched::after {
+  content: '•';
+  position: absolute;
+  margin-top: 18px;
+  color: var(--greenLt);
+  font-size: 12px;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(74,184,112,.6);
+}
+.latch-btn {
+  color: var(--greenLt);
+  border-color: rgba(74,184,112,.35);
+  min-width: 74px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.latch-btn:active { background: var(--greenLt); color: var(--bg); }
 
 /* step display */
 .step-box {

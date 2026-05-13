@@ -99,6 +99,15 @@
     return hihatOpenness.map(bank => bank.slice());
   }
 
+  function clonePatternFxScenes(patternFxScenes) {
+    const scenes = Array(BANK_COUNT).fill(null);
+    if (!Array.isArray(patternFxScenes)) return scenes;
+    for (let i = 0; i < Math.min(BANK_COUNT, patternFxScenes.length); i++) {
+      scenes[i] = patternFxScenes[i] == null ? null : cloneValue(patternFxScenes[i]);
+    }
+    return scenes;
+  }
+
   function serializeTracks(tracks) {
     return tracks.map(t => ({
       id: t.id,
@@ -128,6 +137,7 @@
     };
     if (input.ratchets !== undefined) project.ratchets = cloneRatchets(input.ratchets);
     if (input.hihatOpenness !== undefined) project.hihatOpenness = cloneHihatOpennessBanks(input.hihatOpenness);
+    if (input.patternFxScenes !== undefined) project.patternFxScenes = clonePatternFxScenes(input.patternFxScenes);
     return project;
   }
 
@@ -155,6 +165,7 @@
     validatePatterns(data.patterns, errors);
     validateRatchets(data.ratchets, errors);
     validateHihatOpenness(data.hihatOpenness, errors);
+    validatePatternFxScenes(data.patternFxScenes, errors);
     validateTracks(data.tracks, errors);
     validateFx(data.fx, errors);
 
@@ -253,6 +264,56 @@
     });
   }
 
+  function validatePatternFxScenes(patternFxScenes, errors) {
+    if (patternFxScenes === undefined) return;
+    if (!Array.isArray(patternFxScenes) || patternFxScenes.length !== BANK_COUNT) {
+      errors.push('patternFxScenes must contain exactly 4 banks');
+      return;
+    }
+    patternFxScenes.forEach((scene, sceneIndex) => {
+      if (scene == null) return;
+      if (!scene || typeof scene !== 'object' || Array.isArray(scene)) {
+        errors.push('patternFxScenes[' + sceneIndex + '] must be an object or null');
+        return;
+      }
+      Object.keys(scene).forEach(key => {
+        if (!['fx', 'mix', 'engine', 'mstVol'].includes(key)) errors.push('patternFxScenes[' + sceneIndex + '].' + key + ' is unknown');
+      });
+      if (scene.engine !== undefined && !ENGINES.includes(scene.engine)) {
+        errors.push('patternFxScenes[' + sceneIndex + '].engine must be one of: ' + ENGINES.join(', '));
+      }
+      if (scene.mstVol !== undefined) validateNumberInRange(scene.mstVol, 0, 1, errors, 'patternFxScenes[' + sceneIndex + '].mstVol');
+      if (scene.fx !== undefined) validateFx(scene.fx, errors, 'patternFxScenes[' + sceneIndex + '].fx');
+      if (scene.mix !== undefined) validatePatternFxSceneMix(scene.mix, sceneIndex, errors);
+    });
+  }
+
+  function validatePatternFxSceneMix(mix, sceneIndex, errors) {
+    if (!Array.isArray(mix)) {
+      errors.push('patternFxScenes[' + sceneIndex + '].mix must be an array');
+      return;
+    }
+    const seen = {};
+    mix.forEach((track, trackIndex) => {
+      const path = 'patternFxScenes[' + sceneIndex + '].mix[' + trackIndex + ']';
+      if (!track || typeof track !== 'object' || Array.isArray(track)) {
+        errors.push(path + ' must be an object');
+        return;
+      }
+      if (!TRACK_IDS.includes(track.id)) {
+        errors.push(path + '.id must be a known canonical track id');
+      } else if (seen[track.id]) {
+        errors.push(path + '.id is duplicated: ' + track.id);
+      } else {
+        seen[track.id] = true;
+      }
+      ['mute', 'dlyS', 'revS'].forEach(field => {
+        if (typeof track[field] !== 'boolean') errors.push(path + '.' + field + ' must be a boolean');
+      });
+      if (track.vol !== undefined) validateNumberInRange(track.vol, 0, 1, errors, path + '.vol');
+    });
+  }
+
   function validateTracks(tracks, errors) {
     if (!Array.isArray(tracks)) {
       errors.push('tracks must be an array');
@@ -320,53 +381,55 @@
     }
   }
 
-  function validateFx(fx, errors) {
+  function validateFx(fx, errors, pathPrefix) {
+    const path = pathPrefix || 'fx';
     if (!fx || typeof fx !== 'object' || Array.isArray(fx)) {
-      errors.push('fx must be an object');
+      errors.push(path + ' must be an object');
       return;
     }
     const schema = getDefaultFxState();
     Object.keys(fx).forEach(key => {
-      if (!Object.prototype.hasOwnProperty.call(schema, key)) errors.push('fx.' + key + ' is unknown');
+      if (!Object.prototype.hasOwnProperty.call(schema, key)) errors.push(path + '.' + key + ' is unknown');
     });
     ['dly', 'rev', 'comp'].forEach(key => {
       if (fx[key] === undefined) {
-        errors.push('fx.' + key + ' must be an object');
+        errors.push(path + '.' + key + ' must be an object');
         return;
       }
       if (!fx[key] || typeof fx[key] !== 'object' || Array.isArray(fx[key])) {
-        errors.push('fx.' + key + ' must be an object');
+        errors.push(path + '.' + key + ' must be an object');
         return;
       }
-      validateFxSection(key, fx[key], schema[key] || {}, errors);
+      validateFxSection(key, fx[key], schema[key] || {}, errors, path);
     });
     if (fx.wreck !== undefined) {
       if (!fx.wreck || typeof fx.wreck !== 'object' || Array.isArray(fx.wreck)) {
-        errors.push('fx.wreck must be an object');
+        errors.push(path + '.wreck must be an object');
       } else {
-        validateFxSection('wreck', fx.wreck, schema.wreck || {}, errors);
+        validateFxSection('wreck', fx.wreck, schema.wreck || {}, errors, path);
       }
     }
   }
 
-  function validateFxSection(sectionName, section, schemaSection, errors) {
+  function validateFxSection(sectionName, section, schemaSection, errors, pathPrefix) {
+    const path = pathPrefix || 'fx';
     Object.keys(section).forEach(field => {
       if (!Object.prototype.hasOwnProperty.call(schemaSection, field)) {
-        errors.push('fx.' + sectionName + '.' + field + ' is unknown');
+        errors.push(path + '.' + sectionName + '.' + field + ' is unknown');
         return;
       }
       const value = section[field];
       if (field === 'on' || field === 'gateOn') {
-        if (typeof value !== 'boolean') errors.push('fx.' + sectionName + '.on must be a boolean');
+        if (typeof value !== 'boolean') errors.push(path + '.' + sectionName + '.on must be a boolean');
       } else if (field === 'detector') {
-        if (value !== 'peak' && value !== 'rms') errors.push('fx.' + sectionName + '.detector must be peak or rms');
+        if (value !== 'peak' && value !== 'rms') errors.push(path + '.' + sectionName + '.detector must be peak or rms');
       } else if (field === 'curve') {
         if (!WRECK_CURVES.includes(value) && !Object.prototype.hasOwnProperty.call(LEGACY_WRECK_CURVE_MAP, value)) {
-          errors.push('fx.' + sectionName + '.curve must be one of: ' + WRECK_CURVES.join(', '));
+          errors.push(path + '.' + sectionName + '.curve must be one of: ' + WRECK_CURVES.join(', '));
         }
       } else {
         const range = FX_RANGES[sectionName] && FX_RANGES[sectionName][field];
-        validateNumberInRange(value, range && range[0], range && range[1], errors, 'fx.' + sectionName + '.' + field);
+        validateNumberInRange(value, range && range[0], range && range[1], errors, path + '.' + sectionName + '.' + field);
       }
     });
   }
@@ -397,6 +460,7 @@
     if (value.engine === undefined) value.engine = 'aphex';
     if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
     if (value.hihatOpenness === undefined) value.hihatOpenness = createHihatOpennessBanks();
+    if (value.patternFxScenes === undefined) value.patternFxScenes = Array(BANK_COUNT).fill(null);
     normalizeLegacyFx(value.fx);
     return { ok: true, value, errors: [] };
   }
