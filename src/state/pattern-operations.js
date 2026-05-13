@@ -93,6 +93,13 @@
     return setHihatOpenness(opennessGrid, stepIndex, 0);
   }
 
+  function cycleHihatOpenness(opennessGrid, stepIndex) {
+    const current = getHihatOpenness(opennessGrid, stepIndex);
+    if (current === 0) return setHihatOpenness(opennessGrid, stepIndex, 0.45);
+    if (current === 0.45) return setHihatOpenness(opennessGrid, stepIndex, 1);
+    return setHihatOpenness(opennessGrid, stepIndex, 0);
+  }
+
   function getRatchetCount(ratchetGrid, trackId, stepIndex) {
     assertKnownTrack(trackId);
     assertStepIndex(stepIndex);
@@ -149,6 +156,7 @@
     getHihatOpenness,
     setHihatOpenness,
     clearHihatOpenness,
+    cycleHihatOpenness,
     toggleStep,
     clearPattern,
   };

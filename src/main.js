@@ -818,6 +818,13 @@ function buildSeq() {
       c.addEventListener('click', () => {
         if (longPressFired) { longPressFired = false; return; }
         const wasOn = !!PATTERNS[S.patt][tr.id][i];
+        if (tr.id === 'hihat' && wasOn && TRACKS.indexOf(tr) === S.sel) {
+          HHT_OPENNESS[S.patt] = State.cycleHihatOpenness(HHT_OPENNESS[S.patt], i);
+          refreshCell();
+          renderRhythmIntelligence();
+          autosave();
+          return;
+        }
         const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
         PATTERNS[S.patt] = result.pattern;
         RATCHETS[S.patt] = result.ratchets;
