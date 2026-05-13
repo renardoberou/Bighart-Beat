@@ -34,6 +34,16 @@ assert(html.includes('aria-live="polite"'), 'RI panel remains polite for accessi
 assert(/class="[^"]*ri-read[^"]*"[^>]*id="riInterpretation"/.test(html), 'RI interpretation has compact styling hook');
 assert(html.indexOf('id="riBreath"') > riPanelStart, 'RI panel exposes pump breath cue');
 assert(/<div class="ve-lbl">BREATH<\/div>/.test(html), 'RI pump cue uses compact BREATH label');
+const riNoteMatch = html.match(/<div class="ri-note" id="riResearchNote">([^<]+)<\/div>/);
+assert(riNoteMatch, 'RI panel exposes a compact in-app neuroscience research note');
+const riNote = riNoteMatch[1];
+assert(riNote.length <= 140, 'RI research note stays compact for the performance surface');
+assert(/Groove/i.test(riNote), 'RI note names groove');
+assert(/prediction error/i.test(riNote), 'RI note explains structured prediction error');
+assert(/motor entrainment/i.test(riNote), 'RI note explains motor entrainment');
+assert(/tension\/release/i.test(riNote), 'RI note names tension/release');
+assert(!/(meterConfidence|surpriseTension|recoverability|neural|cognitive)/.test(riNote), 'RI note avoids internal or academic clutter');
+assert(/\.ri-note\s*\{[\s\S]*?font-size:\s*10px[\s\S]*?line-height:\s*1\.35/.test(css), 'RI note has a compact mobile-safe styling hook');
 assert(/grid-template-columns:\s*58px\s+1fr\s+7[6-9]px/.test(css), 'RI/voice value column fits breath timings on mobile');
 
 const renderRI = extractFunction(main, 'renderRhythmIntelligence');

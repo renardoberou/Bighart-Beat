@@ -431,6 +431,13 @@ body.running #ss  { display: none; }
 }
 .ve-lbl { font-size: 8px; letter-spacing: 2px; color: var(--textDm); }
 .ve-val { font-size: 8px; letter-spacing: 1px; color: var(--amberLt); text-align: right; }
+.ri-note {
+  margin-top: 2px;
+  color: var(--amberLt);
+  font-size: 10px;
+  line-height: 1.35;
+  letter-spacing: .3px;
+}
 .ri-read {
   margin-top: 2px;
   padding-top: 6px;
