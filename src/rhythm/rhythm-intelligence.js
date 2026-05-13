@@ -207,6 +207,7 @@
       labels,
       interpretation: makeInterpretation(metrics, labels, totalWeight),
       pumpArousal: analyzePumpArousal(opts.fx && opts.fx.comp),
+      brainLoop: makeBrainLoop(metrics, labels, totalWeight),
       stepMetrics,
     };
   }
@@ -264,6 +265,43 @@
       return 'Feels locked with a little push; it resolves back into the beat.';
     }
     return 'Feels loose; add a stronger landing point to clarify the pulse.';
+  }
+
+  function makeBrainLoop(metrics, labels, totalWeight) {
+    if (!totalWeight) {
+      return {
+        value: 'LOST',
+        line: 'Add an anchor so your body knows where the pulse starts.',
+      };
+    }
+    if (metrics.density > 0.85 || labels.tension === 'red') {
+      return {
+        value: 'OVERLOADED',
+        line: 'Too many hits blur the pulse.',
+      };
+    }
+    if (labels.tension === 'high' || labels.sync === 'tense') {
+      return {
+        value: 'USEFUL SURPRISE',
+        line: 'The beat surprises you but still pulls back.',
+      };
+    }
+    if (labels.anchor === 'locked' && (labels.tension === 'low' || labels.recover === 'recovers')) {
+      return {
+        value: 'CLEAR',
+        line: 'Your body can predict this pulse.',
+      };
+    }
+    if (labels.recover === 'recovers' && metrics.movementDrive >= 0.025) {
+      return {
+        value: 'USEFUL SURPRISE',
+        line: 'The beat surprises you but still pulls back.',
+      };
+    }
+    return {
+      value: 'LOST',
+      line: 'Add an anchor so your body knows where the pulse starts.',
+    };
   }
 
   const api = { analyzeRhythm, analyzePumpArousal, METER_SALIENCE, TRACK_WEIGHTS };
