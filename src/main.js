@@ -10,6 +10,7 @@ const Rhythm = globalThis.BighartBeatRhythm;
 const HihatVoice = globalThis.BighartBeatHihat;
 const KickVoice = window.BighartBeatKick;
 const SnareVoice = window.BighartBeatSnare;
+const ClapVoice = window.BighartBeatClap;
 const EngineProfiles = globalThis.BighartBeatEngineProfiles;
 const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
@@ -508,26 +509,20 @@ function previewHihat(openAmount) {
 // ── CLAP ── 3 short bursts + tail
 function synthClap(t, v, p) {
   const dest = routeVoice(t, 3);
-  const s = p.spread / 1000; // ms → s
-  const bursts = [
-    { o: 0.000, g: .48, d: .014 },
-    { o: s,        g: .42, d: .014 },
-    { o: s * 2,    g: .38, d: .014 },
-    { o: s * 3.1,  g: .82, d: p.decay }, // the main tail
-  ];
-  for (const b of bursts) {
-    const bt = t + b.o;
+  const spec = ClapVoice.resolveClapVoiceSpec(S.engine, p, v);
+  for (const b of spec.bursts) {
+    const bt = t + b.offsetSec;
     const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
     const bp = A.createBiquadFilter(); bp.type = 'bandpass';
-    bp.frequency.value = p.tone + (Math.random() - .5) * 280;
-    bp.Q.value = 1.3;
-    const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 700;
+    bp.frequency.value = clamp(spec.toneHz + (Math.random() - .5) * spec.toneJitterHz, 700, 6000);
+    bp.Q.value = spec.filterQ;
+    const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = spec.highpassHz;
     const g = A.createGain();
     g.gain.setValueAtTime(0, bt);
-    g.gain.linearRampToValueAtTime(v * b.g * .55, bt + .0008);
-    g.gain.exponentialRampToValueAtTime(.001, bt + b.d);
+    g.gain.linearRampToValueAtTime(b.gain, bt + .0008);
+    g.gain.exponentialRampToValueAtTime(.001, bt + b.durationSec);
     ns.connect(bp); bp.connect(hp); hp.connect(g); g.connect(dest);
-    ns.start(bt); ns.stop(bt + b.d + .02);
+    ns.start(bt); ns.stop(bt + b.durationSec + spec.stopPaddingSec);
   }
 }
 
