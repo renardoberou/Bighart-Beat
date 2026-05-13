@@ -528,6 +528,24 @@ function previewHihat(openAmount) {
   synthHihat(t, tr.vol, p);
 }
 
+function previewEngineKit() {
+  if (S.playing) return;
+  initAudio();
+  const t = A.currentTime + .018;
+  const kick = TRACKS[0];
+  const snare = TRACKS[1];
+  const hihat = TRACKS[2];
+
+  triggerCompGate(t, kick.id);
+  synthKick(t, kick.vol, kick.p);
+
+  triggerCompGate(t + .12, snare.id);
+  synthSnare(t + .12, snare.vol, snare.p);
+
+  triggerCompGate(t + .24, hihat.id);
+  synthHihat(t + .24, hihat.vol, { ...hihat.p, open: HHT_PLACE });
+}
+
 // ── CLAP ── 3 short bursts + tail
 function synthClap(t, v, p) {
   const dest = routeVoice(t, 3);
@@ -1303,6 +1321,7 @@ function wire() {
       if (!State.ENGINES.includes(b.dataset.engine)) return;
       S.engine = b.dataset.engine;
       syncEngineSelector();
+      previewEngineKit();
       if (TRACKS[S.sel].id === 'hihat') buildVE();
       autosave();
     });
