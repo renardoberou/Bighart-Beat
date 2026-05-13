@@ -82,10 +82,16 @@
     return 1 + ((count - 1) * 0.35);
   }
 
+  function hihatOpennessAt(hihatOpenness, step) {
+    const value = Array.isArray(hihatOpenness) ? Number(hihatOpenness[step]) : 0;
+    return value === 0.45 || value === 1 ? value : 0;
+  }
+
   function analyzeRhythm(input) {
     const opts = input || {};
     const pattern = opts.pattern || {};
     const ratchets = opts.ratchets || null;
+    const hihatOpenness = opts.hihatOpenness || null;
     const stepsPerBar = Number.isInteger(opts.stepsPerBar) && opts.stepsPerBar > 0 ? opts.stepsPerBar : DEFAULT_STEPS;
     const salience = METER_SALIENCE.slice(0, stepsPerBar);
     while (salience.length < stepsPerBar) salience.push(METER_SALIENCE[salience.length % METER_SALIENCE.length]);
@@ -105,7 +111,8 @@
       for (const trackId of TRACK_IDS) {
         if (hasHit(pattern, trackId, step)) {
           const count = ratchetCount(ratchets, trackId, step);
-          const weight = (TRACK_WEIGHTS[trackId] || 0.5) * ratchetWeightMultiplier(count);
+          let weight = (TRACK_WEIGHTS[trackId] || 0.5) * ratchetWeightMultiplier(count);
+          if (trackId === 'hihat') weight += hihatOpennessAt(hihatOpenness, step) * 0.22;
           stepWeight += weight;
           hits.push(trackId);
           if (count > 1) ratchetMetrics[trackId] = count;
@@ -126,6 +133,8 @@
         salience: round3(meter),
         surprise: round3(stepWeight ? surprise : 0),
       };
+      const hihatOpen = hasHit(pattern, 'hihat', step) ? hihatOpennessAt(hihatOpenness, step) : 0;
+      if (hihatOpen) metric.hihatOpen = hihatOpen;
       if (Object.keys(ratchetMetrics).length) metric.ratchets = ratchetMetrics;
       stepMetrics.push(metric);
     }

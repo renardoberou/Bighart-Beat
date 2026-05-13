@@ -860,6 +860,7 @@ function renderRhythmIntelligence() {
     tracks: TRACKS,
     pattern: PATTERNS[S.patt],
     ratchets: RATCHETS[S.patt],
+    hihatOpenness: HHT_OPENNESS[S.patt],
     stepsPerBar: 16,
     fx: { comp: FX.comp },
   });
