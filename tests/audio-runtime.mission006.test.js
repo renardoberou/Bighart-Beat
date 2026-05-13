@@ -23,8 +23,8 @@ function extractFunction(name) {
 
 const routeVoice = extractFunction('routeVoice');
 assert(
-  /if\s*\(tr\.revS\)\s*\{[\s\S]*?out\.connect\(rs\);\s*rs\.connect\(N\.revGate\);[\s\S]*?triggerGate\(t\);[\s\S]*?\}/.test(routeVoice),
-  'track reverb sends must feed N.revGate so gated reverb cannot be bypassed',
+  /if\s*\(tr\.revS\)\s*\{[\s\S]*?out\.connect\(rs\);\s*rs\.connect\(N\.revSend\);[\s\S]*?triggerGate\(t\);[\s\S]*?\}/.test(routeVoice),
+  'track reverb sends must feed N.revSend so send attenuation is preserved before the gated reverb path',
 );
 assert(
   !/rs\.connect\(N\.conv\)/.test(routeVoice),

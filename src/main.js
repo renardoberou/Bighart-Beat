@@ -52,6 +52,9 @@ function buildGraph() {
   // Delay input is per-track only: do not tap N.bus into N.dlyLine,
   // or channels with D off will bleed into the delay wet path. Existing
   // N.dlyFB repeats are intentional feedback tails from prior sent hits.
+  // Reverb input is per-track only too: do not tap N.bus into N.revSend,
+  // or tracks with R off will bleed into the gated wet path when another
+  // track opens the reverb gate.
   N.revSend = A.createGain(); N.revSend.gain.value = 0.6;
 
   // ── DIGITAL DELAY ──────────────────────────────
@@ -94,9 +97,8 @@ function buildGraph() {
   N.mstSum = A.createGain(); N.mstSum.gain.value = 1;
   // bus is the dry path
   N.bus.connect(N.mstSum);
-  // Reverb still taps the bus through its gated input. Delay does not:
-  // routeVoice() creates the only new delay sends, gated by track dlyS.
-  N.bus.connect(N.revSend);
+  // Delay and reverb do not tap the full bus: routeVoice() creates the only
+  // new wet sends, gated by per-track dlyS/revS toggles.
   // wet returns merge into the master sum
   N.dlyWet.connect(N.mstSum);
   N.revWet.connect(N.mstSum);
@@ -309,7 +311,7 @@ function routeVoice(t, ti) {
   }
   if (tr.revS) {
     const rs = A.createGain(); rs.gain.value = 1;
-    out.connect(rs); rs.connect(N.revGate);
+    out.connect(rs); rs.connect(N.revSend);
     triggerGate(t);
   }
   return out;
