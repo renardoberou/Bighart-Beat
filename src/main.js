@@ -806,7 +806,7 @@ function buildSeq() {
       const cycleCellRatchet = () => {
         const wasOn = !!PATTERNS[S.patt][tr.id][i];
         if (!wasOn) PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
-        if (tr.id === 'hihat' && !wasOn) HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
+        if (tr.id === 'hihat') HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
         RATCHETS[S.patt] = State.cycleRatchetCount(RATCHETS[S.patt], tr.id, i);
         refreshCell();
         renderRhythmIntelligence();
