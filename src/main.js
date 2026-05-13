@@ -8,6 +8,7 @@ const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
 const State = globalThis.BighartBeatState;
 const Rhythm = globalThis.BighartBeatRhythm;
 const HihatVoice = globalThis.BighartBeatHihat;
+const KickVoice = window.BighartBeatKick;
 const EngineProfiles = globalThis.BighartBeatEngineProfiles;
 const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
@@ -359,37 +360,37 @@ function triggerCompGate(t, trackId) {
 // ── KICK ── deep thump with click and saturation
 function synthKick(t, v, p) {
   const dest = routeVoice(t, 0);
-  const ep = engineProfile().kick;
+  const spec = KickVoice.resolveKickVoiceSpec(S.engine, p, v);
   // body oscillator (sine with pitch drop)
   const o = A.createOscillator(); o.type = 'sine';
-  o.frequency.setValueAtTime(p.pitch * 1.8 * ep.pitch, t);                  // attack spike
-  o.frequency.exponentialRampToValueAtTime(p.pitch * ep.pitch, t + .008);    // initial drop
-  o.frequency.exponentialRampToValueAtTime(p.end * ep.pitch, t + p.decay * ep.decay * .6);
-  // body envelope — peak at 0.85 leaves headroom for click + sub
+  o.frequency.setValueAtTime(spec.attackHz, t);                 // attack spike
+  o.frequency.exponentialRampToValueAtTime(spec.dropHz, t + .008); // initial drop
+  o.frequency.exponentialRampToValueAtTime(spec.endHz, t + spec.bodyDecaySec * .6);
+  // body envelope — resolved peak leaves headroom for click + sub
   const g = A.createGain();
   g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(v * .85, t + .003);
-  g.gain.exponentialRampToValueAtTime(.001, t + p.decay * ep.decay);
+  g.gain.linearRampToValueAtTime(spec.bodyPeakGain, t + .003);
+  g.gain.exponentialRampToValueAtTime(.001, t + spec.bodyDecaySec);
   // saturation on body
-  const sat = A.createWaveShaper(); sat.curve = mkSatCurve(clamp(p.drive * ep.drive, 0, 1)); sat.oversample = '2x';
+  const sat = A.createWaveShaper(); sat.curve = mkSatCurve(spec.driveAmount); sat.oversample = '2x';
   o.connect(sat); sat.connect(g); g.connect(dest);
-  o.start(t); o.stop(t + p.decay * ep.decay + .08);
+  o.start(t); o.stop(t + spec.oscStopSec);
   // click layer — noise burst HP
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
   const nf = A.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 1800; nf.Q.value = .7;
   const ng = A.createGain();
-  ng.gain.setValueAtTime(v * p.click * ep.click * .42, t);
+  ng.gain.setValueAtTime(spec.clickGain, t);
   ng.gain.exponentialRampToValueAtTime(.001, t + .018);
   ns.connect(nf); nf.connect(ng); ng.connect(dest);
   ns.start(t); ns.stop(t + .025);
   // sub body reinforcement
-  const o2 = A.createOscillator(); o2.type = 'sine'; o2.frequency.value = p.end * .75;
+  const o2 = A.createOscillator(); o2.type = 'sine'; o2.frequency.value = spec.endHz * .75;
   const g2 = A.createGain();
   g2.gain.setValueAtTime(0, t);
-  g2.gain.linearRampToValueAtTime(v * .28, t + .01);
-  g2.gain.exponentialRampToValueAtTime(.001, t + p.decay * ep.decay * 1.1);
+  g2.gain.linearRampToValueAtTime(spec.subPeakGain, t + .01);
+  g2.gain.exponentialRampToValueAtTime(.001, t + spec.subDecaySec);
   o2.connect(g2); g2.connect(dest);
-  o2.start(t); o2.stop(t + p.decay * ep.decay * 1.2 + .05);
+  o2.start(t); o2.stop(t + spec.subStopSec);
 }
 
 // ── SNARE ── noise + pitched shell + crack
