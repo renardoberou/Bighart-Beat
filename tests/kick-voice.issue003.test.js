@@ -33,6 +33,7 @@ function assertFiniteBounded(spec, label) {
     'subStopSec',
     'driveAmount',
     'clickGain',
+    'clickHighpassHz',
     'bodyPeakGain',
     'subPeakGain',
   ].forEach(key => {
@@ -46,6 +47,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.subDecaySec >= spec.bodyDecaySec, `${label}: sub tail is at least body length`);
   assert(spec.driveAmount >= 0 && spec.driveAmount <= 1, `${label}: driveAmount waveshaper input bounded`);
   assert(spec.clickGain <= 0.9, `${label}: clickGain leaves headroom`);
+  assert(spec.clickHighpassHz >= 900 && spec.clickHighpassHz <= 6000, `${label}: clickHighpassHz stays in a musical transient band`);
   assert(spec.bodyPeakGain <= 0.85, `${label}: bodyPeakGain leaves headroom`);
   assert(spec.subPeakGain <= 0.32, `${label}: subPeakGain leaves headroom`);
 }
@@ -64,6 +66,8 @@ assert.strictEqual(fallback.engine, 'aphex', 'unknown engine safely falls back t
 assert(kick808.endHz < kick909.endHz, '808 kick resolves deeper than 909');
 assert(kick808.bodyDecaySec > kick909.bodyDecaySec, '808 kick resolves longer than 909');
 assert(kick909.clickGain > kick808.clickGain, '909 kick has stronger click transient than 808');
+assert(kick909.clickHighpassHz > kick808.clickHighpassHz, '909 kick click is brighter than 808');
+assert(aphex.clickHighpassHz > kick909.clickHighpassHz, 'Aphex-inspired kick click is the sharpest IDM transient');
 assert(reznor.driveAmount > kick909.driveAmount, 'Reznor-inspired kick has more bounded drive than 909');
 assert(aphex.attackHz > kick808.attackHz, 'Aphex-inspired kick has a brighter/steeper attack than 808');
 assert(aphex.bodyDecaySec < kick808.bodyDecaySec, 'Aphex-inspired kick is tighter than 808');

@@ -402,7 +402,7 @@ function synthKick(t, v, p) {
   o.start(t); o.stop(t + spec.oscStopSec);
   // click layer — noise burst HP
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
-  const nf = A.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 1800; nf.Q.value = .7;
+  const nf = A.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = spec.clickHighpassHz; nf.Q.value = .7;
   const ng = A.createGain();
   ng.gain.setValueAtTime(spec.clickGain, t);
   ng.gain.exponentialRampToValueAtTime(.001, t + .018);

@@ -44,5 +44,9 @@ assert(
   /ng\.gain\.setValueAtTime\(spec\.clickGain/.test(main),
   'synthKick uses resolved bounded click gain',
 );
+assert(
+  /nf\.frequency\.value\s*=\s*spec\.clickHighpassHz/.test(main),
+  'synthKick uses resolved engine-aware click highpass frequency',
+);
 
 console.log('Issue 003 kick voice runtime wiring checks passed.');
