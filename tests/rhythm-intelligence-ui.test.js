@@ -33,7 +33,7 @@ assert(interpretationIndex > riPanelStart, 'RI interpretation is rendered inside
 assert(html.includes('aria-live="polite"'), 'RI panel remains polite for accessible updates');
 assert(/class="[^"]*ri-read[^"]*"[^>]*id="riInterpretation"/.test(html), 'RI interpretation has compact styling hook');
 assert(html.indexOf('id="riBreath"') > riPanelStart, 'RI panel exposes pump breath cue');
-assert(/<div class="ve-lbl">BREATH<\/div>/.test(html), 'RI pump cue uses compact BREATH label');
+assert(/<div class="ve-lbl">PUMP<\/div>/.test(html), 'RI pump cue uses compact PUMP label');
 const riNoteMatch = html.match(/<div class="ri-note" id="riResearchNote">([^<]+)<\/div>/);
 assert(riNoteMatch, 'RI panel exposes a compact in-app neuroscience research note');
 const riNote = riNoteMatch[1];

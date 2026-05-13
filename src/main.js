@@ -924,6 +924,7 @@ function renderRhythmIntelligence() {
   $('riBreath').textContent = analysis.pumpArousal.value;
   $('riBrainLoop').textContent = analysis.brainLoop.value;
   $('riBrainLoopLine').textContent = analysis.brainLoop.line;
+  $('riPumpCue').textContent = analysis.pumpArousal.cue;
   $('riInterpretation').textContent = analysis.interpretation || '';
 }
 
