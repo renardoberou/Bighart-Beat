@@ -29,7 +29,9 @@ assert(!/N\.dlySend\.connect\(N\.dlyLine\)/.test(buildGraph), 'removed global de
 assert(!/N\.bus\.connect\(N\.dlyLine\)/.test(buildGraph), 'full dry bus must never connect directly to delay line');
 assert(/N\.dlyFB\.connect\(N\.dlyLine\)/.test(buildGraph), 'delay feedback tails remain intentional and documented');
 assert(/Delay input is per-track only/.test(buildGraph), 'code documents intentional per-track-only delay routing');
-assert(/if\s*\(tr\.dlyS\)\s*\{[\s\S]*?out\.connect\(ds\);\s*ds\.connect\(N\.dlyLine\);[\s\S]*?\}/.test(routeVoice), 'routeVoice injects new delay signal only when track dlyS is on');
+assert(/tr\.dlyS/.test(routeVoice), 'routeVoice still honors the per-track delay-send switch');
+assert(/FX\.dly\.on/.test(routeVoice), 'routeVoice blocks fresh delay injection while global delay is off');
+assert(/FX\.dly\.wet\s*>\s*0/.test(routeVoice), 'routeVoice blocks fresh delay injection while global delay wet is zero');
 assert(/out\.connect\(N\.bus\)/.test(routeVoice), 'voices still feed the dry bus regardless of delay send');
 
 console.log('Issue 006 delay per-channel send isolation checks passed.');

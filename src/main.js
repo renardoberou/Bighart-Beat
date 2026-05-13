@@ -329,7 +329,8 @@ function routeVoice(t, ti) {
   const out = A.createGain();
   out.gain.value = tr.vol;
   out.connect(N.bus);
-  if (tr.dlyS) {
+  const delaySendActive = tr.dlyS && FX.dly.on && FX.dly.wet > 0;
+  if (delaySendActive) {
     const ds = A.createGain(); ds.gain.value = 1;
     out.connect(ds); ds.connect(N.dlyLine);
   }
