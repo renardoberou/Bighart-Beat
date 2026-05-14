@@ -73,7 +73,7 @@ if (hasCanonicalSource) {
   console.warn('WARN: canonical source snapshot unavailable; skipping exact v4 parity comparisons.');
 }
 
-assert(index.includes('<link rel="stylesheet" href="styles/main.css">'), 'index links styles/main.css');
+assert(/<link rel="stylesheet" href="styles\/main\.css(?:\?v=[^"]+)?">/.test(index), 'index links styles/main.css with optional cache-busting query');
 const requiredScripts = [
   'src/state/tracks.js',
   'src/state/patterns.js',
