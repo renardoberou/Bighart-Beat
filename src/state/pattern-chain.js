@@ -18,9 +18,17 @@
         { pattern: 0, bars: 1 },
         { pattern: 1, bars: 1 },
         { pattern: 2, bars: 1 },
-        { pattern: 0, bars: 1 },
+        { pattern: 3, bars: 1 },
       ],
     };
+  }
+
+  function isLegacyDefaultPatternChain(items) {
+    return items.length === 4 &&
+      items[0].pattern === 0 && items[0].bars === 1 &&
+      items[1].pattern === 1 && items[1].bars === 1 &&
+      items[2].pattern === 2 && items[2].bars === 1 &&
+      items[3].pattern === 0 && items[3].bars === 1;
   }
 
   function assertPatternIndex(pattern, path) {
@@ -61,6 +69,7 @@
     if (!Number.isInteger(input.barCount) || input.barCount < 0 || input.barCount >= activeBars) {
       throw new TypeError('patternChain.barCount must be within the active item duration');
     }
+    if (isLegacyDefaultPatternChain(items)) items[3] = { pattern: 3, bars: 1 };
     return {
       enabled: input.enabled,
       position: input.position,

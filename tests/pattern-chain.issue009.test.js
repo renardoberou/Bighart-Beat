@@ -22,9 +22,9 @@ assertDeepFrozenCopy(defaultChain, {
     { pattern: 0, bars: 1 },
     { pattern: 1, bars: 1 },
     { pattern: 2, bars: 1 },
-    { pattern: 0, bars: 1 },
+    { pattern: 3, bars: 1 },
   ],
-}, 'default pattern chain is disabled A→B→C→A with one bar per item');
+}, 'default pattern chain is disabled A→B→C→D with one bar per item');
 
 let disabled = State.advancePatternChainBar(defaultChain, 2);
 assert.strictEqual(disabled.pattern, 2, 'disabled chain keeps current manual pattern on bar advance');
@@ -34,7 +34,7 @@ let chain = State.normalizePatternChain({
   enabled: true,
   position: 0,
   barCount: 0,
-  items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }],
+  items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 3, bars: 1 }],
 });
 let result = State.advancePatternChainBar(chain, 0);
 assert.strictEqual(result.pattern, 1, 'enabled chain advances A→B on first one-bar boundary');
@@ -42,7 +42,30 @@ assert.strictEqual(result.chain.position, 1, 'chain cursor moves to B');
 result = State.advancePatternChainBar(result.chain, result.pattern);
 assert.strictEqual(result.pattern, 2, 'enabled chain advances B→C on next boundary');
 result = State.advancePatternChainBar(result.chain, result.pattern);
-assert.strictEqual(result.pattern, 0, 'enabled chain wraps C→A');
+assert.strictEqual(result.pattern, 3, 'enabled chain advances C→D on next boundary');
+result = State.advancePatternChainBar(result.chain, result.pattern);
+assert.strictEqual(result.pattern, 0, 'enabled chain wraps D→A');
+
+const legacyDefaultChain = State.normalizePatternChain({
+  enabled: true,
+  position: 2,
+  barCount: 0,
+  items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 0, bars: 1 }],
+});
+assert.deepStrictEqual(legacyDefaultChain, {
+  enabled: true,
+  position: 2,
+  barCount: 0,
+  items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 3, bars: 1 }],
+}, 'exact legacy default A→B→C→A chain normalizes to A→B→C→D while preserving flags and cursor');
+
+const customRepeatedAChain = State.normalizePatternChain({
+  enabled: true,
+  position: 0,
+  barCount: 1,
+  items: [{ pattern: 0, bars: 2 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 0, bars: 1 }],
+});
+assert.deepStrictEqual(customRepeatedAChain.items, [{ pattern: 0, bars: 2 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 0, bars: 1 }], 'custom chains that are not the exact old one-bar default are not migrated');
 
 chain = State.normalizePatternChain({
   enabled: true,
@@ -86,6 +109,22 @@ assert.deepStrictEqual(serialized.patternChain, appState.patternChain, 'serializ
 const parsed = Persistence.parseProjectImport(JSON.stringify(serialized));
 assert.strictEqual(parsed.ok, true, 'parseProjectImport accepts serialized patternChain');
 assert.deepStrictEqual(parsed.value.patternChain, appState.patternChain, 'parseProjectImport round-trips patternChain');
+
+const legacyPersisted = JSON.parse(JSON.stringify(serialized));
+legacyPersisted.patternChain = {
+  enabled: true,
+  position: 3,
+  barCount: 0,
+  items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 0, bars: 1 }],
+};
+const parsedLegacyPersisted = Persistence.parseProjectImport(JSON.stringify(legacyPersisted));
+assert.strictEqual(parsedLegacyPersisted.ok, true, 'legacy persisted default patternChain imports successfully');
+assert.deepStrictEqual(parsedLegacyPersisted.value.patternChain, {
+  enabled: true,
+  position: 3,
+  barCount: 0,
+  items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 3, bars: 1 }],
+}, 'legacy persisted default patternChain imports as A→B→C→D without losing enabled/cursor state');
 
 delete serialized.patternChain;
 const legacy = Persistence.parseProjectImport(JSON.stringify(serialized));

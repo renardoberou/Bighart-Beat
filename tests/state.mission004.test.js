@@ -89,7 +89,7 @@ assert.deepStrictEqual(appState, {
       { pattern: 0, bars: 1 },
       { pattern: 1, bars: 1 },
       { pattern: 2, bars: 1 },
-      { pattern: 0, bars: 1 },
+      { pattern: 3, bars: 1 },
     ],
   },
 }, 'createAppState returns canonical app defaults');
