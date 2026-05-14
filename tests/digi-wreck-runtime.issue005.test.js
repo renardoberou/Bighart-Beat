@@ -30,8 +30,12 @@ assert(/N\.wreckCrusher\s*=\s*A\.createWaveShaper\(\)/.test(buildGraph), 'master
 assert(/N\.wreckTone\s*=\s*A\.createBiquadFilter\(\)/.test(buildGraph), 'master graph creates DIGI WRECK tone contour filter');
 assert(/N\.wreckOut\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master graph creates DIGI WRECK output trim');
 assert(/N\.compMakeup\.connect\(N\.wreckIn\)/.test(buildGraph), 'DIGI WRECK is hooked after pump compressor/auto-makeup');
-assert(/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(buildGraph), 'DIGI WRECK wet path enters the sample-hold/downsample stage');
+assert(!/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(buildGraph), 'bypassed DIGI WRECK must not keep feeding the mobile-costly sample-hold processor');
+assert(/updateWreckProcessorFeed\(FX\.wreck\.on\)/.test(buildGraph), 'initial DIGI WRECK processor feed follows the on/off state');
 assert(/N\.wreckDownsample\.connect\(N\.wreckCrusher\)/.test(buildGraph), 'sample-hold/downsample stage feeds the crusher instead of only shaping a curve');
+assert(/function\s+updateWreckProcessorFeed\s*\(active\)\s*\{/.test(js), 'runtime defines a gated DIGI WRECK processor-feed helper');
+assert(/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper reconnects wet input only when DIGI WRECK is enabled');
+assert(/N\.wreckIn\.disconnect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper disconnects wet input when DIGI WRECK is bypassed');
 assert(/N\.wreckOut\.connect\(N\.mstSat\)/.test(buildGraph), 'DIGI WRECK feeds existing safe saturation/limiter path before master');
 assert(!/N\.compMakeup\.connect\(N\.mstSat\)/.test(buildGraph), 'DIGI WRECK cannot be bypassed by old compressor-to-saturation route');
 

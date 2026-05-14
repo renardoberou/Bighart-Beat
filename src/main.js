@@ -164,7 +164,9 @@ function buildGraph() {
   N.wreckOut = A.createGain(); N.wreckOut.gain.value = FX.wreck.on ? FX.wreck.out : 1;
   N.compMakeup.connect(N.wreckIn);
   N.wreckIn.connect(N.wreckDry); N.wreckDry.connect(N.wreckOut);
-  N.wreckIn.connect(N.wreckDownsample); N.wreckDownsample.connect(N.wreckCrusher); N.wreckCrusher.connect(N.wreckTone); N.wreckTone.connect(N.wreckWet); N.wreckWet.connect(N.wreckOut);
+  N.wreckWetFeedConnected = false;
+  N.wreckDownsample.connect(N.wreckCrusher); N.wreckCrusher.connect(N.wreckTone); N.wreckTone.connect(N.wreckWet); N.wreckWet.connect(N.wreckOut);
+  updateWreckProcessorFeed(FX.wreck.on);
 
   // gentle warmth saturation, AFTER comp and optional digital destruction
   N.mstSat = A.createWaveShaper();
@@ -213,6 +215,18 @@ function toneHz(v) { // 0..1 → 800 Hz..16 kHz exp
 
 function wreckToneHz(v) { // 0..1 → 900 Hz..18 kHz exp; dark settings tame alias splash.
   return 900 * Math.pow(20, clamp(v, 0, 1));
+}
+
+function updateWreckProcessorFeed(active) {
+  if (!N || !N.wreckIn || !N.wreckDownsample) return;
+  const shouldFeed = !!active;
+  if (shouldFeed && !N.wreckWetFeedConnected) {
+    N.wreckIn.connect(N.wreckDownsample);
+    N.wreckWetFeedConnected = true;
+  } else if (!shouldFeed && N.wreckWetFeedConnected) {
+    try { N.wreckIn.disconnect(N.wreckDownsample); } catch (_) {}
+    N.wreckWetFeedConnected = false;
+  }
 }
 
 function mkWreckCurve(bits, mode, rate, thresholdDb) {
@@ -1170,6 +1184,7 @@ function applyFXState() {
   // digital destruction
   N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate, FX.wreck.threshold);
   N.wreckDownsample.wreckRate = FX.wreck.rate;
+  updateWreckProcessorFeed(FX.wreck.on);
   N.wreckTone.frequency.setTargetAtTime(wreckToneHz(FX.wreck.tone), A.currentTime, .02);
   N.wreckDry.gain.setTargetAtTime(FX.wreck.on ? 1 - FX.wreck.mix : 1, A.currentTime, .02);
   N.wreckWet.gain.setTargetAtTime(FX.wreck.on ? FX.wreck.mix : 0, A.currentTime, .02);
