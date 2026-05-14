@@ -494,10 +494,10 @@ body.running #ss  { display: none; }
   .variation-btn { width: 100%; min-height: 32px; }
   .hht-place-strip { justify-content: space-between; }
   .hht-place-b { flex: 1 1 0; }
-  .swing-strip { grid-template-columns: 1fr; min-width: 0; margin-top: 12px; justify-items: center; }
+  .swing-strip { grid-template-columns: 1fr; min-width: 0; margin-top: 8px; padding: 8px; gap: 8px; justify-items: center; }
   .swing-copy { width: 100%; text-align: center; }
-  .swing-step { width: 100%; min-height: 56px; }
-  .swing-knob-control { min-width: 92px; min-height: 92px; }
+  .swing-step { width: 100%; min-height: 48px; }
+  .swing-knob-control { min-width: 84px; min-height: 84px; }
 }
 .seq {
   flex: 0 0 50vh;
@@ -641,6 +641,38 @@ body.running #ss  { display: none; }
 }
 .ctrl::-webkit-scrollbar { width: 4px; }
 .ctrl::-webkit-scrollbar-thumb { background: var(--border); }
+
+@media (max-width: 640px) {
+  /* MOBILE-SCROLL-ACCESS-FIX: let the document, not only .ctrl, scroll vertically so lower panels remain reachable in Telegram/GitHub Pages webviews. */
+  html, body {
+    min-height: 100%;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  #app,
+  body.running #app {
+    min-height: 100dvh;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .seq {
+    flex: 0 0 auto;
+    height: clamp(300px, 44vh, 420px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+  }
+
+  .ctrl {
+    flex: 0 0 auto;
+    overflow: visible;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}
 
 .panel {
   background: var(--panel);
