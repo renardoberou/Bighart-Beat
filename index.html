@@ -98,9 +98,14 @@
       <button class="hht-place-b" data-quick-hht-place=".45">TIGHT</button>
       <button class="hht-place-b" data-quick-hht-place="1">OPEN</button>
     </div>
-    <div class="swing-strip" aria-label="Swing amount">
-      <span>SWING</span>
-      <input type="range" class="fdr a" id="swing" min="0" max="100" value="0">
+    <div class="swing-strip" role="group" aria-label="Swing amount">
+      <span class="swing-label">SWING</span>
+      <div class="swing-options" id="swing" aria-label="Swing choices">
+        <button type="button" class="swing-option on" data-swing="0" aria-pressed="true">0%</button>
+        <button type="button" class="swing-option" data-swing="0.25" aria-pressed="false">25%</button>
+        <button type="button" class="swing-option" data-swing="0.5" aria-pressed="false">50%</button>
+        <button type="button" class="swing-option" data-swing="0.75" aria-pressed="false">75%</button>
+      </div>
       <span class="swing-val" id="vSwing">0%</span>
     </div>
   </div>

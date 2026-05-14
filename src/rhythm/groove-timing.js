@@ -16,7 +16,9 @@
   }
 
   function swingOffsetSeconds(stepIndex, stepDuration, swing) {
-    return stepIndex % 2 === 1 ? stepDuration * clampSwing(swing) * 0.5 : 0;
+    const classicMaxOffset = stepDuration * 0.5;
+    const strongerOffset = stepDuration * clampSwing(swing) * (2 / 3);
+    return stepIndex % 2 === 1 ? Math.min(classicMaxOffset, strongerOffset) : 0;
   }
 
   function swungStepStartSeconds(stepIndex, stepStart, stepDuration, swing) {

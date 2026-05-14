@@ -46,8 +46,8 @@ Pass criteria:
 - Use `+` and `−` to change BPM.
 - Hold `+` and `−` to check repeat behavior.
 - Tap `TAP` four times at an obvious tempo.
-- Move `SWING` from `0%` to around `50–60%` while playing, then back to `0%`.
-- Try bounds: BPM should not go below 40 or above 240; swing should stay between `0%` and `100%`.
+- Tap the `SWING` segmented toggle through `0%`, `25%`, `50%`, and `75%` while playing, then return to `0%`.
+- Try bounds: BPM should not go below 40 or above 240; swing should stay on the four visible toggle choices.
 
 Pass criteria:
 - BPM display updates immediately.
@@ -115,7 +115,7 @@ Pass criteria:
 ## Current known MVP caveats to check before Bernado test
 
 - Rhythm intelligence UI/logic is now implemented and covered by automated fixtures, but still needs a real browser visual check.
-- Swing timing is covered by automated fixtures and should be given an audible live-playback check around `50–60%`.
+- Swing timing is covered by automated fixtures and should be given an audible live-playback check at `25%`, `50%`, and the more drastic `75%` max.
 - Reverb gate routing is covered by an automated runtime guard and still deserves an audible FX sanity check.
 - Mobile mute usability must be verified: row-label double-click exists, but explicit mixer `M` buttons are the acceptable mobile path.
 - Full MVP confidence still requires at least one actual mobile-browser pass.

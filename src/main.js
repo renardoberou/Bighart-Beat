@@ -1435,10 +1435,37 @@ function syncFxControls() {
   setFdr('wreckOut', Math.round(FX.wreck.out * 100), v => v + '%');
 }
 
+const SWING_OPTIONS = [0, 0.25, 0.5, 0.75];
+
+function nearestSwingOption(value) {
+  const swung = Groove.clampSwing(value);
+  return SWING_OPTIONS.reduce((best, opt) =>
+    Math.abs(opt - swung) < Math.abs(best - swung) ? opt : best
+  , SWING_OPTIONS[0]);
+}
+
+function syncSwingControl() {
+  const active = nearestSwingOption(S.swing);
+  $('swing').querySelectorAll('[data-swing]').forEach(b => {
+    const isOn = Math.abs(parseFloat(b.dataset.swing) - active) < .001;
+    b.classList.toggle('on', isOn);
+    b.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+  });
+  const readout = $('vSwing');
+  if (readout) readout.textContent = Math.round(S.swing * 100) + '%';
+}
+
+function setSwingFromOption(value) {
+  S.swing = Groove.clampSwing(value);
+  syncSwingControl();
+  renderRhythmIntelligence();
+  autosave();
+}
+
 function syncMasterControls() {
   $('bpmD').textContent = S.bpm;
   setFdr('mstVol', Math.round(S.mstVol * 100), v => v + '%');
-  setFdr('swing', Math.round(S.swing * 100), v => v + '%');
+  syncSwingControl();
 }
 
 function applyProjectData(d) {
@@ -1632,7 +1659,9 @@ function wire() {
 
   // master
   bindF('mstVol', v => { S.mstVol = v / 100; applyFXState(); }, v => v + '%');
-  bindF('swing', v => { S.swing = Groove.clampSwing(v / 100); renderRhythmIntelligence(); }, v => v + '%');
+  $('swing').querySelectorAll('[data-swing]').forEach(b => {
+    b.addEventListener('click', () => setSwingFromOption(parseFloat(b.dataset.swing)));
+  });
 
   // clear / export / import
   $('clearBtn').addEventListener('click', () => {
