@@ -11,19 +11,26 @@ const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
 
 assert(html.includes('src="src/rhythm/groove-timing.js"'), 'HTML loads the groove timing helper before main.js');
+assert(html.includes('src="src/rhythm/swing-knob.js"'), 'HTML loads the swing knob pointer helper before main.js');
 assert(/id="vSwing"/.test(html), 'transport UI exposes a swing value readout with id="vSwing"');
 assert(!/<input[^>]+id="swing"[^>]+type="range"|<input[^>]+type="range"[^>]+id="swing"/.test(html), 'swing is no longer exposed as a hard-to-hit range slider');
 
-const swingButtons = [...html.matchAll(/<button\b[^>]*class="[^"]*swing-option[^"]*"[^>]*data-swing="([^"]+)"[^>]*>/g)].map(m => Number(m[1]));
-assert.deepStrictEqual(swingButtons, [0, 0.25, 0.5, 0.75], 'HTML exposes exactly four swing toggle choices: 0%, 25%, 50%, 75%');
-assert(/role="group"[^>]+aria-label="Swing amount"|aria-label="Swing amount"[^>]+role="group"/.test(html), 'swing toggle is announced as a grouped control');
+assert(/class="[^"]*swing-knob-control[^"]*"[^>]*(?:role="slider"|aria-valuemin="0")/.test(html), 'HTML exposes swing as an accessible knob/slider control');
+assert(/id="swing"/.test(html) && /data-swing-knob/.test(html), 'swing knob has the canonical id and knob data hook');
+assert(/aria-valuemin="0"/.test(html) && /aria-valuemax="100"/.test(html), 'swing knob ARIA range can announce persisted/imported 100% swing without overflowing valuemax');
+assert(/data-swing-step="-1"/.test(html) && /data-swing-step="1"/.test(html), 'swing control includes large decrement/increment buttons for reliable touch adjustment');
+assert(!/class="[^"]*swing-option[^"]*"/.test(html), 'cramped four-button segmented swing control has been removed');
+assert(/role="group"[^>]+aria-label="Swing groove amount"|aria-label="Swing groove amount"[^>]+role="group"/.test(html), 'swing knob cluster is announced as a grouped control');
 
 assert(/const Groove\s*=\s*globalThis\.BighartBeatGroove/.test(main), 'runtime reads the groove timing helper');
 assert(/const\s+SWING_OPTIONS\s*=\s*\[0,\s*0\.25,\s*0\.5,\s*0\.75\]/.test(main), 'runtime declares the discrete swing options');
 assert(/function\s+nearestSwingOption\s*\(/.test(main), 'runtime has a helper for selecting the nearest visible swing option');
 assert(/function\s+setSwingFromOption\s*\([^)]*\)\s*\{[\s\S]*S\.swing\s*=\s*Groove\.clampSwing\(value\)[\s\S]*syncSwingControl\(\)[\s\S]*renderRhythmIntelligence\(\)[\s\S]*autosave\(\)/.test(main), 'runtime has a discrete swing selection path that updates S.swing, UI, rhythm intelligence, and persistence');
-assert(/querySelectorAll\('\[data-swing\]'\)[\s\S]*addEventListener\('click'/.test(main), 'runtime binds click events on the swing option buttons');
-assert(/function\s+syncSwingControl\s*\([^)]*\)\s*\{[\s\S]*nearestSwingOption\(S\.swing\)[\s\S]*classList\.toggle\('on'[\s\S]*aria-pressed[\s\S]*vSwing[\s\S]*Math\.round\(S\.swing \* 100\) \+ '%'/.test(main), 'runtime sync marks the active selected toggle and updates the vSwing readout after load/import');
+assert(/addEventListener\('pointerdown'[\s\S]*setSwingFromPointer/.test(main) && /querySelectorAll\('\[data-swing-step\]'\)[\s\S]*addEventListener\('click'[\s\S]*stepSwing/.test(main), 'runtime binds pointer drag on the knob plus click events on +/- buttons');
+assert(/function\s+syncSwingControl\s*\([^)]*\)\s*\{[\s\S]*nearestSwingOption\(S\.swing\)[\s\S]*aria-valuenow[\s\S]*aria-valuetext[\s\S]*--swing-angle[\s\S]*vSwing[\s\S]*Math\.round\(S\.swing \* 100\) \+ '%'/.test(main), 'runtime sync updates knob ARIA, radial angle, and vSwing readout after load/import');
+assert(/aria-valuenow[\s\S]*Math\.min\(100,[\s\S]*percent/.test(main), 'runtime clamps aria-valuenow to the advertised 0-100 range for imported swing values');
+assert(/SwingKnob\.(?:swingFromPoint|valueFromPoint)[\s\S]*nearestSwingOption/.test(main), 'pointer input is mapped through the shared visible -135..135 swing knob helper before snapping to visible choices');
+assert(/event\.key === 'Home'[\s\S]*setSwingFromOption\(0\)/.test(main) && /event\.key === 'End'[\s\S]*setSwingFromOption\(0\.75\)/.test(main), 'keyboard slider supports Home for 0% and End for the deepest visible 75% choice');
 assert(!/bindF\('swing'/.test(main), 'runtime no longer binds swing as a continuous fader');
 assert(!/setFdr\('swing'/.test(main), 'control sync no longer restores swing through the old slider path');
 assert(/Groove\.scheduledHitTimes\(\{[\s\S]*stepIndex:\s*step[\s\S]*swing:\s*S\.swing[\s\S]*\}\)/.test(main), 'scheduler applies S.swing when computing hit times');
@@ -31,9 +38,10 @@ assert(/tlog\.push\(\{\s*step,\s*time:\s*swungT\s*\}\)/.test(main), 'playhead lo
 assert(/swing:\s*S\.swing/.test(main), 'Rhythm Intelligence receives current swing instead of hardcoded swing: 0');
 assert(/S\.swing\s*=\s*Groove\.clampSwing\(d\.swing/.test(main), 'project import applies persisted swing');
 
-assert(/\.swing-strip\s*\{[\s\S]*margin-top:\s*(?:8|10|12|14|16)px[\s\S]*padding:\s*6px/.test(css), 'CSS separates the swing control from sequencer hits with a visible top gap/padded strip');
-assert(/\.swing-options\s*\{[\s\S]*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/.test(css), 'CSS gives swing a visible four-button segmented layout');
-assert(/\.swing-option\s*\{[\s\S]*min-height:\s*(?:32|36|40|44|48)px[\s\S]*touch-action:\s*manipulation/.test(css), 'CSS makes swing buttons touch-sized and safe on mobile');
-assert(/\.swing-option\.on\s*\{[\s\S]*background:[\s\S]*box-shadow:/.test(css), 'CSS visibly marks the selected swing option');
+assert(/\.swing-strip\s*\{[\s\S]*margin-top:\s*(?:8|10|12|14|16)px[\s\S]*padding:\s*(?:8|10|12)px/.test(css), 'CSS separates the swing control from sequencer hits with a visible top gap/padded strip');
+assert(/\.swing-knob-control\s*\{[\s\S]*min-width:\s*(?:72|76|80|84|88|92|96)px[\s\S]*min-height:\s*(?:72|76|80|84|88|92|96)px[\s\S]*border-radius:\s*50%[\s\S]*touch-action:\s*none/.test(css), 'CSS makes the swing knob large, round, and drag-safe on mobile');
+assert(/\.swing-knob-control::before\s*\{[\s\S]*conic-gradient/.test(css), 'CSS gives swing a premium radial/rotary visual');
+assert(/\.swing-step\s*\{[\s\S]*min-width:\s*(?:56|60|64)px[\s\S]*min-height:\s*(?:56|60|64)px/.test(css), 'CSS gives swing +/- controls at least 56px touch targets');
+assert(/@media \(max-width: (?:640|680|720)px\)[\s\S]*\.swing-strip\s*\{[\s\S]*grid-template-columns:\s*1fr/.test(css), 'mobile/tablet CSS stacks the swing knob before the 520px overflow zone');
 
 console.log('Issue 008 swing runtime wiring checks passed.');

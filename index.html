@@ -20,6 +20,7 @@
 <script src="src/state/persistence.js" defer></script>
 <script src="src/rhythm/rhythm-intelligence.js" defer></script>
 <script src="src/rhythm/groove-timing.js" defer></script>
+<script src="src/rhythm/swing-knob.js" defer></script>
 <script src="src/rhythm/engine-profiles.js" defer></script>
 <script src="src/rhythm/hihat-voice.js" defer></script>
 <script src="src/rhythm/kick-voice.js" defer></script>
@@ -98,15 +99,17 @@
       <button class="hht-place-b" data-quick-hht-place=".45">TIGHT</button>
       <button class="hht-place-b" data-quick-hht-place="1">OPEN</button>
     </div>
-    <div class="swing-strip" role="group" aria-label="Swing amount">
-      <span class="swing-label">SWING</span>
-      <div class="swing-options" id="swing" aria-label="Swing choices">
-        <button type="button" class="swing-option on" data-swing="0" aria-pressed="true">0%</button>
-        <button type="button" class="swing-option" data-swing="0.25" aria-pressed="false">25%</button>
-        <button type="button" class="swing-option" data-swing="0.5" aria-pressed="false">50%</button>
-        <button type="button" class="swing-option" data-swing="0.75" aria-pressed="false">75%</button>
+    <div class="swing-strip" role="group" aria-label="Swing groove amount">
+      <div class="swing-copy">
+        <span class="swing-label">SWING</span>
+        <span class="swing-hint">75% = deep triplet pocket</span>
       </div>
-      <span class="swing-val" id="vSwing">0%</span>
+      <button type="button" class="swing-step" data-swing-step="-1" aria-label="Decrease swing">−</button>
+      <button type="button" class="swing-knob-control" id="swing" data-swing-knob role="slider" aria-label="Swing amount" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0% swing">
+        <span class="swing-knob-dot" aria-hidden="true"></span>
+        <span class="swing-val" id="vSwing">0%</span>
+      </button>
+      <button type="button" class="swing-step" data-swing-step="1" aria-label="Increase swing">+</button>
     </div>
   </div>
   <div class="seq" id="seq"></div>

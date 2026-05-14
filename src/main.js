@@ -8,6 +8,7 @@ const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
 const State = globalThis.BighartBeatState;
 const Rhythm = globalThis.BighartBeatRhythm;
 const Groove = globalThis.BighartBeatGroove;
+const SwingKnob = globalThis.BighartBeatSwingKnob;
 const HihatVoice = globalThis.BighartBeatHihat;
 const KickVoice = window.BighartBeatKick;
 const SnareVoice = window.BighartBeatSnare;
@@ -1440,17 +1441,21 @@ const SWING_OPTIONS = [0, 0.25, 0.5, 0.75];
 function nearestSwingOption(value) {
   const swung = Groove.clampSwing(value);
   return SWING_OPTIONS.reduce((best, opt) =>
-    Math.abs(opt - swung) < Math.abs(best - swung) ? opt : best
+    Math.abs(opt - swung) <= Math.abs(best - swung) ? opt : best
   , SWING_OPTIONS[0]);
 }
 
 function syncSwingControl() {
   const active = nearestSwingOption(S.swing);
-  $('swing').querySelectorAll('[data-swing]').forEach(b => {
-    const isOn = Math.abs(parseFloat(b.dataset.swing) - active) < .001;
-    b.classList.toggle('on', isOn);
-    b.setAttribute('aria-pressed', isOn ? 'true' : 'false');
-  });
+  const knob = $('swing');
+  const percent = Math.round(S.swing * 100);
+  const visualSwing = Math.min(1, Math.max(0, S.swing));
+  const angle = SwingKnob.angleFromSwing(visualSwing);
+  if (knob) {
+    knob.setAttribute('aria-valuenow', String(Math.min(100, Math.max(0, percent))));
+    knob.setAttribute('aria-valuetext', percent + '% swing');
+    knob.style.setProperty('--swing-angle', angle + 'deg');
+  }
   const readout = $('vSwing');
   if (readout) readout.textContent = Math.round(S.swing * 100) + '%';
 }
@@ -1460,6 +1465,21 @@ function setSwingFromOption(value) {
   syncSwingControl();
   renderRhythmIntelligence();
   autosave();
+}
+
+function stepSwing(delta) {
+  const active = nearestSwingOption(S.swing);
+  const index = Math.max(0, SWING_OPTIONS.indexOf(active));
+  const next = Math.min(SWING_OPTIONS.length - 1, Math.max(0, index + delta));
+  setSwingFromOption(SWING_OPTIONS[next]);
+}
+
+function setSwingFromPointer(event) {
+  const knob = $('swing');
+  if (!knob) return;
+  const rect = knob.getBoundingClientRect();
+  const value = SwingKnob.swingFromPoint(rect, event);
+  setSwingFromOption(nearestSwingOption(value));
 }
 
 function syncMasterControls() {
@@ -1659,8 +1679,24 @@ function wire() {
 
   // master
   bindF('mstVol', v => { S.mstVol = v / 100; applyFXState(); }, v => v + '%');
-  $('swing').querySelectorAll('[data-swing]').forEach(b => {
-    b.addEventListener('click', () => setSwingFromOption(parseFloat(b.dataset.swing)));
+  const swingKnob = $('swing');
+  if (swingKnob) {
+    swingKnob.addEventListener('pointerdown', event => {
+      swingKnob.setPointerCapture?.(event.pointerId);
+      setSwingFromPointer(event);
+    });
+    swingKnob.addEventListener('pointermove', event => {
+      if (event.buttons) setSwingFromPointer(event);
+    });
+    swingKnob.addEventListener('keydown', event => {
+      if (event.key === 'ArrowRight' || event.key === 'ArrowUp') { event.preventDefault(); stepSwing(1); }
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') { event.preventDefault(); stepSwing(-1); }
+      if (event.key === 'Home') { event.preventDefault(); setSwingFromOption(0); }
+      if (event.key === 'End') { event.preventDefault(); setSwingFromOption(0.75); }
+    });
+  }
+  document.querySelectorAll('[data-swing-step]').forEach(b => {
+    b.addEventListener('click', () => stepSwing(parseInt(b.dataset.swingStep, 10)));
   });
 
   // clear / export / import
