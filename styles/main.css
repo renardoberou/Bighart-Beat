@@ -661,10 +661,10 @@ body.running #ss  { display: none; }
 
   .seq {
     flex: 0 0 auto;
-    height: clamp(300px, 44vh, 420px);
+    height: clamp(260px, 38vh, 360px);
     overflow-x: auto;
     overflow-y: hidden;
-    touch-action: pan-x;
+    touch-action: pan-x pan-y;
   }
 
   .ctrl {

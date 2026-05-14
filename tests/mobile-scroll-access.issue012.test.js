@@ -50,8 +50,8 @@ assertRule(
 assertRule(
   mobileScroll,
   '\\.seq',
-  'flex\\s*:\\s*0\\s+0\\s+auto[\\s\\S]*?height\\s*:\\s*clamp\\(300px,\\s*44vh,\\s*420px\\)[\\s\\S]*?overflow-x\\s*:\\s*auto[\\s\\S]*?overflow-y\\s*:\\s*hidden[\\s\\S]*?touch-action\\s*:\\s*pan-x',
-  'mobile sequencer keeps horizontal panning but no longer consumes a fixed half viewport flex slot'
+  'flex\\s*:\\s*0\\s+0\\s+auto[\\s\\S]*?height\\s*:\\s*clamp\\(260px,\\s*38vh,\\s*360px\\)[\\s\\S]*?overflow-x\\s*:\\s*auto[\\s\\S]*?overflow-y\\s*:\\s*hidden[\\s\\S]*?touch-action\\s*:\\s*pan-x\\s+pan-y',
+  'mobile sequencer keeps horizontal panning while allowing vertical page scroll gestures'
 );
 assertRule(
   mobileScroll,
