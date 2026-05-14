@@ -27,6 +27,14 @@ assert(/selectPattern\(result\.pattern,[\s\S]*source: 'chain'/.test(main), 'queu
 assert(/selectPattern[\s\S]*syncPatternButtons\(\)[\s\S]*buildSeq\(\)[\s\S]*restorePatternFxScene\(S\.patt\)[\s\S]*renderRhythmIntelligence\(\)/.test(main), 'selectPattern keeps UI, FX latches, and rhythm intelligence in sync');
 assert(main.includes('patternChain: S.patternChain'), 'autosave/export includes the pattern chain state');
 assert(main.includes('S.patternChain = State.normalizePatternChain(d.patternChain'), 'imports normalize and apply pattern chain state');
+assert(main.includes('function cyclePatternChainSlotBars(slot)'), 'runtime exposes a chain slot bar-length cycler');
+assert(/cyclePatternChainSlotBars[\s\S]*State\.setPatternChainItem\(chain, slot, \{ pattern: item\.pattern, bars: nextBars \}\)/.test(main), 'bar-length cycler preserves pattern and updates only bars');
+assert(/const CHAIN_SLOT_BAR_CHOICES = \[1, 2, 4, 8, 16\]/.test(main), 'bar-length cycler uses compact playable 1/2/4/8/16 bar choices');
+assert(/data-chain-slot[\s\S]*pointerdown[\s\S]*setTimeout\([\s\S]*cyclePatternChainSlotBars/.test(main), 'chain slots support long-press to change bar length');
+assert(/click[\s\S]*chainSlotLongPressed/.test(main), 'long-press bar change suppresses the follow-up click pattern cycle');
+assert(/b\.title = 'Tap: pattern; hold: bars/.test(main), 'chain slots tell players tap changes pattern and hold changes bars');
+assert(/b\.setAttribute\('aria-label', 'Pattern chain slot/.test(main), 'chain slots expose tap/hold behavior to assistive tech');
+assert(/contextmenu[\s\S]*preventDefault/.test(main), 'chain slot long-press prevents native mobile context menus');
 
 assert(css.includes('.chain-strip'), 'CSS defines mobile-friendly chain strip styling');
 assert(css.includes('.chain-slot-b'), 'CSS defines touch targets for chain slots');

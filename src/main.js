@@ -34,6 +34,7 @@ const NON_KICK_PUMP_WEIGHT = 0.35;
 const GATE_ANALOG_JITTER_MS = 6;
 const GATE_ANALOG_CLOSED_DB = 3;
 const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
+const CHAIN_SLOT_BAR_CHOICES = [1, 2, 4, 8, 16];
 const hihatChokeState = { gain: null, open: false };
 
 function setHihatPlacement(value) {
@@ -1234,6 +1235,8 @@ function syncPatternChainControls() {
     if (!item) return;
     b.dataset.chainPattern = String(item.pattern);
     b.textContent = 'ABCD'[item.pattern] + '·' + item.bars;
+    b.title = 'Tap: pattern; hold: bars (' + item.bars + ')';
+    b.setAttribute('aria-label', 'Pattern chain slot ' + (slot + 1) + ': pattern ' + 'ABCD'[item.pattern] + ', ' + item.bars + ' bars. Tap for pattern, hold for bars.');
     b.classList.toggle('on', chain.enabled && slot === chain.position);
   });
 }
@@ -1245,6 +1248,18 @@ function cyclePatternChainSlot(slot) {
   S.patternChain = State.setPatternChainItem(chain, slot, { pattern: (item.pattern + 1) % 4, bars: item.bars });
   syncPatternChainControls();
   autosave();
+}
+
+function cyclePatternChainSlotBars(slot) {
+  const chain = State.normalizePatternChain(S.patternChain);
+  const item = chain.items[slot];
+  if (!item) return;
+  const currentIndex = CHAIN_SLOT_BAR_CHOICES.indexOf(item.bars);
+  const nextBars = CHAIN_SLOT_BAR_CHOICES[(currentIndex + 1) % CHAIN_SLOT_BAR_CHOICES.length];
+  S.patternChain = State.setPatternChainItem(chain, slot, { pattern: item.pattern, bars: nextBars });
+  syncPatternChainControls();
+  autosave();
+  toast('CHAIN ' + 'ABCD'[item.pattern] + ' · ' + nextBars + ' bars');
 }
 
 function latchCurrentPatternFxScene() {
@@ -1452,7 +1467,29 @@ function wire() {
     autosave();
   });
   $('songQueue').querySelectorAll('[data-chain-slot]').forEach(b => {
-    b.addEventListener('click', () => cyclePatternChainSlot(parseInt(b.dataset.chainSlot)));
+    let chainSlotPressTimer = null;
+    let chainSlotLongPressed = false;
+    const clearChainSlotPress = () => {
+      if (chainSlotPressTimer) clearTimeout(chainSlotPressTimer);
+      chainSlotPressTimer = null;
+    };
+    b.addEventListener('pointerdown', () => {
+      clearChainSlotPress();
+      chainSlotLongPressed = false;
+      chainSlotPressTimer = setTimeout(() => {
+        chainSlotLongPressed = true;
+        cyclePatternChainSlotBars(parseInt(b.dataset.chainSlot));
+      }, 450);
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => b.addEventListener(type, clearChainSlotPress));
+    b.addEventListener('contextmenu', e => e.preventDefault());
+    b.addEventListener('click', () => {
+      if (chainSlotLongPressed) {
+        chainSlotLongPressed = false;
+        return;
+      }
+      cyclePatternChainSlot(parseInt(b.dataset.chainSlot));
+    });
   });
 
   // drum-machine engine: changes synthesis immediately and does not stop playback
