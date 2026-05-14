@@ -9,30 +9,44 @@
 <title>BIGHART BEAT — STUDIO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=issue013-critical-scroll">
+<link rel="stylesheet" href="styles/main.css?v=issue014-app-scroll">
 <style id="mobileCriticalScrollFix">
-@media (max-width: 640px) {
-  /* MOBILE-CRITICAL-SCROLL-FIX: inline fallback for Telegram webviews that cache or suppress external mobile scroll CSS. */
+@media (max-width: 900px), (pointer: coarse) {
+  /* MOBILE-CRITICAL-SCROLL-FIX: Telegram webviews can ignore/body-lock document scrolling; make the running app itself the scroll container. */
   html,
   body {
+    width: 100%;
     min-height: 100%;
-    height: auto !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    height: 100% !important;
+    overflow: hidden !important;
     overscroll-behavior-y: contain;
-    touch-action: pan-y;
   }
 
   #app,
   body.running #app {
     min-height: 100dvh;
-    height: auto !important;
-    overflow-y: visible !important;
+    height: 100dvh !important;
+    max-height: 100dvh;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  @supports (height: 100svh) {
+    #app,
+    body.running #app {
+      min-height: 100svh;
+      height: 100svh !important;
+      max-height: 100svh;
+    }
   }
 
   .seq {
     flex: 0 0 auto !important;
-    height: clamp(260px, 38vh, 360px) !important;
+    height: clamp(220px, 32svh, 300px) !important;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
@@ -42,7 +56,7 @@
   .ctrl {
     flex: 0 0 auto !important;
     overflow: visible !important;
-    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    padding-bottom: calc(48px + env(safe-area-inset-bottom));
   }
 }
 </style>

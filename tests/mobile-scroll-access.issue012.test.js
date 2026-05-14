@@ -34,29 +34,29 @@ function assertRule(block, selectorPattern, declarationsPattern, message) {
 
 const mobileScroll = mediaBlockContaining('MOBILE-SCROLL-ACCESS-FIX');
 
-assert(/@media\s*\(max-width:\s*640px\)/.test(mobileScroll), 'mobile scroll contract is scoped to the existing 640px breakpoint');
+assert(/@media\s*\(max-width:\s*900px\),\s*\(pointer:\s*coarse\)/.test(mobileScroll), 'mobile scroll contract covers Telegram custom tabs and coarse-pointer webviews');
 assertRule(
   mobileScroll,
   'html,\\s*body',
-  'min-height\\s*:\\s*100%[\\s\\S]*?height\\s*:\\s*auto[\\s\\S]*?overflow-x\\s*:\\s*hidden[\\s\\S]*?overflow-y\\s*:\\s*auto[\\s\\S]*?overscroll-behavior-y\\s*:\\s*contain',
-  'mobile document scroll is enabled vertically while preventing horizontal page drift'
+  'width\\s*:\\s*100%[\\s\\S]*?min-height\\s*:\\s*100%[\\s\\S]*?height\\s*:\\s*100%[\\s\\S]*?overflow\\s*:\\s*hidden[\\s\\S]*?overscroll-behavior-y\\s*:\\s*contain',
+  'mobile document is locked so Telegram does not fight an internal app scroller'
 );
 assertRule(
   mobileScroll,
   '#app,\\s*body\\.running #app',
-  'min-height\\s*:\\s*100dvh[\\s\\S]*?height\\s*:\\s*auto[\\s\\S]*?overflow-y\\s*:\\s*visible',
-  'running app shell can grow with content instead of clipping controls below the fold'
+  'min-height\\s*:\\s*100dvh[\\s\\S]*?height\\s*:\\s*100dvh[\\s\\S]*?max-height\\s*:\\s*100dvh[\\s\\S]*?overflow-x\\s*:\\s*hidden[\\s\\S]*?overflow-y\\s*:\\s*auto[\\s\\S]*?-webkit-overflow-scrolling\\s*:\\s*touch[\\s\\S]*?touch-action\\s*:\\s*pan-y',
+  'running app shell is the reliable vertical scroll container in Telegram webviews'
 );
 assertRule(
   mobileScroll,
   '\\.seq',
-  'flex\\s*:\\s*0\\s+0\\s+auto[\\s\\S]*?height\\s*:\\s*clamp\\(260px,\\s*38vh,\\s*360px\\)[\\s\\S]*?overflow-x\\s*:\\s*auto[\\s\\S]*?overflow-y\\s*:\\s*hidden[\\s\\S]*?touch-action\\s*:\\s*pan-x\\s+pan-y',
+  'flex\\s*:\\s*0\\s+0\\s+auto[\\s\\S]*?height\\s*:\\s*clamp\\(220px,\\s*32svh,\\s*300px\\)[\\s\\S]*?overflow-x\\s*:\\s*auto[\\s\\S]*?overflow-y\\s*:\\s*hidden[\\s\\S]*?touch-action\\s*:\\s*pan-x\\s+pan-y',
   'mobile sequencer keeps horizontal panning while allowing vertical page scroll gestures'
 );
 assertRule(
   mobileScroll,
   '\\.ctrl',
-  'flex\\s*:\\s*0\\s+0\\s+auto[\\s\\S]*?overflow\\s*:\\s*visible[\\s\\S]*?padding-bottom\\s*:\\s*calc\\(24px\\s*\\+\\s*env\\(safe-area-inset-bottom\\)\\)',
+  'flex\\s*:\\s*0\\s+0\\s+auto[\\s\\S]*?overflow\\s*:\\s*visible[\\s\\S]*?padding-bottom\\s*:\\s*calc\\(48px\\s*\\+\\s*env\\(safe-area-inset-bottom\\)\\)',
   'mobile control panels participate in the document scroll with safe-area bottom padding'
 );
 
