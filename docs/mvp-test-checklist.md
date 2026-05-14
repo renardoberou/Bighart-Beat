@@ -7,13 +7,13 @@ Purpose: practical acceptance gates for a Bernado-testable MVP candidate. Run th
 From repo root:
 
 ```bash
-for f in tests/*.js; do node "$f"; done
-node --check src/main.js
+for f in tests/*.test.js; do node "$f"; done
+for f in src/state/*.js src/rhythm/*.js src/*.js tests/*.js; do node --check "$f"; done
 ```
 
 Pass criteria:
 - All test scripts exit 0.
-- `src/main.js` has no syntax errors.
+- App, rhythm, state, and test JavaScript syntax checks pass.
 - No unexpected working-tree source changes are present.
 
 ## Required MVP gates
@@ -42,16 +42,18 @@ Pass criteria:
 - Step state updates visually and audibly.
 - Clear affects only the selected bank.
 
-### Gate 3 — BPM and tap tempo
+### Gate 3 — BPM, tap tempo, and swing
 - Use `+` and `−` to change BPM.
 - Hold `+` and `−` to check repeat behavior.
 - Tap `TAP` four times at an obvious tempo.
-- Try bounds: BPM should not go below 40 or above 240.
+- Move `SWING` from `0%` to around `50–60%` while playing, then back to `0%`.
+- Try bounds: BPM should not go below 40 or above 240; swing should stay between `0%` and `100%`.
 
 Pass criteria:
 - BPM display updates immediately.
 - Playback tempo and delay time track the new BPM.
 - Tap tempo settles to a plausible BPM without console errors.
+- Swing visibly updates its percent readout and audibly delays off-beat 16ths without stopping transport.
 
 ### Gate 4 — pattern banks A–D
 - In pattern A, make an obvious edit.
@@ -113,6 +115,7 @@ Pass criteria:
 ## Current known MVP caveats to check before Bernado test
 
 - Rhythm intelligence UI/logic is now implemented and covered by automated fixtures, but still needs a real browser visual check.
+- Swing timing is covered by automated fixtures and should be given an audible live-playback check around `50–60%`.
 - Reverb gate routing is covered by an automated runtime guard and still deserves an audible FX sanity check.
 - Mobile mute usability must be verified: row-label double-click exists, but explicit mixer `M` buttons are the acceptable mobile path.
 - Full MVP confidence still requires at least one actual mobile-browser pass.
