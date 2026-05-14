@@ -653,7 +653,7 @@ body.running #ss  { display: none; }
 }
 .ri-action-btn {
   width: 100%;
-  min-height: 32px;
+  min-height: 44px;
   margin-top: 8px;
   border: 1px solid rgba(252, 242, 173, .55);
   background: rgba(232, 184, 75, .08);

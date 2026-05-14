@@ -8,14 +8,19 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
 
 assert(
   html.includes('id="riFixAnchorBtn"'),
   'RI panel exposes a compact FIX ANCHOR action control'
 );
 assert(
-  /FIX\s+ANCHOR/i.test(html),
-  'RI action control is labeled for mobile performance use'
+  /<button[^>]*id="riFixAnchorBtn"[^>]*>[\s\S]*APPLY\s+BRAIN\s+LOOP[\s\S]*FIX\s+ANCHOR[\s\S]*<\/button>/i.test(html),
+  'RI action control is explicitly labeled as an analysis-to-action Brain Loop mutation while preserving anchor intent'
+);
+assert(
+  /\.ri-action-btn\s*\{[\s\S]*width:\s*100%[\s\S]*min-height:\s*44px/.test(css),
+  'RI action control has a full-width 44px mobile-safe touch target'
 );
 assert(
   /function\s+createRhythmActionVariation\s*\(/.test(main),
