@@ -7,6 +7,7 @@ const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
 ═══════════════════════════════════════════════ */
 const State = globalThis.BighartBeatState;
 const Rhythm = globalThis.BighartBeatRhythm;
+const Groove = globalThis.BighartBeatGroove;
 const HihatVoice = globalThis.BighartBeatHihat;
 const KickVoice = window.BighartBeatKick;
 const SnareVoice = window.BighartBeatSnare;
@@ -703,7 +704,9 @@ function scheduledHitTimes(stepStart, stepDuration, count) {
 }
 
 function schedStep(step, t) {
-  tlog.push({ step, time: t });
+  const dur = stepDur();
+  const swungT = Groove.swungStepStartSeconds(step, t, dur, S.swing);
+  tlog.push({ step, time: swungT });
   if (tlog.length > 64) tlog.shift();
   const grid = PATTERNS[S.patt];
   for (let ti = 0; ti < TRACKS.length; ti++) {
@@ -711,7 +714,7 @@ function schedStep(step, t) {
     if (!grid[tr.id][step] || tr.mute) continue;
     const count = State.getRatchetCount(RATCHETS[S.patt], tr.id, step);
     firingStep = step;
-    for (const hitT of scheduledHitTimes(t, stepDur(), count)) fire(ti, hitT);
+    for (const hitT of Groove.scheduledHitTimes({ stepIndex: step, stepStart: t, stepDuration: dur, ratchets: count, swing: S.swing })) fire(ti, hitT);
   }
 }
 function advance() {
@@ -920,7 +923,7 @@ function renderRhythmIntelligence() {
   if (!Rhythm || !Rhythm.analyzeRhythm || !$('riPanel')) return;
   const analysis = Rhythm.analyzeRhythm({
     bpm: S.bpm,
-    swing: 0,
+    swing: S.swing,
     tracks: TRACKS,
     pattern: PATTERNS[S.patt],
     ratchets: RATCHETS[S.patt],
@@ -1310,10 +1313,12 @@ function syncFxControls() {
 function syncMasterControls() {
   $('bpmD').textContent = S.bpm;
   setFdr('mstVol', Math.round(S.mstVol * 100), v => v + '%');
+  setFdr('swing', Math.round(S.swing * 100), v => v + '%');
 }
 
 function applyProjectData(d) {
   S.bpm = d.bpm;
+  S.swing = Groove.clampSwing(d.swing);
   if (typeof d.patt === 'number') S.patt = d.patt;
   S.engine = d.engine || 'aphex';
   S.mstVol = d.mstVol;
@@ -1478,6 +1483,7 @@ function wire() {
 
   // master
   bindF('mstVol', v => { S.mstVol = v / 100; applyFXState(); }, v => v + '%');
+  bindF('swing', v => { S.swing = Groove.clampSwing(v / 100); renderRhythmIntelligence(); }, v => v + '%');
 
   // clear / export / import
   $('clearBtn').addEventListener('click', () => {

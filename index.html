@@ -18,6 +18,7 @@
 <script src="src/state/pattern-operations.js" defer></script>
 <script src="src/state/persistence.js" defer></script>
 <script src="src/rhythm/rhythm-intelligence.js" defer></script>
+<script src="src/rhythm/groove-timing.js" defer></script>
 <script src="src/rhythm/engine-profiles.js" defer></script>
 <script src="src/rhythm/hihat-voice.js" defer></script>
 <script src="src/rhythm/kick-voice.js" defer></script>
@@ -92,6 +93,11 @@
       <button class="hht-place-b on" data-quick-hht-place="0">CLOSED</button>
       <button class="hht-place-b" data-quick-hht-place=".45">TIGHT</button>
       <button class="hht-place-b" data-quick-hht-place="1">OPEN</button>
+    </div>
+    <div class="swing-strip" aria-label="Swing amount">
+      <span>SWING</span>
+      <input type="range" class="fdr a" id="swing" min="0" max="100" value="0">
+      <span class="swing-val" id="vSwing">0%</span>
     </div>
   </div>
   <div class="seq" id="seq"></div>

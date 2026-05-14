@@ -309,11 +309,29 @@ body.running #ss  { display: none; }
   color: var(--bg);
   box-shadow: 0 0 7px rgba(232,184,75,.35);
 }
+.swing-strip {
+  display: grid;
+  grid-template-columns: auto minmax(92px, 1fr) 34px;
+  align-items: center;
+  gap: 6px;
+  color: var(--amberLt);
+  font-size: 7px;
+  letter-spacing: 1px;
+  min-width: 170px;
+  white-space: nowrap;
+}
+.swing-val {
+  color: var(--amberLt);
+  font-family: var(--mono);
+  font-size: 8px;
+  text-align: right;
+}
 @media (max-width: 520px) {
   .seq-tools { align-items: stretch; flex-direction: column; gap: 4px; }
   .seq-hint { text-align: left; }
   .hht-place-strip { justify-content: space-between; }
   .hht-place-b { flex: 1 1 0; }
+  .swing-strip { grid-template-columns: 48px 1fr 34px; min-width: 0; }
 }
 .seq {
   flex: 0 0 50vh;

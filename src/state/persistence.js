@@ -147,6 +147,7 @@
     const project = {
       schemaVersion: SCHEMA_VERSION,
       bpm: appState.bpm,
+      swing: appState.swing || 0,
       patt: appState.patt,
       engine: ENGINES.includes(appState.engine) ? appState.engine : 'aphex',
       mstVol: appState.mstVol,
@@ -175,6 +176,7 @@
     }
     if (data.meta !== undefined) validateMeta(data.meta, errors);
     validateNumberInRange(data.bpm, 40, 240, errors, 'bpm');
+    if (data.swing !== undefined) validateNumberInRange(data.swing, 0, 1, errors, 'swing');
     if (data.patt !== undefined && (!Number.isInteger(data.patt) || data.patt < 0 || data.patt >= BANK_COUNT)) {
       errors.push('patt must be an integer from 0 to 3');
     }
@@ -489,6 +491,7 @@
     if (!validation.ok) return validation;
     const value = cloneValue(data);
     if (value.engine === undefined) value.engine = 'aphex';
+    if (value.swing === undefined) value.swing = 0;
     if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
     if (value.hihatOpenness === undefined) value.hihatOpenness = createHihatOpennessBanks();
     if (value.patternFxScenes === undefined) value.patternFxScenes = Array(BANK_COUNT).fill(null);

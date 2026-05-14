@@ -18,6 +18,7 @@ assert.strictEqual(SCHEMA_VERSION, 1, 'schema version is explicit and stable');
 
 const appState = createAppState();
 appState.bpm = 132;
+appState.swing = 0.35;
 appState.patt = 2;
 appState.engine = '909';
 appState.mstVol = 0.64;
@@ -44,10 +45,11 @@ const patterns = createPatternBanks();
 patterns[2].ether[15] = 1;
 
 const serialized = serializeProject({ appState, tracks, fx, patterns });
-assert.deepStrictEqual(Object.keys(serialized), ['schemaVersion', 'bpm', 'patt', 'engine', 'mstVol', 'patterns', 'tracks', 'fx', 'meta', 'patternChain'], 'serializeProject uses deterministic v4-compatible top-level shape including pattern chain');
+assert.deepStrictEqual(Object.keys(serialized), ['schemaVersion', 'bpm', 'swing', 'patt', 'engine', 'mstVol', 'patterns', 'tracks', 'fx', 'meta', 'patternChain'], 'serializeProject uses deterministic v4-compatible top-level shape including swing and pattern chain');
 assert.strictEqual(serialized.schemaVersion, 1);
 assert.deepStrictEqual(serialized.meta, { app: 'bighart-beat-v4' }, 'serializeProject omits volatile timestamps unless provided');
 assert.strictEqual(serialized.bpm, 132);
+assert.strictEqual(serialized.swing, 0.35, 'serializeProject persists global swing amount');
 assert.strictEqual(serialized.patt, 2);
 assert.strictEqual(serialized.engine, '909', 'serializeProject persists selected drum-machine engine');
 assert.strictEqual(serialized.mstVol, 0.64);
@@ -70,6 +72,7 @@ assert.deepStrictEqual(validateProjectData(serializeProject({ appState, tracks, 
 const parsedFromObject = parseProjectImport(serializeProject({ appState, tracks, fx, patterns }));
 assert.strictEqual(parsedFromObject.ok, true, 'parseProjectImport accepts valid objects');
 assert.strictEqual(parsedFromObject.value.engine, '909', 'parseProjectImport round-trips valid engine values');
+assert.strictEqual(parsedFromObject.value.swing, 0.35, 'parseProjectImport round-trips swing amount');
 assert.strictEqual(parsedFromObject.value.patterns[2].ether[15], 1);
 parsedFromObject.value.patterns[2].ether[15] = 0;
 assert.strictEqual(patterns[2].ether[15], 1, 'parseProjectImport returns cloned data');
@@ -94,6 +97,7 @@ const legacyShape = {
 assert.strictEqual(parseProjectImport(legacyShape).ok, true, 'parseProjectImport accepts current v4 export shape without schemaVersion');
 assert.strictEqual(parseProjectImport({ ...legacyShape, patt: 1 }).ok, true, 'parseProjectImport accepts legacy shape with patt and without schemaVersion');
 assert.strictEqual(parseProjectImport(legacyShape).value.engine, 'aphex', 'legacy imports without engine default to aphex');
+assert.strictEqual(parseProjectImport(legacyShape).value.swing, 0, 'legacy imports without swing default to straight timing');
 
 function assertImportRejected(project, pattern, label) {
   const result = parseProjectImport(project);

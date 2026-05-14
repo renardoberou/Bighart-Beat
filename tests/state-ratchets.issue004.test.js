@@ -100,7 +100,7 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 assert(/const\s+RATCHETS\s*=\s*State\.createRatchetBanks\(\)/.test(js));
 assert(/function\s+ratchetOffsets\s*\(\s*stepDuration\s*,\s*count\s*\)/.test(js));
 assert(/function\s+scheduledHitTimes\s*\(\s*stepStart\s*,\s*stepDuration\s*,\s*count\s*\)/.test(js));
-assert(/scheduledHitTimes\(t,\s*stepDur\(\),\s*count\)/.test(js));
+assert(/Groove\.scheduledHitTimes\(\{[\s\S]*stepIndex:\s*step[\s\S]*ratchets:\s*count[\s\S]*\}\)/.test(js), 'runtime schedules ratchets through the groove timing helper');
 assert(/fire\(ti,\s*hitT\)/.test(js));
 assert(/getRatchetCount\(RATCHETS\[S\.patt\],\s*tr\.id,\s*step\)/.test(js));
 assert(/addEventListener\(['"]contextmenu['"]/.test(js));

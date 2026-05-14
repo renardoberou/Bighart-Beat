@@ -75,6 +75,7 @@ assertIndependent(createDefaultFxState, null, f => { f.dly.on = true; f.rev.wet 
 const appState = createAppState();
 assert.deepStrictEqual(appState, {
   bpm: 120,
+  swing: 0,
   playing: false,
   patt: 0,
   sel: 0,
