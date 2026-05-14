@@ -31,11 +31,13 @@ assert(/N\.wreckTone\s*=\s*A\.createBiquadFilter\(\)/.test(buildGraph), 'master 
 assert(/N\.wreckOut\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master graph creates DIGI WRECK output trim');
 assert(/N\.compMakeup\.connect\(N\.wreckIn\)/.test(buildGraph), 'DIGI WRECK is hooked after pump compressor/auto-makeup');
 assert(!/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(buildGraph), 'bypassed DIGI WRECK must not keep feeding the mobile-costly sample-hold processor');
-assert(/updateWreckProcessorFeed\(FX\.wreck\.on\)/.test(buildGraph), 'initial DIGI WRECK processor feed follows the on/off state');
+assert(/updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)/.test(buildGraph), 'initial DIGI WRECK processor feed follows audible wet-feed state');
 assert(/N\.wreckDownsample\.connect\(N\.wreckCrusher\)/.test(buildGraph), 'sample-hold/downsample stage feeds the crusher instead of only shaping a curve');
+assert(/function\s+shouldFeedWreckProcessor\s*\(\)\s*\{/.test(js), 'runtime defines a DIGI WRECK wet-feed predicate');
+assert(/return\s+!!\(FX\.wreck\.on\s*&&\s*FX\.wreck\.mix\s*>\s*0\s*&&\s*FX\.wreck\.out\s*>\s*0\)/.test(js), 'DIGI WRECK only feeds processor when enabled with audible wet mix/output');
 assert(/function\s+updateWreckProcessorFeed\s*\(active\)\s*\{/.test(js), 'runtime defines a gated DIGI WRECK processor-feed helper');
-assert(/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper reconnects wet input only when DIGI WRECK is enabled');
-assert(/N\.wreckIn\.disconnect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper disconnects wet input when DIGI WRECK is bypassed');
+assert(/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper reconnects wet input only when DIGI WRECK wet path is audible');
+assert(/N\.wreckIn\.disconnect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper disconnects wet input when DIGI WRECK is bypassed or zero-wet');
 assert(/N\.wreckOut\.connect\(N\.mstSat\)/.test(buildGraph), 'DIGI WRECK feeds existing safe saturation/limiter path before master');
 assert(!/N\.compMakeup\.connect\(N\.mstSat\)/.test(buildGraph), 'DIGI WRECK cannot be bypassed by old compressor-to-saturation route');
 
@@ -48,6 +50,7 @@ assert(/function\s+wreckToneHz\s*\(/.test(js), 'runtime defines DIGI WRECK tone 
 const applyFXState = extractFunction('applyFXState');
 assert(/N\.wreckCrusher\.curve\s*=\s*mkWreckCurve\(FX\.wreck\.bits,\s*FX\.wreck\.curve,\s*FX\.wreck\.rate,\s*FX\.wreck\.threshold\)/.test(applyFXState), 'applyFXState updates bit depth, transfer mode, rate, and threshold');
 assert(/N\.wreckDownsample\.wreckRate\s*=\s*FX\.wreck\.rate/.test(applyFXState), 'applyFXState drives the real sample-hold/downsample stage from RATE');
+assert(/updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)/.test(applyFXState), 'applyFXState gates DIGI WRECK processor feed by audible wet-feed state');
 assert(/N\.wreckTone\.frequency\.setTargetAtTime\(wreckToneHz\(FX\.wreck\.tone/.test(applyFXState), 'applyFXState maps DIGI WRECK tone to a filter');
 assert(/N\.wreckDry\.gain\.setTargetAtTime\(FX\.wreck\.on\s*\?\s*1\s*-\s*FX\.wreck\.mix\s*:\s*1/.test(applyFXState), 'applyFXState keeps dry signal when DIGI WRECK is bypassed');
 assert(/N\.wreckWet\.gain\.setTargetAtTime\(FX\.wreck\.on\s*\?\s*FX\.wreck\.mix\s*:\s*0/.test(applyFXState), 'applyFXState controls wet destruction blend');
