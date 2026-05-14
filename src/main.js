@@ -1229,6 +1229,7 @@ function syncPatternChainControls() {
   S.patternChain = chain;
   $('chainToggle').classList.toggle('on', chain.enabled);
   $('chainToggle').textContent = chain.enabled ? 'CHAIN ON' : 'CHAIN';
+  $('chainStatus').textContent = State.describePatternChainStatus(chain);
   $('songQueue').querySelectorAll('[data-chain-slot]').forEach(b => {
     const slot = parseInt(b.dataset.chainSlot);
     const item = chain.items[slot];

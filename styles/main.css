@@ -273,6 +273,16 @@ body.running #ss  { display: none; }
   letter-spacing: 1px;
   cursor: pointer;
 }
+.chain-status {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  color: var(--amberLt);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .8px;
+  line-height: 28px;
+  white-space: nowrap;
+}
 .chain-toggle.on,
 .chain-slot-b.on {
   color: var(--bg);
@@ -284,6 +294,7 @@ body.running #ss  { display: none; }
 @media (max-width: 420px) {
   .chain-strip { order: 3; justify-content: flex-end; }
   .chain-toggle, .chain-slot-b { min-width: 36px; height: 32px; }
+  .chain-status { line-height: 32px; }
 }
 
 @media (max-width: 380px) {

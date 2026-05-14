@@ -123,6 +123,14 @@
     return { chain: normalized, pattern, changed: true };
   }
 
+  function describePatternChainStatus(chain) {
+    const normalized = normalizePatternChain(chain);
+    if (!normalized.enabled) return 'CHAIN OFF';
+    const item = normalized.items[normalized.position];
+    const nextItem = normalized.items[(normalized.position + 1) % normalized.items.length];
+    return 'ABCD'[item.pattern] + ' ' + (normalized.barCount + 1) + '/' + item.bars + ' → ' + 'ABCD'[nextItem.pattern];
+  }
+
   const api = {
     createDefaultPatternChain,
     clonePatternChain,
@@ -131,6 +139,7 @@
     setPatternChainItem,
     advancePatternChainBar,
     cuePatternChain,
+    describePatternChainStatus,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
