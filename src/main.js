@@ -714,7 +714,20 @@ function schedStep(step, t) {
     for (const hitT of scheduledHitTimes(t, stepDur(), count)) fire(ti, hitT);
   }
 }
-function advance() { sch = (sch + 1) % 16; nextT += stepDur(); }
+function advance() {
+  const wasLastStep = sch === 15;
+  sch = (sch + 1) % 16;
+  nextT += stepDur();
+  if (wasLastStep) maybeAdvancePatternChain();
+}
+
+function maybeAdvancePatternChain() {
+  if (!S.patternChain || !S.patternChain.enabled) return;
+  const result = State.advancePatternChainBar(S.patternChain, S.patt);
+  S.patternChain = result.chain;
+  if (result.changed) selectPattern(result.pattern, { source: 'chain', autosave: false });
+  syncPatternChainControls();
+}
 function runSch() {
   while (nextT < A.currentTime + AHEAD) { schedStep(sch, nextT); advance(); }
   schTimer = setTimeout(runSch, TICK);
@@ -1164,7 +1177,7 @@ function autosave() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try {
-      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, patternFxScenes: PATTERN_FX_SCENES });
+      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain });
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch(e) {}
   }, 250);
@@ -1188,6 +1201,47 @@ function syncPatternButtons() {
       ? 'Pattern ' + 'ABCD'[patternIndex] + ' has a latched FX scene'
       : 'Pattern ' + 'ABCD'[patternIndex];
   });
+}
+
+function selectPattern(patternIndex, options) {
+  const opts = options || {};
+  if (!Number.isInteger(patternIndex) || patternIndex < 0 || patternIndex > 3) return;
+  S.patt = patternIndex;
+  if (opts.source === 'manual' && S.patternChain && S.patternChain.enabled) {
+    const cue = State.cuePatternChain(S.patternChain, S.patt);
+    S.patternChain = cue.chain;
+    syncPatternChainControls();
+  }
+  syncPatternButtons();
+  buildSeq();
+  restorePatternFxScene(S.patt);
+  renderRhythmIntelligence();
+  if (opts.autosave !== false) autosave();
+}
+
+function syncPatternChainControls() {
+  if (!$('songQueue') || !S.patternChain) return;
+  const chain = State.normalizePatternChain(S.patternChain);
+  S.patternChain = chain;
+  $('chainToggle').classList.toggle('on', chain.enabled);
+  $('chainToggle').textContent = chain.enabled ? 'CHAIN ON' : 'CHAIN';
+  $('songQueue').querySelectorAll('[data-chain-slot]').forEach(b => {
+    const slot = parseInt(b.dataset.chainSlot);
+    const item = chain.items[slot];
+    if (!item) return;
+    b.dataset.chainPattern = String(item.pattern);
+    b.textContent = 'ABCD'[item.pattern] + '·' + item.bars;
+    b.classList.toggle('on', chain.enabled && slot === chain.position);
+  });
+}
+
+function cyclePatternChainSlot(slot) {
+  const chain = State.normalizePatternChain(S.patternChain);
+  const item = chain.items[slot];
+  if (!item) return;
+  S.patternChain = State.setPatternChainItem(chain, slot, { pattern: (item.pattern + 1) % 4, bars: item.bars });
+  syncPatternChainControls();
+  autosave();
 }
 
 function latchCurrentPatternFxScene() {
@@ -1263,6 +1317,7 @@ function applyProjectData(d) {
   if (typeof d.patt === 'number') S.patt = d.patt;
   S.engine = d.engine || 'aphex';
   S.mstVol = d.mstVol;
+  S.patternChain = State.normalizePatternChain(d.patternChain || State.createDefaultPatternChain());
   for (let i = 0; i < 4; i++) {
     PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
     RATCHETS[i] = State.cloneRatchetGrid(d.ratchets[i]);
@@ -1310,13 +1365,17 @@ function wire() {
   // patterns
   $('patt').querySelectorAll('.patt-b').forEach(b => {
     b.addEventListener('click', () => {
-      S.patt = parseInt(b.dataset.p);
-      syncPatternButtons();
-      buildSeq();
-      restorePatternFxScene(S.patt);
-      renderRhythmIntelligence();
-      autosave();
+      selectPattern(parseInt(b.dataset.p), { source: 'manual' });
     });
+  });
+
+  $('chainToggle').addEventListener('click', () => {
+    S.patternChain = State.setPatternChainEnabled(S.patternChain, !S.patternChain.enabled);
+    syncPatternChainControls();
+    autosave();
+  });
+  $('songQueue').querySelectorAll('[data-chain-slot]').forEach(b => {
+    b.addEventListener('click', () => cyclePatternChainSlot(parseInt(b.dataset.chainSlot)));
   });
 
   // drum-machine engine: changes synthesis immediately and does not stop playback
@@ -1517,7 +1576,7 @@ function doTap() {
 }
 
 function exportJSON() {
-  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, patternFxScenes: PATTERN_FX_SCENES, timestamp: new Date().toISOString() });
+  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain, timestamp: new Date().toISOString() });
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1534,6 +1593,7 @@ async function importJSON(e) {
     if (!parsed.ok) { toast('Import failed'); return; }
     applyProjectData(parsed.value);
     syncPatternButtons();
+    syncPatternChainControls();
     syncMasterControls();
     syncFxControls();
     syncEngineSelector();
@@ -1573,6 +1633,7 @@ function launch() {
   // restore UI state
   syncMasterControls();
   syncPatternButtons();
+  syncPatternChainControls();
   syncFxControls();
   syncEngineSelector();
   renderRhythmIntelligence();

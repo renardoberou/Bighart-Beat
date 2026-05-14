@@ -80,7 +80,18 @@ assert.deepStrictEqual(appState, {
   sel: 0,
   engine: 'aphex',
   mstVol: .72,
+  patternChain: {
+    enabled: false,
+    position: 0,
+    barCount: 0,
+    items: [
+      { pattern: 0, bars: 1 },
+      { pattern: 1, bars: 1 },
+      { pattern: 2, bars: 1 },
+      { pattern: 0, bars: 1 },
+    ],
+  },
 }, 'createAppState returns canonical app defaults');
-assertIndependent(createAppState, null, s => { s.bpm = 140; }, s => s.bpm, 'createAppState');
+assertIndependent(createAppState, null, s => { s.bpm = 140; s.patternChain.items[0].pattern = 3; }, s => [s.bpm, s.patternChain.items[0].pattern], 'createAppState');
 
 console.log('Mission 004 state helper checks passed.');

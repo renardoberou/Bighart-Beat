@@ -46,6 +46,26 @@
     return { dly: {}, rev: {}, comp: {} };
   }
 
+  function getPatternChainApi() {
+    if (root && root.BighartBeatState && typeof root.BighartBeatState.createDefaultPatternChain === 'function') {
+      return root.BighartBeatState;
+    }
+    if (typeof require === 'function') return require('./pattern-chain.js');
+    return null;
+  }
+
+  function createDefaultPatternChain() {
+    const api = getPatternChainApi();
+    if (api && typeof api.createDefaultPatternChain === 'function') return api.createDefaultPatternChain();
+    return { enabled: false, position: 0, barCount: 0, items: [{ pattern: 0, bars: 1 }] };
+  }
+
+  function normalizePatternChain(chain) {
+    const api = getPatternChainApi();
+    if (api && typeof api.normalizePatternChain === 'function') return api.normalizePatternChain(chain);
+    return cloneValue(chain);
+  }
+
   function isDangerousKey(key) {
     return DANGEROUS_KEYS.includes(key);
   }
@@ -138,6 +158,7 @@
     if (input.ratchets !== undefined) project.ratchets = cloneRatchets(input.ratchets);
     if (input.hihatOpenness !== undefined) project.hihatOpenness = cloneHihatOpennessBanks(input.hihatOpenness);
     if (input.patternFxScenes !== undefined) project.patternFxScenes = clonePatternFxScenes(input.patternFxScenes);
+    project.patternChain = normalizePatternChain(input.patternChain || appState.patternChain || createDefaultPatternChain());
     return project;
   }
 
@@ -166,6 +187,7 @@
     validateRatchets(data.ratchets, errors);
     validateHihatOpenness(data.hihatOpenness, errors);
     validatePatternFxScenes(data.patternFxScenes, errors);
+    validatePatternChain(data.patternChain, errors);
     validateTracks(data.tracks, errors);
     validateFx(data.fx, errors);
 
@@ -312,6 +334,15 @@
       });
       if (track.vol !== undefined) validateNumberInRange(track.vol, 0, 1, errors, path + '.vol');
     });
+  }
+
+  function validatePatternChain(chain, errors) {
+    if (chain === undefined) return;
+    try {
+      normalizePatternChain(chain);
+    } catch (err) {
+      errors.push(err && err.message ? err.message : 'patternChain is invalid');
+    }
   }
 
   function validateTracks(tracks, errors) {
@@ -461,6 +492,7 @@
     if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
     if (value.hihatOpenness === undefined) value.hihatOpenness = createHihatOpennessBanks();
     if (value.patternFxScenes === undefined) value.patternFxScenes = Array(BANK_COUNT).fill(null);
+    value.patternChain = value.patternChain === undefined ? createDefaultPatternChain() : normalizePatternChain(value.patternChain);
     normalizeLegacyFx(value.fx);
     return { ok: true, value, errors: [] };
   }

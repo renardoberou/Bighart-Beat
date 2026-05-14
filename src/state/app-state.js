@@ -9,6 +9,22 @@
       sel: 0,
       engine: 'aphex',
       mstVol: .72,
+      patternChain: getDefaultPatternChain(),
+    };
+  }
+
+  function getDefaultPatternChain() {
+    if (root && root.BighartBeatState && typeof root.BighartBeatState.createDefaultPatternChain === 'function') {
+      return root.BighartBeatState.createDefaultPatternChain();
+    }
+    if (typeof require === 'function') {
+      return require('./pattern-chain.js').createDefaultPatternChain();
+    }
+    return {
+      enabled: false,
+      position: 0,
+      barCount: 0,
+      items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 0, bars: 1 }],
     };
   }
 

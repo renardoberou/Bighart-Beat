@@ -13,6 +13,7 @@
 <script src="src/state/tracks.js" defer></script>
 <script src="src/state/patterns.js" defer></script>
 <script src="src/state/fx-state.js" defer></script>
+<script src="src/state/pattern-chain.js" defer></script>
 <script src="src/state/app-state.js" defer></script>
 <script src="src/state/pattern-operations.js" defer></script>
 <script src="src/state/persistence.js" defer></script>
@@ -71,6 +72,13 @@
         <button class="patt-b" data-p="1">B</button>
         <button class="patt-b" data-p="2">C</button>
         <button class="patt-b" data-p="3">D</button>
+      </div>
+      <div class="chain-strip" id="songQueue" aria-label="Pattern chain song queue">
+        <button class="chain-toggle" id="chainToggle" title="Enable pattern chain">CHAIN</button>
+        <button class="chain-slot-b" data-chain-slot="0" data-chain-pattern="0">A·1</button>
+        <button class="chain-slot-b" data-chain-slot="1" data-chain-pattern="1">B·1</button>
+        <button class="chain-slot-b" data-chain-slot="2" data-chain-pattern="2">C·1</button>
+        <button class="chain-slot-b" data-chain-slot="3" data-chain-pattern="3">D·1</button>
       </div>
       <button class="btn latch-btn" id="latchFxBtn" title="Save current FX/mix scene to selected pattern">LATCH FX</button>
     </div>
