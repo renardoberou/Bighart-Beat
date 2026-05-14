@@ -283,6 +283,17 @@ body.running #ss  { display: none; }
   line-height: 28px;
   white-space: nowrap;
 }
+.chain-hint {
+  flex: 1 1 70px;
+  min-width: 54px;
+  color: var(--textDm2);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: .7px;
+  line-height: 1.15;
+  text-align: right;
+  white-space: normal;
+}
 .chain-toggle.on,
 .chain-slot-b.on {
   color: var(--bg);
@@ -292,9 +303,10 @@ body.running #ss  { display: none; }
 }
 
 @media (max-width: 420px) {
-  .chain-strip { order: 3; justify-content: flex-end; }
+  .chain-strip { order: 3; justify-content: flex-end; flex-wrap: wrap; }
   .chain-toggle, .chain-slot-b { min-width: 36px; height: 32px; }
   .chain-status { line-height: 32px; }
+  .chain-hint { flex-basis: 100%; order: 9; text-align: left; }
 }
 
 @media (max-width: 380px) {
