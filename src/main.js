@@ -35,6 +35,8 @@ const GATE_ANALOG_JITTER_MS = 6;
 const GATE_ANALOG_CLOSED_DB = 3;
 const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
 const CHAIN_SLOT_BAR_CHOICES = [1, 2, 4, 8, 16];
+const OPEN_HIHAT_ROW_ID = 'open-hihat';
+const OPEN_HIHAT_ROW_LABEL = 'OHH';
 const hihatChokeState = { gain: null, open: false };
 
 function setHihatPlacement(value) {
@@ -796,20 +798,33 @@ function uiLoop() {
 /* ═══════════════════════════════════════════════
    SEQUENCER BUILD
 ═══════════════════════════════════════════════ */
+function sequencerRows() {
+  const rows = [];
+  for (const tr of TRACKS) {
+    rows.push({ rowId: tr.id, label: tr.n, track: tr, openHihat: false });
+    if (tr.id === 'hihat') rows.push({ rowId: OPEN_HIHAT_ROW_ID, label: OPEN_HIHAT_ROW_LABEL, track: tr, openHihat: true });
+  }
+  return rows;
+}
+
 function buildSeq() {
   const seq = $('seq');
   seq.innerHTML = '';
-  for (const tr of TRACKS) {
+  for (const rowSpec of sequencerRows()) {
+    const tr = rowSpec.track;
+    const trackIndex = TRACKS.indexOf(tr);
+    const trackId = rowSpec.track.id;
+    const isOpenHihatRow = rowSpec.rowId === OPEN_HIHAT_ROW_ID;
     const row = document.createElement('div');
     row.className = 'row';
-    row.dataset.id = tr.id;
+    row.dataset.id = rowSpec.rowId;
 
     const lbl = document.createElement('div');
     lbl.className = 'rlbl' + (tr.mute ? ' mute' : '');
-    lbl.dataset.ti = TRACKS.indexOf(tr);
-    lbl.innerHTML = `<div class="dot"></div><span>${tr.n}</span><div class="mi">${tr.mute ? 'MUTE' : 'ON'}</div>`;
+    lbl.dataset.ti = trackIndex;
+    lbl.innerHTML = `<div class="dot"></div><span>${rowSpec.label}</span><div class="mi">${tr.mute ? 'MUTE' : 'ON'}</div>`;
     lbl.addEventListener('click', () => {
-      S.sel = TRACKS.indexOf(tr);
+      S.sel = trackIndex;
       buildSeq();
       buildMix();
       buildVE();
@@ -819,40 +834,41 @@ function buildSeq() {
       tr.mute = !tr.mute;
       buildSeq(); buildMix();
     });
-    if (TRACKS.indexOf(tr) === S.sel) lbl.classList.add('sel');
+    if (trackIndex === S.sel && !isOpenHihatRow) lbl.classList.add('sel');
     row.appendChild(lbl);
 
     for (let i = 0; i < 16; i++) {
       const c = document.createElement('div');
       c.className = 'sc';
       c.dataset.s = i;
-      c.dataset.ti = TRACKS.indexOf(tr);
+      c.dataset.ti = trackIndex;
       if (i % 4 === 0)  c.classList.add('db');
       if (i % 8 === 0)  c.classList.add('db4');
-      const grid = PATTERNS[S.patt];
+      const isOpenHihatStep = () => PATTERNS[S.patt][trackId][i] && State.getHihatOpenness(HHT_OPENNESS[S.patt], i) === 1;
+      const isCellOn = () => isOpenHihatRow ? isOpenHihatStep() : !!PATTERNS[S.patt][trackId][i] && (trackId !== 'hihat' || !isOpenHihatStep());
       const setHihatCellMarker = () => {
         c.classList.remove('hht-tight', 'hht-open');
         delete c.dataset.hat;
-        if (tr.id !== 'hihat' || !PATTERNS[S.patt][tr.id][i]) return;
+        if (trackId !== 'hihat' || !PATTERNS[S.patt][trackId][i]) return;
         const open = State.getHihatOpenness(HHT_OPENNESS[S.patt], i);
-        if (open === 0.45) {
-          c.classList.add('hht-tight');
-          c.dataset.hat = 'tight';
-        } else if (open === 1) {
+        if (isOpenHihatRow && open === 1) {
           c.classList.add('hht-open');
           c.dataset.hat = 'open';
+        } else if (!isOpenHihatRow && open === 0.45) {
+          c.classList.add('hht-tight');
+          c.dataset.hat = 'tight';
         }
       };
-      if (grid[tr.id][i]) c.classList.add('on');
+      if (isCellOn()) c.classList.add('on');
       setHihatCellMarker();
-      const ratchet = State.getRatchetCount(RATCHETS[S.patt], tr.id, i);
+      const ratchet = State.getRatchetCount(RATCHETS[S.patt], trackId, i);
       if (ratchet > 1) {
         c.classList.add('r' + ratchet);
         c.dataset.r = ratchet + 'x';
       }
       const refreshCell = () => {
-        const nextRatchet = State.getRatchetCount(RATCHETS[S.patt], tr.id, i);
-        c.classList.toggle('on', !!PATTERNS[S.patt][tr.id][i]);
+        const nextRatchet = State.getRatchetCount(RATCHETS[S.patt], trackId, i);
+        c.classList.toggle('on', isCellOn());
         c.classList.remove('r2', 'r3');
         delete c.dataset.r;
         if (nextRatchet > 1) {
@@ -862,11 +878,18 @@ function buildSeq() {
         setHihatCellMarker();
       };
       const cycleCellRatchet = () => {
-        const wasOn = !!PATTERNS[S.patt][tr.id][i];
+        const wasOn = isCellOn();
+        const backingWasOn = !!PATTERNS[S.patt][trackId][i];
         if (!wasOn) PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
-        if (tr.id === 'hihat') HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
+        if (!wasOn && isOpenHihatRow && backingWasOn) PATTERNS[S.patt] = State.toggleStep(PATTERNS[S.patt], tr.id, i);
+        if (tr.id === 'hihat' && isOpenHihatRow) {
+          HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, 1);
+        } else if (tr.id === 'hihat') {
+          HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
+        }
         RATCHETS[S.patt] = State.cycleRatchetCount(RATCHETS[S.patt], tr.id, i);
-        refreshCell();
+        if (tr.id === 'hihat') buildSeq();
+        else refreshCell();
         renderRhythmIntelligence();
         autosave();
       };
@@ -874,12 +897,27 @@ function buildSeq() {
       let longPressFired = false;
       c.addEventListener('click', () => {
         if (longPressFired) { longPressFired = false; return; }
-        const wasOn = !!PATTERNS[S.patt][tr.id][i];
-        if (tr.id === 'hihat' && wasOn && TRACKS.indexOf(tr) === S.sel) {
+        const wasOn = isCellOn();
+        if (isOpenHihatRow) {
+          if (!wasOn) {
+            PATTERNS[S.patt][trackId][i] = 1;
+            HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, 1);
+          } else {
+            const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
+            PATTERNS[S.patt] = result.pattern;
+            RATCHETS[S.patt] = result.ratchets;
+            HHT_OPENNESS[S.patt] = State.clearHihatOpenness(HHT_OPENNESS[S.patt], i);
+          }
+          buildSeq();
+          renderRhythmIntelligence();
+          autosave();
+          return;
+        }
+        if (trackId === 'hihat' && PATTERNS[S.patt][trackId][i] && trackIndex === S.sel) {
           const currentOpen = State.getHihatOpenness(HHT_OPENNESS[S.patt], i);
           if (currentOpen !== HHT_PLACE) {
             HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
-            refreshCell();
+            buildSeq();
             renderRhythmIntelligence();
             autosave();
             return;
@@ -888,12 +926,13 @@ function buildSeq() {
         const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
         PATTERNS[S.patt] = result.pattern;
         RATCHETS[S.patt] = result.ratchets;
-        if (tr.id === 'hihat') {
+        if (trackId === 'hihat') {
           HHT_OPENNESS[S.patt] = wasOn
             ? State.clearHihatOpenness(HHT_OPENNESS[S.patt], i)
             : State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
         }
-        refreshCell();
+        if (tr.id === 'hihat') buildSeq();
+        else refreshCell();
         renderRhythmIntelligence();
         autosave();
       });
