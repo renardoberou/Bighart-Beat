@@ -1548,11 +1548,19 @@ function wire() {
   $('bpmUp').addEventListener('click', () => chgBPM(1));
   $('bpmDn').addEventListener('click', () => chgBPM(-1));
   let bpmHold = null;
-  $('bpmUp').addEventListener('pointerdown', () => { bpmHold = setInterval(() => chgBPM(2), 110); });
-  $('bpmDn').addEventListener('pointerdown', () => { bpmHold = setInterval(() => chgBPM(-2), 110); });
+  function clearBpmHold() {
+    clearInterval(bpmHold);
+    bpmHold = null;
+  }
+  function startBpmHold(delta) {
+    clearBpmHold();
+    bpmHold = setInterval(() => chgBPM(delta), 110);
+  }
+  $('bpmUp').addEventListener('pointerdown', () => { startBpmHold(2); });
+  $('bpmDn').addEventListener('pointerdown', () => { startBpmHold(-2); });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(e => {
-    $('bpmUp').addEventListener(e, () => clearInterval(bpmHold));
-    $('bpmDn').addEventListener(e, () => clearInterval(bpmHold));
+    $('bpmUp').addEventListener(e, clearBpmHold);
+    $('bpmDn').addEventListener(e, clearBpmHold);
   });
 
   $('tapBtn').addEventListener('click', doTap);
