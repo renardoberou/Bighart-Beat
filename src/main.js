@@ -1254,6 +1254,31 @@ function latchCurrentPatternFxScene() {
   toast('FX latched to pattern ' + 'ABCD'[S.patt]);
 }
 
+function createControlledPatternVariation() {
+  if (!State.applyControlledPatternVariation) return;
+  const result = State.applyControlledPatternVariation({
+    patterns: PATTERNS,
+    ratchets: RATCHETS,
+    hihatOpenness: HHT_OPENNESS,
+    sourceIndex: S.patt,
+    targetIndex: (S.patt + 1) % 4,
+    edit: {
+      trackId: 'hihat',
+      stepIndex: 15,
+      active: 1,
+      ratchet: 2,
+      hihatOpen: 0.45,
+    },
+  });
+  PATTERNS[result.targetIndex] = result.patterns[result.targetIndex];
+  RATCHETS[result.targetIndex] = result.ratchets[result.targetIndex];
+  HHT_OPENNESS[result.targetIndex] = result.hihatOpenness[result.targetIndex];
+  selectPattern(result.targetIndex, { source: 'manual', autosave: false });
+  renderRhythmIntelligence();
+  autosave();
+  toast('VAR +1 → pattern ' + 'ABCD'[result.targetIndex]);
+}
+
 function restorePatternFxScene(patternIndex) {
   const scene = PATTERN_FX_SCENES[patternIndex];
   if (!scene) return false;
@@ -1366,6 +1391,7 @@ function wire() {
 
   $('tapBtn').addEventListener('click', doTap);
   $('latchFxBtn').addEventListener('click', latchCurrentPatternFxScene);
+  $('variationBtn').addEventListener('click', createControlledPatternVariation);
 
   // patterns
   $('patt').querySelectorAll('.patt-b').forEach(b => {

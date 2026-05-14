@@ -283,6 +283,22 @@ body.running #ss  { display: none; }
   letter-spacing: 2px;
   text-align: right;
 }
+.variation-btn {
+  min-height: 28px;
+  padding: 0 10px;
+  background: var(--panel2);
+  border: 1px solid rgba(82,168,216,.45);
+  color: var(--skyLt);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.variation-btn:active {
+  background: var(--skyLt);
+  color: var(--bg);
+}
 .hht-place-strip {
   display: flex;
   align-items: center;
@@ -329,6 +345,7 @@ body.running #ss  { display: none; }
 @media (max-width: 520px) {
   .seq-tools { align-items: stretch; flex-direction: column; gap: 4px; }
   .seq-hint { text-align: left; }
+  .variation-btn { width: 100%; min-height: 32px; }
   .hht-place-strip { justify-content: space-between; }
   .hht-place-b { flex: 1 1 0; }
   .swing-strip { grid-template-columns: 48px 1fr 34px; min-width: 0; }
