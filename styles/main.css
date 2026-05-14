@@ -625,6 +625,21 @@ body.running #ss  { display: none; }
   line-height: 1.35;
   letter-spacing: .4px;
 }
+.ri-action-btn {
+  width: 100%;
+  min-height: 32px;
+  margin-top: 8px;
+  border: 1px solid rgba(252, 242, 173, .55);
+  background: rgba(232, 184, 75, .08);
+  color: var(--amberLt);
+  font: 700 10px var(--mono);
+  letter-spacing: 1.5px;
+  cursor: pointer;
+}
+.ri-action-btn:active {
+  background: var(--amberLt);
+  color: var(--bg);
+}
 .hat-test {
   display: grid;
   grid-template-columns: 58px 1fr;

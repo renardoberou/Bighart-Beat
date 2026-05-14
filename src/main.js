@@ -1254,6 +1254,51 @@ function latchCurrentPatternFxScene() {
   toast('FX latched to pattern ' + 'ABCD'[S.patt]);
 }
 
+function analyzeCurrentRhythm() {
+  if (!Rhythm || !Rhythm.analyzeRhythm) return null;
+  return Rhythm.analyzeRhythm({
+    bpm: S.bpm,
+    swing: S.swing,
+    tracks: TRACKS,
+    pattern: PATTERNS[S.patt],
+    ratchets: RATCHETS[S.patt],
+    hihatOpenness: HHT_OPENNESS[S.patt],
+    stepsPerBar: 16,
+    fx: { comp: FX.comp },
+  });
+}
+
+function createRhythmActionVariation() {
+  if (!State.resolveRhythmMutationAction || !State.applyControlledPatternVariation) return;
+  const analysis = analyzeCurrentRhythm();
+  if (!analysis) return;
+  const action = State.resolveRhythmMutationAction({
+    analysis,
+    pattern: PATTERNS[S.patt],
+    ratchets: RATCHETS[S.patt],
+    hihatOpenness: HHT_OPENNESS[S.patt],
+  });
+  if (!action || !action.edit) {
+    toast('ANCHOR OK');
+    return;
+  }
+  const result = State.applyControlledPatternVariation({
+    patterns: PATTERNS,
+    ratchets: RATCHETS,
+    hihatOpenness: HHT_OPENNESS,
+    sourceIndex: S.patt,
+    targetIndex: (S.patt + 1) % 4,
+    edit: action.edit,
+  });
+  PATTERNS[result.targetIndex] = result.patterns[result.targetIndex];
+  RATCHETS[result.targetIndex] = result.ratchets[result.targetIndex];
+  HHT_OPENNESS[result.targetIndex] = result.hihatOpenness[result.targetIndex];
+  selectPattern(result.targetIndex, { source: 'manual', autosave: false });
+  renderRhythmIntelligence();
+  autosave();
+  toast((action.reason || 'RI ACTION') + ' → pattern ' + 'ABCD'[result.targetIndex]);
+}
+
 function createControlledPatternVariation() {
   if (!State.applyControlledPatternVariation) return;
   const result = State.applyControlledPatternVariation({
@@ -1392,6 +1437,7 @@ function wire() {
   $('tapBtn').addEventListener('click', doTap);
   $('latchFxBtn').addEventListener('click', latchCurrentPatternFxScene);
   $('variationBtn').addEventListener('click', createControlledPatternVariation);
+  $('riFixAnchorBtn').addEventListener('click', createRhythmActionVariation);
 
   // patterns
   $('patt').querySelectorAll('.patt-b').forEach(b => {

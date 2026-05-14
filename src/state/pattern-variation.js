@@ -124,6 +124,45 @@
     }
   }
 
+  function hitAt(pattern, trackId, stepIndex) {
+    return !!(pattern && pattern[trackId] && pattern[trackId][stepIndex]);
+  }
+
+  function resolveRhythmMutationAction(input) {
+    const opts = input || {};
+    const analysis = opts.analysis || {};
+    const labels = analysis.labels || {};
+    const pattern = opts.pattern || {};
+
+    if (labels.anchor === 'locked') return null;
+    if (labels.anchor === 'lost' || labels.anchor === 'wobbly' || labels.sync === 'broken') {
+      const stepIndex = [0, 8, 4, 12].find(step => !hitAt(pattern, 'kick', step));
+      if (stepIndex !== undefined) {
+        return {
+          reason: 'ADD ANCHOR',
+          edit: {
+            trackId: 'kick',
+            stepIndex,
+            active: 1,
+          },
+        };
+      }
+      const hihatStep = [1, 3, 5, 7, 9, 11, 13, 15].find(step => hitAt(pattern, 'hihat', step));
+      if (hihatStep !== undefined) {
+        return {
+          reason: 'CLEAR SPACE',
+          edit: {
+            trackId: 'hihat',
+            stepIndex: hihatStep,
+            active: 0,
+          },
+        };
+      }
+    }
+
+    return null;
+  }
+
   function applyControlledPatternVariation(input) {
     const opts = input || {};
     assertBankIndex(opts.sourceIndex, 'Source');
@@ -158,7 +197,7 @@
     };
   }
 
-  const api = { applyControlledPatternVariation };
+  const api = { applyControlledPatternVariation, resolveRhythmMutationAction };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.BighartBeatState = Object.assign(root.BighartBeatState || {}, api);
