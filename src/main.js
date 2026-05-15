@@ -1,6 +1,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
+const MAX_SAMPLE_SECONDS = 30;
 
 /* ═══════════════════════════════════════════════
    STATE
@@ -1753,6 +1754,11 @@ function wire() {
     try {
       const buf = await f.arrayBuffer();
       const ab = await A.decodeAudioData(buf);
+      if (ab.duration > MAX_SAMPLE_SECONDS) {
+        toast('Sample too long (30s max)');
+        e.target.value = '';
+        return;
+      }
       TRACKS[4].smp = ab;
       TRACKS[4].smpN = f.name;
       if (S.sel === 4) buildVE();

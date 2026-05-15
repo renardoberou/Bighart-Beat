@@ -43,6 +43,8 @@ assert(/clearTimeout\(schTimer\)/.test(stopPlay), 'stopPlay() clears scheduler t
 
 const maxSampleBytesIndex = js.indexOf('MAX_SAMPLE_BYTES');
 assert(maxSampleBytesIndex !== -1, 'sample loader defines a mobile-safe file size limit');
+const maxSampleSecondsIndex = js.indexOf('MAX_SAMPLE_SECONDS');
+assert(maxSampleSecondsIndex !== -1, 'sample loader defines a decoded-duration limit for mobile memory safety');
 
 assert(/function\s+autoMakeupGainDb\s*\(/.test(js), 'runtime defines autoMakeupGainDb helper');
 assert(!/compMakeup[^\n]*(?:makeup|output)[^\n]*=/.test(js), 'runtime does not expose manual compressor makeup/output gain');
@@ -108,6 +110,15 @@ assert(arrayBufferIndex !== -1, 'sample loader still decodes accepted sample fil
 assert(sizeGuardIndex < initAudioIndex, 'sample size guard runs before unlocking/initializing audio');
 assert(sizeGuardIndex < arrayBufferIndex, 'sample size guard runs before reading large files into memory');
 assert(/toast\(['"]Sample too large/.test(sampleHandler), 'oversized sample rejection gives clear user feedback');
-assert(/e\.target\.value\s*=\s*['"]['"]/.test(sampleHandler), 'oversized sample rejection clears file input for retry');
+assert(/e\.target\.value\s*=\s*['"]["']/.test(sampleHandler), 'oversized sample rejection clears file input for retry');
+const decodeIndex = sampleHandler.indexOf('A.decodeAudioData(buf)');
+const durationGuardIndex = sampleHandler.search(/ab\.duration\s*>\s*MAX_SAMPLE_SECONDS/);
+const sampleAssignIndex = sampleHandler.indexOf('TRACKS[4].smp = ab');
+assert(decodeIndex !== -1, 'sample loader decodes accepted sample files');
+assert(durationGuardIndex !== -1, 'sample loader rejects decoded buffers longer than MAX_SAMPLE_SECONDS');
+assert(sampleAssignIndex !== -1, 'sample loader still assigns accepted decoded buffers');
+assert(decodeIndex < durationGuardIndex, 'sample duration guard runs after decode so compressed long files are caught');
+assert(durationGuardIndex < sampleAssignIndex, 'sample duration guard runs before assigning the input-track sample');
+assert(/toast\(['"]Sample too long/.test(sampleHandler), 'overlong decoded sample rejection gives clear user feedback');
 
 console.log('Mission 006 audio runtime checks passed.');
