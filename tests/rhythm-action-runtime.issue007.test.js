@@ -39,8 +39,16 @@ assert(
   'runtime writes the resolved RI action through the controlled variation helper'
 );
 assert(
-  /riFixAnchorBtn[\s\S]*textContent\s*=\s*'APPLY BRAIN LOOP · '\s*\+\s*\(action\s*&&\s*action\.reason\s*\?\s*action\.reason\s*:\s*'FIX ANCHOR'\)/.test(main),
-  'runtime relabels the RI action button with the resolved action reason such as FIX TIMING'
+  /const\s+riActionBtn\s*=\s*\$\('riFixAnchorBtn'\)/.test(main),
+  'runtime keeps a local RI action button reference for truthful enabled/disabled state'
+);
+assert(
+  /riActionBtn\.disabled\s*=\s*!action/.test(main),
+  'runtime disables the RI action button when analysis has no mutation action'
+);
+assert(
+  /riActionBtn\.textContent\s*=\s*action\s*&&\s*action\.reason\s*\?\s*\('APPLY BRAIN LOOP · '\s*\+\s*action\.reason\)\s*:\s*'BRAIN LOOP OK'/.test(main),
+  'runtime labels the RI action button truthfully when idle instead of inviting a no-op tap'
 );
 assert(
   /targetIndex\s*:\s*\(S\.patt\s*\+\s*1\)\s*%\s*4/.test(main),

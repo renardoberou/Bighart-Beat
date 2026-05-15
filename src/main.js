@@ -1012,7 +1012,9 @@ function renderRhythmIntelligence() {
     ratchets: RATCHETS[S.patt],
     hihatOpenness: HHT_OPENNESS[S.patt],
   }) : null;
-  $('riFixAnchorBtn').textContent = 'APPLY BRAIN LOOP · ' + (action && action.reason ? action.reason : 'FIX ANCHOR');
+  const riActionBtn = $('riFixAnchorBtn');
+  riActionBtn.disabled = !action;
+  riActionBtn.textContent = action && action.reason ? ('APPLY BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
 }
 
 /* ═══════════════════════════════════════════════
