@@ -140,6 +140,25 @@ body.running #ss  { display: none; }
     justify-content: flex-start;
     align-items: stretch;
   }
+  .btn-play, .btn-stop, .tap-btn {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  .bpm-btn {
+    min-width: 44px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  .patt-b {
+    min-width: 40px;
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+  .chain-toggle, .chain-slot-b {
+    min-width: 40px;
+    min-height: 40px;
+    touch-action: manipulation;
+  }
 }
 
 .btn {
@@ -186,6 +205,12 @@ body.running #ss  { display: none; }
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 .bpm-btn:active { background: var(--amber); color: var(--bg); }
+
+@media (max-width: 640px) {
+  .bpm-box {
+    align-items: stretch;
+  }
+}
 
 .tap-btn {
   color: var(--amberLt); border-color: rgba(232,184,75,.3);
@@ -307,6 +332,14 @@ body.running #ss  { display: none; }
   .chain-toggle, .chain-slot-b { min-width: 36px; height: 32px; }
   .chain-status { line-height: 32px; }
   .chain-hint { flex-basis: 100%; order: 9; text-align: left; }
+}
+
+@media (max-width: 640px) {
+  .chain-toggle, .chain-slot-b {
+    min-width: 40px;
+    min-height: 40px;
+    touch-action: manipulation;
+  }
 }
 
 @media (max-width: 380px) {
