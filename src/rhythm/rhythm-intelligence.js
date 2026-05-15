@@ -27,6 +27,10 @@
     return Math.round(clamp01(v) * 1000) / 1000;
   }
 
+  function compactSwing(v) {
+    return clamp01(Number(v));
+  }
+
   function clampRange(v, min, max, fallback) {
     const n = Number(v);
     if (!Number.isFinite(n)) return fallback;
@@ -196,6 +200,7 @@
     };
 
     const labels = makeLabels(metrics, totalWeight);
+    const motorCoupling = makeMotorCoupling(metrics, labels, totalWeight, opts.swing);
 
     return {
       syncopation: metrics.syncopation,
@@ -208,6 +213,7 @@
       interpretation: makeInterpretation(metrics, labels, totalWeight),
       pumpArousal: analyzePumpArousal(opts.fx && opts.fx.comp),
       brainLoop: makeBrainLoop(metrics, labels, totalWeight),
+      motorCoupling,
       predictiveTiming: analyzePredictiveTiming(pattern, totalWeight),
       stepMetrics,
     };
@@ -313,6 +319,61 @@
       return 'Feels locked with a little push; it resolves back into the beat.';
     }
     return 'Feels loose; add a stronger landing point to clarify the pulse.';
+  }
+
+  function makeMotorCoupling(metrics, labels, totalWeight, swingValue) {
+    const swing = compactSwing(swingValue);
+    if (!totalWeight) {
+      return {
+        score: 0,
+        value: 'STILL',
+        cue: 'Add a clear pulse so the body has somewhere to land.',
+      };
+    }
+    if (metrics.density > 0.85 || labels.tension === 'red') {
+      return {
+        score: 0.12,
+        value: 'JAMMED',
+        cue: 'Too many hits blur the pulse; clear space before adding swing.',
+      };
+    }
+
+    const anchorLift = labels.anchor === 'locked' ? 0.22
+      : labels.anchor === 'bending' ? 0.14
+      : labels.anchor === 'wobbly' ? 0.06
+      : 0;
+    const pocketLift = swing >= 0.75 ? 0.33
+      : swing >= 0.33 ? 0.26
+      : swing >= 0.05 ? 0.14
+      : 0.04;
+    const score = round3((metrics.recoverability * 0.34) + (metrics.movementDrive * 0.22) + anchorLift + pocketLift);
+
+    if (swing >= 0.75) {
+      return {
+        score,
+        value: 'TRIPLET POCKET',
+        cue: 'Deep swing: strong lilt. Keep anchors clear so the pulse stays readable.',
+      };
+    }
+    if (swing >= 0.33) {
+      return {
+        score,
+        value: 'BODY POCKET',
+        cue: 'Late offbeats give the body a place to lean into the groove.',
+      };
+    }
+    if (swing >= 0.05) {
+      return {
+        score,
+        value: 'LIGHT PUSH',
+        cue: 'A small offbeat delay adds a subtle head-nod cue.',
+      };
+    }
+    return {
+      score,
+      value: 'EVEN',
+      cue: 'Even grid: stable pulse, little body sway.',
+    };
   }
 
   function makeBrainLoop(metrics, labels, totalWeight) {

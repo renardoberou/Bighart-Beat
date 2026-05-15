@@ -999,8 +999,10 @@ function renderRhythmIntelligence() {
   $('riDrive').textContent = labels.drive.toUpperCase();
   $('riBreath').textContent = analysis.pumpArousal.value;
   $('riPredict').textContent = analysis.predictiveTiming.timingBias.toUpperCase();
+  $('riMotor').textContent = analysis.motorCoupling.value;
   $('riBrainLoop').textContent = analysis.brainLoop.value;
   $('riPredictLine').textContent = analysis.predictiveTiming.cue;
+  $('riMotorLine').textContent = analysis.motorCoupling.cue;
   $('riBrainLoopLine').textContent = analysis.brainLoop.line;
   $('riPumpCue').textContent = analysis.pumpArousal.cue;
   $('riInterpretation').textContent = analysis.interpretation || '';
