@@ -39,6 +39,10 @@ assert(
   'runtime writes the resolved RI action through the controlled variation helper'
 );
 assert(
+  /riFixAnchorBtn[\s\S]*textContent\s*=\s*'APPLY BRAIN LOOP · '\s*\+\s*\(action\s*&&\s*action\.reason\s*\?\s*action\.reason\s*:\s*'FIX ANCHOR'\)/.test(main),
+  'runtime relabels the RI action button with the resolved action reason such as FIX TIMING'
+);
+assert(
   /targetIndex\s*:\s*\(S\.patt\s*\+\s*1\)\s*%\s*4/.test(main),
   'runtime writes the RI action variation to the next pattern bank'
 );

@@ -128,11 +128,47 @@
     return !!(pattern && pattern[trackId] && pattern[trackId][stepIndex]);
   }
 
+  function resolvePredictiveTimingEdit(analysis, pattern) {
+    const timing = analysis && analysis.predictiveTiming ? analysis.predictiveTiming : {};
+    const bias = timing.timingBias;
+    if (bias !== 'early' && bias !== 'late') return null;
+
+    const expected = [
+      { trackId: 'kick', stepIndex: 0 },
+      { trackId: 'kick', stepIndex: 4 },
+      { trackId: 'kick', stepIndex: 8 },
+      { trackId: 'kick', stepIndex: 12 },
+      { trackId: 'snare', stepIndex: 4, altTrackId: 'clap' },
+      { trackId: 'snare', stepIndex: 12, altTrackId: 'clap' },
+    ];
+    const offset = bias === 'early' ? STEP_COUNT - 1 : 1;
+    for (const slot of expected) {
+      const stepIndex = slot.stepIndex;
+      if (hitAt(pattern, slot.trackId, stepIndex) || (slot.altTrackId && hitAt(pattern, slot.altTrackId, stepIndex))) continue;
+      const displacedStep = (stepIndex + offset) % STEP_COUNT;
+      if (hitAt(pattern, slot.trackId, displacedStep)) {
+        return { trackId: slot.trackId, stepIndex, active: 1 };
+      }
+      if (slot.altTrackId && hitAt(pattern, slot.altTrackId, displacedStep)) {
+        return { trackId: slot.altTrackId, stepIndex, active: 1 };
+      }
+    }
+    return null;
+  }
+
   function resolveRhythmMutationAction(input) {
     const opts = input || {};
     const analysis = opts.analysis || {};
     const labels = analysis.labels || {};
     const pattern = opts.pattern || {};
+
+    const timingEdit = resolvePredictiveTimingEdit(analysis, pattern);
+    if (timingEdit) {
+      return {
+        reason: 'FIX TIMING',
+        edit: timingEdit,
+      };
+    }
 
     if (labels.anchor === 'locked') return null;
     if (labels.anchor === 'lost' || labels.anchor === 'wobbly' || labels.sync === 'broken') {

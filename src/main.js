@@ -1004,6 +1004,13 @@ function renderRhythmIntelligence() {
   $('riBrainLoopLine').textContent = analysis.brainLoop.line;
   $('riPumpCue').textContent = analysis.pumpArousal.cue;
   $('riInterpretation').textContent = analysis.interpretation || '';
+  const action = State.resolveRhythmMutationAction ? State.resolveRhythmMutationAction({
+    analysis,
+    pattern: PATTERNS[S.patt],
+    ratchets: RATCHETS[S.patt],
+    hihatOpenness: HHT_OPENNESS[S.patt],
+  }) : null;
+  $('riFixAnchorBtn').textContent = 'APPLY BRAIN LOOP · ' + (action && action.reason ? action.reason : 'FIX ANCHOR');
 }
 
 /* ═══════════════════════════════════════════════

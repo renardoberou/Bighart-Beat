@@ -102,4 +102,36 @@ assert.deepStrictEqual(overloadedAction.edit, {
 }, 'broken/lost dense rhythm clears a low-priority offbeat hihat when kick anchors are full');
 assert.strictEqual(overloadedAction.reason, 'CLEAR SPACE', 'dense broken action gives a truthful player-readable reason');
 
+const earlyTimingPattern = Ops.createEmptyGrid();
+earlyTimingPattern.kick[15] = 1;
+const earlyTimingAction = Variation.resolveRhythmMutationAction({
+  analysis: {
+    labels: { anchor: 'locked', sync: 'steady' },
+    predictiveTiming: { timingBias: 'early', predictionError: 0.5 },
+  },
+  pattern: earlyTimingPattern,
+  ratchets: Ops.createDefaultRatchetGrid(),
+  hihatOpenness: Ops.createDefaultHihatOpennessGrid(),
+});
+assert.deepStrictEqual(earlyTimingAction, {
+  reason: 'FIX TIMING',
+  edit: { trackId: 'kick', stepIndex: 0, active: 1 },
+}, 'early predictive timing bias resolves to adding the expected anchor on time');
+
+const lateTimingPattern = Ops.createEmptyGrid();
+lateTimingPattern.snare[5] = 1;
+const lateTimingAction = Variation.resolveRhythmMutationAction({
+  analysis: {
+    labels: { anchor: 'locked', sync: 'steady' },
+    predictiveTiming: { timingBias: 'late', predictionError: 0.5 },
+  },
+  pattern: lateTimingPattern,
+  ratchets: Ops.createDefaultRatchetGrid(),
+  hihatOpenness: Ops.createDefaultHihatOpennessGrid(),
+});
+assert.deepStrictEqual(lateTimingAction, {
+  reason: 'FIX TIMING',
+  edit: { trackId: 'snare', stepIndex: 4, active: 1 },
+}, 'late predictive timing bias resolves to adding the expected backbeat on time');
+
 console.log('rhythm action mutation issue007 tests passed');
