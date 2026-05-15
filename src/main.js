@@ -1001,6 +1001,8 @@ function renderRhythmIntelligence() {
   $('riPredict').textContent = analysis.predictiveTiming.timingBias.toUpperCase();
   $('riMotor').textContent = analysis.motorCoupling.value;
   $('riBrainLoop').textContent = analysis.brainLoop.value;
+  $('riLoad').textContent = analysis.cognitiveLoad.value;
+  $('riLoadLine').textContent = analysis.cognitiveLoad.cue;
   $('riPredictLine').textContent = analysis.predictiveTiming.cue;
   $('riMotorLine').textContent = analysis.motorCoupling.cue;
   $('riBrainLoopLine').textContent = analysis.brainLoop.line;

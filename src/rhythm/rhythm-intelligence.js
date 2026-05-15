@@ -201,6 +201,7 @@
 
     const labels = makeLabels(metrics, totalWeight);
     const motorCoupling = makeMotorCoupling(metrics, labels, totalWeight, opts.swing);
+    const predictiveTiming = analyzePredictiveTiming(pattern, totalWeight);
 
     return {
       syncopation: metrics.syncopation,
@@ -214,7 +215,8 @@
       pumpArousal: analyzePumpArousal(opts.fx && opts.fx.comp),
       brainLoop: makeBrainLoop(metrics, labels, totalWeight),
       motorCoupling,
-      predictiveTiming: analyzePredictiveTiming(pattern, totalWeight),
+      predictiveTiming,
+      cognitiveLoad: makeCognitiveLoad(metrics, labels, totalWeight, predictiveTiming),
       stepMetrics,
     };
   }
@@ -319,6 +321,53 @@
       return 'Feels locked with a little push; it resolves back into the beat.';
     }
     return 'Feels loose; add a stronger landing point to clarify the pulse.';
+  }
+
+  function makeCognitiveLoad(metrics, labels, totalWeight, predictiveTiming) {
+    if (!totalWeight) {
+      return {
+        score: 0,
+        value: 'EMPTY',
+        cue: 'Add a clear pulse so the beat has a center.',
+      };
+    }
+    if (metrics.density > 0.85 || labels.tension === 'red') {
+      return {
+        score: 1,
+        value: 'OVERLOAD',
+        cue: 'Too crowded; clear space so the pulse comes back.',
+      };
+    }
+
+    const predictionLoad = predictiveTiming ? predictiveTiming.predictionError : 0;
+    const score = round3(
+      0.08
+      + (metrics.surpriseTension * 0.42)
+      + (metrics.density * 0.28)
+      + ((1 - metrics.recoverability) * 0.12)
+      + (predictionLoad * 0.30)
+      - (metrics.meterConfidence * 0.10)
+    );
+
+    if (score >= 0.72) {
+      return {
+        score,
+        value: 'CROWDED',
+        cue: 'Busy but playable; remove one layer if the pulse feels hidden.',
+      };
+    }
+    if (metrics.surpriseTension >= 0.18 && metrics.recoverability >= 0.18 && score >= 0.20) {
+      return {
+        score,
+        value: 'SWEET SPOT',
+        cue: 'Readable surprise: the groove pushes out and pulls back.',
+      };
+    }
+    return {
+      score,
+      value: 'CLEAR',
+      cue: 'Easy to follow; add a small offbeat if it feels too safe.',
+    };
   }
 
   function makeMotorCoupling(metrics, labels, totalWeight, swingValue) {
