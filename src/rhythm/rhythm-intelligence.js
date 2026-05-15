@@ -208,8 +208,56 @@
       interpretation: makeInterpretation(metrics, labels, totalWeight),
       pumpArousal: analyzePumpArousal(opts.fx && opts.fx.comp),
       brainLoop: makeBrainLoop(metrics, labels, totalWeight),
+      predictiveTiming: analyzePredictiveTiming(pattern, totalWeight),
       stepMetrics,
     };
+  }
+
+  function analyzePredictiveTiming(pattern, totalWeight) {
+    if (!totalWeight) {
+      return {
+        predictionError: 0,
+        timingBias: 'empty',
+        cue: 'Add a downbeat or backbeat so the next pulse can be felt.',
+      };
+    }
+
+    const expected = [
+      { track: 'kick', step: 0 },
+      { track: 'kick', step: 4 },
+      { track: 'kick', step: 8 },
+      { track: 'kick', step: 12 },
+      { track: 'snare', step: 4, alt: 'clap' },
+      { track: 'snare', step: 12, alt: 'clap' },
+    ];
+    let locked = 0;
+    let early = 0;
+    let late = 0;
+    let missing = 0;
+
+    expected.forEach(slot => {
+      const onTime = hasHit(pattern, slot.track, slot.step) || (slot.alt && hasHit(pattern, slot.alt, slot.step));
+      const prevStep = (slot.step + DEFAULT_STEPS - 1) % DEFAULT_STEPS;
+      const nextStep = (slot.step + 1) % DEFAULT_STEPS;
+      const earlyHit = hasHit(pattern, slot.track, prevStep) || (slot.alt && hasHit(pattern, slot.alt, prevStep));
+      const lateHit = hasHit(pattern, slot.track, nextStep) || (slot.alt && hasHit(pattern, slot.alt, nextStep));
+      if (onTime) locked++;
+      else if (earlyHit) early++;
+      else if (lateHit) late++;
+      else missing++;
+    });
+
+    const slots = expected.length;
+    const shifted = early + late;
+    const predictionError = round3(((shifted * 0.72) + (missing * 0.42)) / slots);
+    const timingBias = early > late ? 'early' : late > early ? 'late' : missing > locked ? 'unclear' : 'locked';
+    let cue = 'The downbeat and backbeat make the next pulse easy to predict.';
+    if (predictionError >= 0.72) cue = 'Too many anchors are displaced; the body loses what comes next.';
+    else if (timingBias === 'early') cue = 'The groove leans early, creating anticipation before the anchor lands.';
+    else if (timingBias === 'late') cue = 'The groove drags late, making the anchor feel delayed.';
+    else if (timingBias === 'unclear') cue = 'Add a downbeat or backbeat anchor to clarify what comes next.';
+
+    return { predictionError, timingBias, cue };
   }
 
   function makeLabels(metrics, totalWeight) {
