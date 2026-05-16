@@ -18,7 +18,7 @@
     ether: { freq:[20,400], harmonics:[0,1], texture:[0,1], grit:[0,1], decay:[0.05,0.80] },
   };
   const FX_RANGES = {
-    dly: { mult:[0.25,1.5], fb:[0,1], tone:[0,1], wet:[0,1] },
+    dly: { mult:[0.25,1.5], fb:[0,0.8], tone:[0,1], wet:[0,1] },
     rev: { size:[0,1], damp:[0,1], gate:[40,600], wet:[0,1] },
     comp: { threshold:[-80,0], ratio:[1,20], attack:[1,200], release:[20,2000], gateThreshold:[-80,0], gateRate:[10,2000], gateAnalog:[0,1] },
     wreck: { bits:[4,16], rate:[0,1], threshold:[-80,0], tone:[0,1], mix:[0,1], out:[0,1] },
