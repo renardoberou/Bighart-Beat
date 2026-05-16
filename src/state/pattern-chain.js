@@ -4,6 +4,7 @@
   const BANK_COUNT = 4;
   const MIN_BARS = 1;
   const MAX_BARS = 16;
+  const MANUAL_CUE_MODES = ['continue', 'hold'];
 
   function clonePatternChain(chain) {
     return normalizePatternChain(chain || createDefaultPatternChain());
@@ -15,6 +16,7 @@
       position: 0,
       barCount: 0,
       manualOverridePattern: null,
+      manualCueMode: 'continue',
       items: [
         { pattern: 0, bars: 1 },
         { pattern: 1, bars: 1 },
@@ -42,6 +44,14 @@
     if (!Number.isInteger(bars) || bars < MIN_BARS || bars > MAX_BARS) {
       throw new TypeError(path + '.bars must be an integer from 1 to 16');
     }
+  }
+
+  function normalizeManualCueMode(mode) {
+    const value = mode === undefined ? 'continue' : mode;
+    if (!MANUAL_CUE_MODES.includes(value)) {
+      throw new TypeError('patternChain.manualCueMode must be continue or hold');
+    }
+    return value;
   }
 
   function normalizePatternChain(input) {
@@ -73,11 +83,13 @@
     if (isLegacyDefaultPatternChain(items)) items[3] = { pattern: 3, bars: 1 };
     const manualOverridePattern = input.manualOverridePattern == null ? null : input.manualOverridePattern;
     if (manualOverridePattern !== null) assertPatternIndex(manualOverridePattern, 'patternChain.manualOverridePattern');
+    const manualCueMode = normalizeManualCueMode(input.manualCueMode);
     return {
       enabled: input.enabled,
       position: input.position,
       barCount: input.barCount,
       manualOverridePattern,
+      manualCueMode,
       items,
     };
   }
@@ -102,12 +114,21 @@
     return normalized;
   }
 
+  function setPatternChainManualCueMode(chain, mode) {
+    const normalized = normalizePatternChain(chain);
+    normalized.manualCueMode = normalizeManualCueMode(mode);
+    return normalized;
+  }
+
   function advancePatternChainBar(chain, currentPattern) {
     const normalized = normalizePatternChain(chain);
     if (!normalized.enabled) {
       return { chain: normalized, pattern: currentPattern, changed: false };
     }
     if (normalized.manualOverridePattern !== null) {
+      if (normalized.manualCueMode === 'hold') {
+        return { chain: normalized, pattern: normalized.manualOverridePattern, changed: false };
+      }
       normalized.manualOverridePattern = null;
       normalized.position = (normalized.position + 1) % normalized.items.length;
       normalized.barCount = 0;
@@ -132,7 +153,7 @@
     const match = normalized.items.findIndex(item => item.pattern === pattern);
     if (match >= 0) {
       normalized.position = match;
-      normalized.manualOverridePattern = null;
+      normalized.manualOverridePattern = normalized.manualCueMode === 'hold' ? pattern : null;
     } else {
       normalized.manualOverridePattern = pattern;
     }
@@ -146,6 +167,9 @@
     const item = normalized.items[normalized.position];
     const nextItem = normalized.items[(normalized.position + 1) % normalized.items.length];
     if (normalized.manualOverridePattern !== null) {
+      if (normalized.manualCueMode === 'hold') {
+        return 'ABCD'[normalized.manualOverridePattern] + ' HOLD';
+      }
       return 'ABCD'[normalized.manualOverridePattern] + ' 1/1 → ' + 'ABCD'[nextItem.pattern];
     }
     return 'ABCD'[item.pattern] + ' ' + (normalized.barCount + 1) + '/' + item.bars + ' → ' + 'ABCD'[nextItem.pattern];
@@ -157,6 +181,7 @@
     normalizePatternChain,
     setPatternChainEnabled,
     setPatternChainItem,
+    setPatternChainManualCueMode,
     advancePatternChainBar,
     cuePatternChain,
     describePatternChainStatus,

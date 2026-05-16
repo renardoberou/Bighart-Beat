@@ -19,6 +19,7 @@ assertDeepFrozenCopy(defaultChain, {
   position: 0,
   barCount: 0,
   manualOverridePattern: null,
+  manualCueMode: 'continue',
   items: [
     { pattern: 0, bars: 1 },
     { pattern: 1, bars: 1 },
@@ -58,6 +59,7 @@ assert.deepStrictEqual(legacyDefaultChain, {
   position: 2,
   barCount: 0,
   manualOverridePattern: null,
+  manualCueMode: 'continue',
   items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 3, bars: 1 }],
 }, 'exact legacy default A→B→C→A chain normalizes to A→B→C→D while preserving flags and cursor');
 
@@ -142,6 +144,7 @@ assert.deepStrictEqual(parsedLegacyPersisted.value.patternChain, {
   position: 3,
   barCount: 0,
   manualOverridePattern: null,
+  manualCueMode: 'continue',
   items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 3, bars: 1 }],
 }, 'legacy persisted default patternChain imports as A→B→C→D without losing enabled/cursor state');
 

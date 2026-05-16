@@ -25,6 +25,8 @@
       enabled: false,
       position: 0,
       barCount: 0,
+      manualOverridePattern: null,
+      manualCueMode: 'continue',
       items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 3, bars: 1 }],
     };
   }
