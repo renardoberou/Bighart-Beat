@@ -326,6 +326,15 @@ body.running #ss  { display: none; }
   border-color: var(--amberLt);
   box-shadow: 0 0 8px rgba(232,184,75,.25);
 }
+.chain-slot-b.next {
+  color: var(--amberLt);
+  border-color: var(--amber);
+  box-shadow: inset 0 0 0 1px rgba(232,184,75,.35), 0 0 6px rgba(200,146,42,.18);
+}
+.chain-slot-b.on.next {
+  color: var(--bg);
+  border-color: var(--amberLt);
+}
 
 @media (max-width: 420px) {
   .chain-strip { order: 3; justify-content: flex-end; flex-wrap: wrap; }

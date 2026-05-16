@@ -1305,15 +1305,21 @@ function syncPatternChainControls() {
   $('chainToggle').classList.toggle('on', chain.enabled);
   $('chainToggle').textContent = chain.enabled ? 'CHAIN ON' : 'CHAIN';
   $('chainStatus').textContent = State.describePatternChainStatus(chain);
+  const nextSlot = (chain.position + 1) % chain.items.length;
   $('songQueue').querySelectorAll('[data-chain-slot]').forEach(b => {
     const slot = parseInt(b.dataset.chainSlot);
     const item = chain.items[slot];
     if (!item) return;
+    const isCurrent = chain.enabled && slot === chain.position;
+    const isNext = chain.enabled && slot === nextSlot;
+    const queueHint = isCurrent ? ' Current chain slot.' : (isNext ? ' Next queued slot.' : '');
     b.dataset.chainPattern = String(item.pattern);
     b.textContent = 'ABCD'[item.pattern] + '·' + item.bars;
     b.title = 'Tap: pattern; hold: bars (' + item.bars + ')';
-    b.setAttribute('aria-label', 'Pattern chain slot ' + (slot + 1) + ': pattern ' + 'ABCD'[item.pattern] + ', ' + item.bars + ' bars. Tap for pattern, hold for bars.');
-    b.classList.toggle('on', chain.enabled && slot === chain.position);
+    if (isNext) b.title = 'Next queued. ' + b.title;
+    b.setAttribute('aria-label', 'Pattern chain slot ' + (slot + 1) + ': pattern ' + 'ABCD'[item.pattern] + ', ' + item.bars + ' bars.' + queueHint + ' Tap for pattern, hold for bars.');
+    b.classList.toggle('on', isCurrent);
+    b.classList.toggle('next', chain.enabled && slot === nextSlot);
   });
 }
 
