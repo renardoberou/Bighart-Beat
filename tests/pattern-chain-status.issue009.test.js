@@ -59,6 +59,35 @@ assert.strictEqual(
   'manual cue reset is visible as bar 1 of the selected chain slot'
 );
 
+chain = State.normalizePatternChain({
+  enabled: true,
+  position: 0,
+  barCount: 0,
+  items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }],
+});
+const unmatchedCue = State.cuePatternChain(chain, 3);
+assert.strictEqual(
+  unmatchedCue.pattern,
+  3,
+  'manual cue can jump to a pattern that is not in the programmed chain'
+);
+assert.strictEqual(
+  State.describePatternChainStatus(unmatchedCue.chain),
+  'D 1/1 → B',
+  'manual cue outside the queue is visible as the current override before chain continuation'
+);
+const continuedCue = State.advancePatternChainBar(unmatchedCue.chain, unmatchedCue.pattern);
+assert.strictEqual(
+  continuedCue.pattern,
+  1,
+  'after the manual override bar, chain continues to the next programmed item'
+);
+assert.strictEqual(
+  State.describePatternChainStatus(continuedCue.chain),
+  'B 1/1 → A',
+  'status returns to the programmed chain after the manual override advances'
+);
+
 const legacyDefaultChain = State.normalizePatternChain({
   enabled: true,
   position: 3,

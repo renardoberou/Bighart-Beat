@@ -18,6 +18,7 @@ assertDeepFrozenCopy(defaultChain, {
   enabled: false,
   position: 0,
   barCount: 0,
+  manualOverridePattern: null,
   items: [
     { pattern: 0, bars: 1 },
     { pattern: 1, bars: 1 },
@@ -56,6 +57,7 @@ assert.deepStrictEqual(legacyDefaultChain, {
   enabled: true,
   position: 2,
   barCount: 0,
+  manualOverridePattern: null,
   items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 3, bars: 1 }],
 }, 'exact legacy default A→B→C→A chain normalizes to A→B→C→D while preserving flags and cursor');
 
@@ -94,8 +96,24 @@ assert.deepStrictEqual(result.chain.items, chain.items, 'manual cue does not mut
 result = State.advancePatternChainBar(result.chain, result.pattern);
 assert.strictEqual(result.pattern, 0, 'manual cue continues chain after selected item duration');
 
+chain = State.normalizePatternChain({
+  enabled: true,
+  position: 0,
+  barCount: 0,
+  items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }],
+});
+result = State.cuePatternChain(chain, 3);
+assert.strictEqual(result.pattern, 3, 'manual cue outside the programmed queue still jumps immediately');
+assert.strictEqual(result.chain.position, 0, 'manual cue outside the queue preserves the programmed chain cursor');
+assert.strictEqual(result.chain.manualOverridePattern, 3, 'manual cue outside the queue stores a temporary visible override');
+result = State.advancePatternChainBar(result.chain, result.pattern);
+assert.strictEqual(result.pattern, 1, 'manual cue outside the queue continues to the next programmed chain item after one bar');
+assert.strictEqual(result.chain.position, 1, 'manual cue outside the queue advances the programmed chain cursor after the override bar');
+assert.strictEqual(result.chain.manualOverridePattern, null, 'manual cue override clears after chain continuation');
+
 assert.throws(() => State.normalizePatternChain({ enabled: true, position: 0, barCount: 0, items: [{ pattern: 4, bars: 1 }] }), /pattern/i, 'invalid pattern index is rejected');
 assert.throws(() => State.normalizePatternChain({ enabled: true, position: 0, barCount: 0, items: [{ pattern: 1, bars: 0 }] }), /bars/i, 'invalid bars count is rejected');
+assert.throws(() => State.normalizePatternChain({ enabled: true, position: 0, barCount: 0, manualOverridePattern: 4, items: [{ pattern: 0, bars: 1 }] }), /manualOverridePattern/i, 'invalid manual override pattern is rejected');
 
 const appState = App.createAppState();
 appState.patternChain = State.normalizePatternChain({ enabled: true, position: 1, barCount: 0, items: [{ pattern: 0, bars: 1 }, { pattern: 3, bars: 2 }] });
@@ -123,6 +141,7 @@ assert.deepStrictEqual(parsedLegacyPersisted.value.patternChain, {
   enabled: true,
   position: 3,
   barCount: 0,
+  manualOverridePattern: null,
   items: [{ pattern: 0, bars: 1 }, { pattern: 1, bars: 1 }, { pattern: 2, bars: 1 }, { pattern: 3, bars: 1 }],
 }, 'legacy persisted default patternChain imports as A→B→C→D without losing enabled/cursor state');
 

@@ -85,6 +85,7 @@ assert.deepStrictEqual(appState, {
     enabled: false,
     position: 0,
     barCount: 0,
+    manualOverridePattern: null,
     items: [
       { pattern: 0, bars: 1 },
       { pattern: 1, bars: 1 },

@@ -14,6 +14,7 @@
       enabled: false,
       position: 0,
       barCount: 0,
+      manualOverridePattern: null,
       items: [
         { pattern: 0, bars: 1 },
         { pattern: 1, bars: 1 },
@@ -70,10 +71,13 @@
       throw new TypeError('patternChain.barCount must be within the active item duration');
     }
     if (isLegacyDefaultPatternChain(items)) items[3] = { pattern: 3, bars: 1 };
+    const manualOverridePattern = input.manualOverridePattern == null ? null : input.manualOverridePattern;
+    if (manualOverridePattern !== null) assertPatternIndex(manualOverridePattern, 'patternChain.manualOverridePattern');
     return {
       enabled: input.enabled,
       position: input.position,
       barCount: input.barCount,
+      manualOverridePattern,
       items,
     };
   }
@@ -82,6 +86,7 @@
     const normalized = normalizePatternChain(chain);
     normalized.enabled = !!enabled;
     normalized.barCount = 0;
+    normalized.manualOverridePattern = null;
     return normalized;
   }
 
@@ -102,6 +107,13 @@
     if (!normalized.enabled) {
       return { chain: normalized, pattern: currentPattern, changed: false };
     }
+    if (normalized.manualOverridePattern !== null) {
+      normalized.manualOverridePattern = null;
+      normalized.position = (normalized.position + 1) % normalized.items.length;
+      normalized.barCount = 0;
+      const pattern = normalized.items[normalized.position].pattern;
+      return { chain: normalized, pattern, changed: pattern !== currentPattern };
+    }
     const item = normalized.items[normalized.position];
     const nextBarCount = normalized.barCount + 1;
     if (nextBarCount < item.bars) {
@@ -118,7 +130,12 @@
     const normalized = normalizePatternChain(chain);
     assertPatternIndex(pattern, 'patternChain.manualCue');
     const match = normalized.items.findIndex(item => item.pattern === pattern);
-    if (match >= 0) normalized.position = match;
+    if (match >= 0) {
+      normalized.position = match;
+      normalized.manualOverridePattern = null;
+    } else {
+      normalized.manualOverridePattern = pattern;
+    }
     normalized.barCount = 0;
     return { chain: normalized, pattern, changed: true };
   }
@@ -128,6 +145,9 @@
     if (!normalized.enabled) return 'CHAIN OFF';
     const item = normalized.items[normalized.position];
     const nextItem = normalized.items[(normalized.position + 1) % normalized.items.length];
+    if (normalized.manualOverridePattern !== null) {
+      return 'ABCD'[normalized.manualOverridePattern] + ' 1/1 → ' + 'ABCD'[nextItem.pattern];
+    }
     return 'ABCD'[item.pattern] + ' ' + (normalized.barCount + 1) + '/' + item.bars + ' → ' + 'ABCD'[nextItem.pattern];
   }
 
