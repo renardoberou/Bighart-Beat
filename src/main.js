@@ -1598,7 +1598,11 @@ function wire() {
   });
 
   $('chainToggle').addEventListener('click', () => {
-    S.patternChain = State.setPatternChainEnabled(S.patternChain, !S.patternChain.enabled);
+    const nextEnabled = !S.patternChain.enabled;
+    S.patternChain = State.setPatternChainEnabled(S.patternChain, nextEnabled);
+    if (nextEnabled) {
+      S.patternChain = State.cuePatternChain(S.patternChain, S.patt).chain;
+    }
     syncPatternChainControls();
     autosave();
   });
