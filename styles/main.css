@@ -154,7 +154,7 @@ body.running #ss  { display: none; }
     min-height: 40px;
     touch-action: manipulation;
   }
-  .chain-toggle, .chain-slot-b {
+  .chain-toggle, .chain-cue-mode, .chain-slot-b {
     min-width: 40px;
     min-height: 40px;
     touch-action: manipulation;
@@ -298,6 +298,18 @@ body.running #ss  { display: none; }
   letter-spacing: 1px;
   cursor: pointer;
 }
+.chain-cue-mode {
+  min-width: 32px;
+  height: 28px;
+  padding: 0 6px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--textDm);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
 .chain-status {
   flex: 0 0 auto;
   padding: 0 4px;
@@ -326,6 +338,12 @@ body.running #ss  { display: none; }
   border-color: var(--amberLt);
   box-shadow: 0 0 8px rgba(232,184,75,.25);
 }
+.chain-cue-mode.on {
+  color: var(--bg);
+  background: var(--amberLt);
+  border-color: var(--amberLt);
+  box-shadow: 0 0 8px rgba(232,184,75,.25);
+}
 .chain-slot-b.next {
   color: var(--amberLt);
   border-color: var(--amber);
@@ -339,12 +357,18 @@ body.running #ss  { display: none; }
 @media (max-width: 420px) {
   .chain-strip { order: 3; justify-content: flex-end; flex-wrap: wrap; }
   .chain-toggle, .chain-slot-b { min-width: 36px; height: 32px; }
+  .chain-cue-mode { min-width: 36px; height: 32px; }
   .chain-status { line-height: 32px; }
   .chain-hint { flex-basis: 100%; order: 9; text-align: left; }
 }
 
 @media (max-width: 640px) {
   .chain-toggle, .chain-slot-b {
+    min-width: 40px;
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+  .chain-cue-mode {
     min-width: 40px;
     min-height: 40px;
     touch-action: manipulation;

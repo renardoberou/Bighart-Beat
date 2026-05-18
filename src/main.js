@@ -1305,6 +1305,13 @@ function syncPatternChainControls() {
   $('chainToggle').classList.toggle('on', chain.enabled);
   $('chainToggle').textContent = chain.enabled ? 'CHAIN ON' : 'CHAIN';
   $('chainStatus').textContent = State.describePatternChainStatus(chain);
+  if ($('chainCueMode')) {
+    const holdMode = chain.manualCueMode === 'hold';
+    $('chainCueMode').classList.toggle('on', holdMode);
+    $('chainCueMode').textContent = holdMode ? 'CUE: HOLD' : 'CUE: CONT';
+    $('chainCueMode').title = holdMode ? 'Manual cue mode: hold tapped pattern' : 'Manual cue mode: continue chain after taps';
+    $('chainCueMode').setAttribute('aria-label', holdMode ? 'Pattern chain manual cue mode: hold manual pattern taps' : 'Pattern chain manual cue mode: continue chain after manual pattern taps');
+  }
   const nextSlot = (chain.position + 1) % chain.items.length;
   $('songQueue').querySelectorAll('[data-chain-slot]').forEach(b => {
     const slot = parseInt(b.dataset.chainSlot);
@@ -1603,6 +1610,13 @@ function wire() {
     if (nextEnabled) {
       S.patternChain = State.cuePatternChain(S.patternChain, S.patt).chain;
     }
+    syncPatternChainControls();
+    autosave();
+  });
+  $('chainCueMode').addEventListener('click', () => {
+    const chain = State.normalizePatternChain(S.patternChain);
+    const nextMode = chain.manualCueMode === 'hold' ? 'continue' : 'hold';
+    S.patternChain = State.setPatternChainManualCueMode(chain, nextMode);
     syncPatternChainControls();
     autosave();
   });
