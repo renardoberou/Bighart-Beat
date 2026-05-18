@@ -77,6 +77,43 @@ const clearAction = Variation.resolveRhythmMutationAction({
 });
 assert.strictEqual(clearAction, null, 'clear locked pattern returns no mutation for anchor action');
 
+const sparseLockedPattern = Ops.createEmptyGrid();
+sparseLockedPattern.kick[0] = 1;
+sparseLockedPattern.snare[4] = 1;
+sparseLockedPattern.kick[8] = 1;
+sparseLockedPattern.snare[12] = 1;
+const sparseLockedAction = Variation.resolveRhythmMutationAction({
+  analysis: {
+    labels: { anchor: 'locked', sync: 'straight', tension: 'low', recover: 'recovers', drive: 'flat' },
+    movementDrive: 0.01,
+    cognitiveLoad: { value: 'CLEAR' },
+    predictiveTiming: { timingBias: 'locked', predictionError: 0 },
+  },
+  pattern: sparseLockedPattern,
+  ratchets: Ops.createDefaultRatchetGrid(),
+  hihatOpenness: Ops.createDefaultHihatOpennessGrid(),
+});
+assert.deepStrictEqual(sparseLockedAction, {
+  reason: 'HAT LIFT',
+  edit: { trackId: 'hihat', stepIndex: 15, active: 1, hihatOpen: 1 },
+}, 'locked but flat/clear brain-loop state resolves to an open hihat lift before the loop turns over');
+
+const hatLiftPatterns = Patterns.createPatternBanks();
+const hatLiftRatchets = Patterns.createRatchetBanks();
+const hatLiftOpenness = Patterns.createHihatOpennessBanks();
+hatLiftPatterns[0] = sparseLockedPattern;
+const hatLiftResult = Variation.applyControlledPatternVariation({
+  patterns: hatLiftPatterns,
+  ratchets: hatLiftRatchets,
+  hihatOpenness: hatLiftOpenness,
+  sourceIndex: 0,
+  targetIndex: 1,
+  edit: sparseLockedAction.edit,
+});
+assert.strictEqual(hatLiftResult.patterns[1].hihat[15], 1, 'hat lift writes a next-pattern hihat hit');
+assert.strictEqual(hatLiftResult.hihatOpenness[1][15], 1, 'hat lift opens the written hihat hit');
+assert.strictEqual(hatLiftResult.ratchets[1].hihat[15], 1, 'hat lift keeps a safe default single hihat gate');
+
 const overloadedPattern = Ops.createEmptyGrid();
 Ops.TRACK_IDS.forEach(trackId => {
   for (let step = 0; step < 16; step++) overloadedPattern[trackId][step] = 1;

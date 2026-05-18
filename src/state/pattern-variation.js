@@ -170,7 +170,24 @@
       };
     }
 
-    if (labels.anchor === 'locked') return null;
+    if (labels.anchor === 'locked') {
+      const cognitiveLoad = analysis.cognitiveLoad || {};
+      if (labels.drive === 'flat' && cognitiveLoad.value === 'CLEAR') {
+        const liftStep = [15, 14, 11, 7].find(step => !hitAt(pattern, 'hihat', step));
+        if (liftStep !== undefined) {
+          return {
+            reason: 'HAT LIFT',
+            edit: {
+              trackId: 'hihat',
+              stepIndex: liftStep,
+              active: 1,
+              hihatOpen: 1,
+            },
+          };
+        }
+      }
+      return null;
+    }
     if (labels.anchor === 'lost' || labels.anchor === 'wobbly' || labels.sync === 'broken') {
       const stepIndex = [0, 8, 4, 12].find(step => !hitAt(pattern, 'kick', step));
       if (stepIndex !== undefined) {
