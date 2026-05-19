@@ -21,6 +21,12 @@ function extractFunction(name) {
   throw new Error(`${name} function body did not close`);
 }
 
+function extractConst(name) {
+  const match = js.match(new RegExp(`const\\s+${name}\\s*=\\s*([0-9.]+)\\s*;`));
+  assert(match, `${name} constant exists`);
+  return Number(match[1]);
+}
+
 function makeNode(name, connections) {
   return {
     name,
@@ -38,6 +44,7 @@ function runRouteVoiceWithDelay(delayConfig) {
   const context = {
     TRACKS: [{ vol: 0.8, dlyS: true, revS: false }],
     FX: { dly: delayConfig },
+    DLY_SEND_TRIM: extractConst('DLY_SEND_TRIM'),
     A: {
       createGain() {
         gainIndex += 1;

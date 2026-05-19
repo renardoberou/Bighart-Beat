@@ -34,6 +34,8 @@ let nz = null;
 const N = {}; // nodes
 const KICK_PUMP_WEIGHT = 1;
 const NON_KICK_PUMP_WEIGHT = 0.35;
+const DLY_SEND_TRIM = 0.55;
+const REV_SEND_TRIM = 0.5;
 const GATE_ANALOG_JITTER_MS = 6;
 const GATE_ANALOG_CLOSED_DB = 3;
 const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
@@ -357,12 +359,12 @@ function routeVoice(t, ti) {
   out.connect(N.bus);
   const delaySendActive = tr.dlyS && FX.dly.on && FX.dly.wet > 0;
   if (delaySendActive) {
-    const ds = A.createGain(); ds.gain.value = 1;
+    const ds = A.createGain(); ds.gain.value = DLY_SEND_TRIM;
     out.connect(ds); ds.connect(N.dlyLine);
   }
   const reverbSendActive = tr.revS && FX.rev.on && FX.rev.wet > 0;
   if (reverbSendActive) {
-    const rs = A.createGain(); rs.gain.value = 1;
+    const rs = A.createGain(); rs.gain.value = REV_SEND_TRIM;
     out.connect(rs); rs.connect(N.revSend);
     triggerGate(t);
   }
