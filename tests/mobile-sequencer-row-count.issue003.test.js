@@ -12,7 +12,7 @@ const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 const expectedPlayableRows = createDefaultTracks().length + 1; // virtual OHH row shares hihat backing state
 
-assert(/styles\/main\.css\?v=issue003-seq8/.test(index), 'index busts the stylesheet cache for the eight-row sequencer CSS contract');
+assert(/styles\/main\.css\?v=issue001-brainloop-quick/.test(index), 'index busts the stylesheet cache for the current sequencer CSS contract');
 
 function cssBlockFor(source, selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

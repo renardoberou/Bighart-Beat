@@ -1099,8 +1099,11 @@ function renderRhythmIntelligence() {
     hihatOpenness: HHT_OPENNESS[S.patt],
   }) : null;
   const riActionBtn = $('riFixAnchorBtn');
+  const quickActionBtn = $('brainLoopQuickBtn');
   riActionBtn.disabled = !action;
   riActionBtn.textContent = action && action.reason ? ('APPLY BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
+  quickActionBtn.disabled = !action;
+  quickActionBtn.textContent = action && action.reason ? ('BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
 }
 
 /* ═══════════════════════════════════════════════
@@ -1724,6 +1727,7 @@ function wire() {
   $('tapBtn').addEventListener('click', doTap);
   $('latchFxBtn').addEventListener('click', latchCurrentPatternFxScene);
   $('variationBtn').addEventListener('click', createControlledPatternVariation);
+  $('brainLoopQuickBtn').addEventListener('click', createRhythmActionVariation);
   $('riFixAnchorBtn').addEventListener('click', createRhythmActionVariation);
 
   // patterns
