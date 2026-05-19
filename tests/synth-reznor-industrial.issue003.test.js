@@ -13,7 +13,7 @@ assert.strictEqual(reznor.engine, 'reznor');
 assert.strictEqual(reznor.personality, 'industrial-mono');
 assert.strictEqual(reznor.oscType, 'square');
 assert.strictEqual(reznor.filterType, 'bandpass');
-assert.strictEqual(reznor.modIndex, 0, 'Reznor stays non-FM so it does not blur into Aphex glass');
+assert.strictEqual(reznor.modIndex, 0, 'Reznor stays non-FM so it does not blur into 808 glass/FM');
 
 assert(
   reznor.noiseGain > aphex.noiseGain && reznor.noiseGain > eightOhEight.noiseGain && reznor.noiseGain > nineOhNine.noiseGain,
@@ -29,11 +29,11 @@ assert(
 );
 assert(
   reznor.decaySec < aphex.decaySec,
-  'Reznor SYN should be shorter/gated compared with Aphex glass tails'
+  'Reznor SYN should be shorter/gated compared with Aphex SH-style tails'
 );
 assert(
   reznor.releaseTau < eightOhEight.releaseTau && reznor.releaseTau < aphex.releaseTau,
-  'Reznor SYN should release tighter than bass/glass engines'
+  'Reznor SYN should release tighter than 808/aphex engines'
 );
 assert(
   reznor.filterTriggerHz > reznor.filterRestHz,

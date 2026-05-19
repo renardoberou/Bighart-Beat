@@ -3,28 +3,28 @@
 (function (root) {
   const SYNTH_ENGINE_PROFILES = {
     '808': {
-      personality: 'ms20-bass',
-      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.58, decay: 1.02, tone: 0.66, q: 2.15,
-      drive: 0.50, body: 0.60, sub: 0.30, noise: 0.026, attack: 0.005, release: 0.045, glide: 0.030,
-      filterEnv: 1.65, filterEnd: 0.34, filterSnap: 0.0015,
+      personality: 'mono-fm-glass',
+      oscType: 'sine', filterType: 'lowpass', pitch: 1.00, decay: 1.06, tone: 1.30, q: 0.55,
+      drive: 0.16, body: 0.46, sub: 0.12, noise: 0.018, attack: 0.006, release: 0.030, glide: 0.010,
+      filterEnv: 0.65, filterEnd: 0.40, filterSnap: 0.0025,
     },
     '909': {
       personality: 'acid-bass',
-      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 3.00,
-      drive: 0.62, body: 0.50, sub: 0.22, noise: 0.020, attack: 0.004, release: 0.040, glide: 0.045,
-      filterEnv: 2.60, filterEnd: 0.22, filterSnap: 0.001,
+      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 3.60,
+      drive: 0.70, body: 0.50, sub: 0.22, noise: 0.025, attack: 0.004, release: 0.040, glide: 0.060,
+      filterEnv: 3.30, filterEnd: 0.18, filterSnap: 0.0008,
     },
     reznor: {
       personality: 'industrial-mono',
-      oscType: 'square', filterType: 'bandpass', pitch: 0.74, decay: 0.90, tone: 0.58, q: 1.25,
-      drive: 0.70, body: 0.42, sub: 0.18, noise: 0.10, attack: 0.003, release: 0.026, glide: 0.006,
-      filterEnv: 0.85, filterEnd: 0.45, filterSnap: 0.002,
+      oscType: 'square', filterType: 'bandpass', pitch: 0.74, decay: 0.90, tone: 0.58, q: 2.00,
+      drive: 0.72, body: 0.42, sub: 0.10, noise: 0.12, attack: 0.003, release: 0.026, glide: 0.010,
+      filterEnv: 2.20, filterEnd: 0.28, filterSnap: 0.0035,
     },
     aphex: {
-      personality: 'mono-fm-glass',
-      oscType: 'sine', filterType: 'lowpass', pitch: 1.08, decay: 0.96, tone: 1.18, q: 1.10,
-      drive: 0.18, body: 0.40, sub: 0.08, noise: 0.034, attack: 0.004, release: 0.045, glide: 0.020,
-      filterEnv: 0.92, filterEnd: 0.34, filterSnap: 0.002,
+      personality: 'vintage-sh',
+      oscType: 'triangle', filterType: 'lowpass', pitch: 0.86, decay: 0.98, tone: 1.02, q: 1.05,
+      drive: 0.22, body: 0.38, sub: 0.14, noise: 0.026, attack: 0.006, release: 0.040, glide: 0.020,
+      filterEnv: 0.70, filterEnd: 0.42, filterSnap: 0.0025,
     },
   };
 
