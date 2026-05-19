@@ -1197,6 +1197,7 @@ function buildVE() {
         <div class="hat-help-engine">ENGINE: ${S.engine.toUpperCase()}</div>
         <div>HAT TEST USES SELECTED ENGINE</div>
         <div>PLACE THEN TAP/HOLD HHT STEPS</div>
+        <div class="hat-discovery">TRY OHH ROW: PLACE OPEN, TAP A FEW OFFBEATS, THEN FLIP ENGINE BUTTONS</div>
       </div>
       <div class="ve-lbl">HAT TEST</div>
       <div class="hat-test-btns">

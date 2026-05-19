@@ -905,6 +905,10 @@ body.running #ss  { display: none; }
   font-size: 9px;
   letter-spacing: 1.3px;
 }
+.hat-discovery {
+  margin-top: 4px;
+  color: var(--amberLt);
+}
 .hat-test-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .hat-test-b,
 .hat-place-b {
