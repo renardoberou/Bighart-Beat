@@ -1540,7 +1540,13 @@ function createRhythmActionVariation() {
   selectPattern(result.targetIndex, { source: 'manual', autosave: false });
   renderRhythmIntelligence();
   autosave();
-  toast((action.reason || 'RI ACTION') + ' → pattern ' + 'ABCD'[result.targetIndex]);
+  let toastMessage = (action.reason || 'RI ACTION') + ' → pattern ' + 'ABCD'[result.targetIndex];
+  if (action.edit.trackId === 'hihat' && action.edit.active) {
+    const hihatPreviewOpen = action.edit.hihatOpen ?? HHT_PLACE;
+    previewHihat(hihatPreviewOpen);
+    toastMessage += ' · heard hat';
+  }
+  toast(toastMessage);
 }
 
 function createControlledPatternVariation() {
