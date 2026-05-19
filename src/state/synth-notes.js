@@ -23,6 +23,32 @@
     return SYNTH_HARMONIC_RATIOS[Math.floor(Math.random() * SYNTH_HARMONIC_RATIOS.length)];
   }
 
+  function formatHz(value) {
+    if (!Number.isFinite(value)) return null;
+    return Math.round(value) + ' Hz';
+  }
+
+  function formatSynthNoteRatioLabel(ratio) {
+    const value = normalizeSynthNoteRatio(ratio == null ? 1 : ratio);
+    return value >= 1 ? '×' + value.toFixed(value % 1 ? 2 : 0) : value.toFixed(2) + '×';
+  }
+
+  function formatSynthNoteStatusLabel(options) {
+    const opts = options || {};
+    const rawStep = Number.isInteger(opts.stepIndex) ? opts.stepIndex : 0;
+    const step = clamp(rawStep, 0, STEP_COUNT - 1);
+    const parts = [
+      'STEP ' + String(step + 1).padStart(2, '0'),
+      formatSynthNoteRatioLabel(opts.ratio),
+    ];
+    const root = formatHz(opts.rootHz);
+    const pitch = formatHz(opts.pitchHz);
+    if (root && pitch) parts.push('ROOT ' + root + ' → ' + pitch);
+    else if (root) parts.push('ROOT ' + root);
+    else if (pitch) parts.push(pitch);
+    return parts.join(' · ');
+  }
+
   function createDefaultSynthNotesGrid() {
     return Array.from({ length: STEP_COUNT }, randomHarmonicRatio);
   }
@@ -92,6 +118,8 @@
     SYNTH_MAX_HZ,
     SYNTH_HARMONIC_RATIOS,
     normalizeSynthNoteRatio,
+    formatSynthNoteRatioLabel,
+    formatSynthNoteStatusLabel,
     createDefaultSynthNotesGrid,
     createSynthNotesBanks,
     cloneSynthNotesGrid,

@@ -26,6 +26,7 @@ const PATTERN_FX_SCENES = State.createPatternFxScenes();
 const S = State.createAppState();
 let HHT_PLACE = 0;
 let SYNTH_NOTE_EDIT = false;
+let LAST_SYNTH_NOTE_STEP = 0;
 let lastBrainLoopResultStatus = '';
 let firingStep = 0;
 
@@ -807,6 +808,27 @@ function getStepSynthPitch(step) {
   return State.synthPitchForStep(TRACKS[6].p.pitch, getStepSynthRatio(step));
 }
 
+function setLastSynthNoteStep(step) {
+  LAST_SYNTH_NOTE_STEP = clamp(Number.isInteger(step) ? step : 0, 0, 15);
+}
+
+function synthNoteStatusText(step) {
+  const boundedStep = clamp(Number.isInteger(step) ? step : LAST_SYNTH_NOTE_STEP, 0, 15);
+  const ratio = getStepSynthRatio(boundedStep);
+  const rootHz = TRACKS[6].p.pitch;
+  return State.formatSynthNoteStatusLabel({
+    stepIndex: boundedStep,
+    ratio,
+    rootHz,
+    pitchHz: State.synthPitchForStep(rootHz, ratio),
+  });
+}
+
+function updateSynthNoteStatus() {
+  const status = $('vePanel') && document.querySelector('[data-synth-note-status]');
+  if (status) status.textContent = synthNoteStatusText(LAST_SYNTH_NOTE_STEP);
+}
+
 function fire(ti, t) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
@@ -988,7 +1010,7 @@ function buildSeq() {
         if (trackId !== 'synth' || !PATTERNS[S.patt][trackId][i]) return;
         const ratio = getStepSynthRatio(i);
         c.classList.add('syn-note');
-        c.dataset.note = ratio >= 1 ? '×' + ratio.toFixed(ratio % 1 ? 2 : 0) : ratio.toFixed(2) + '×';
+        c.dataset.note = State.formatSynthNoteRatioLabel(ratio);
       };
       const setHihatCellMarker = () => {
         c.classList.remove('hht-tight', 'hht-open');
@@ -1062,7 +1084,9 @@ function buildSeq() {
         if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT) {
           if (!PATTERNS[S.patt][trackId][i]) PATTERNS[S.patt][trackId][i] = 1;
           SYNTH_NOTES[S.patt] = State.cycleSynthNoteRatio(SYNTH_NOTES[S.patt], i);
+          setLastSynthNoteStep(i);
           buildSeq();
+          buildVE();
           renderRhythmIntelligence();
           autosave();
           return;
@@ -1341,6 +1365,7 @@ function buildVE() {
         <div class="hat-help-engine">SYNTH ENGINE: ${S.engine.toUpperCase()}</div>
         <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.toUpperCase()}</div>
         <div>ROOT 40 Hz–10 kHz · STEP NOTES ARE HARMONIC RATIOS</div>
+        <div data-synth-note-status="1">${synthNoteStatusText(LAST_SYNTH_NOTE_STEP)}</div>
         <div>${SYNTH_NOTE_EDIT ? 'NOTE EDIT ON: TAP SYN STEPS TO CYCLE RATIOS' : 'ENABLE NOTE EDIT TO CHANGE SYN STEPS'}</div>
       </div>
       <button class="mstr-btn" data-synth-test="1">TEST SYN</button>
@@ -1356,10 +1381,11 @@ function buildVE() {
     syn.querySelector('[data-synth-rnd-harm]').addEventListener('click', () => {
       SYNTH_NOTES[S.patt] = State.randomHarmonicSynthNotes(SYNTH_NOTES[S.patt], PATTERNS[S.patt].synth);
       buildSeq();
+      updateSynthNoteStatus();
       autosave();
       toast('SYN harmonic steps randomized');
     });
-    mkRow('PITCH', 40, 10000, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>tr.p.pitch=v, c);
+    mkRow('PITCH', 40, 10000, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>{ tr.p.pitch=v; updateSynthNoteStatus(); }, c);
     mkRow('DECAY', 4, 220, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
     mkRow('TONE', 0, 100, 1, Math.round(tr.p.tone*100), x=>`${x}%`, v=>tr.p.tone=v/100, c);
     mkRow('SHAPE', 0, 100, 1, Math.round(tr.p.shape*100), x=>`${x}%`, v=>tr.p.shape=v/100, c);

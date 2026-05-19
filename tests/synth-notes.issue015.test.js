@@ -31,6 +31,19 @@ assert.strictEqual(SynthNotes.synthPitchForStep(220, 2), 440, 'step pitch multip
 assert.strictEqual(SynthNotes.synthPitchForStep(17, 1), 40, 'step pitch clamps below 40 Hz');
 assert.strictEqual(SynthNotes.synthPitchForStep(8000, 4), 10000, 'step pitch clamps above 10 kHz');
 assert.strictEqual(SynthNotes.normalizeSynthNoteRatio(999), 16, 'ratios are bounded for import safety');
+assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(1), '×1', 'ratio helper preserves root marker style');
+assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(1.25), '×1.25', 'ratio helper preserves above-root marker style');
+assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(0.5), '0.50×', 'ratio helper preserves below-root marker style');
+assert.strictEqual(
+  SynthNotes.formatSynthNoteStatusLabel({ stepIndex: 5, ratio: 1.5, rootHz: 220, pitchHz: 330 }),
+  'STEP 06 · ×1.50 · ROOT 220 Hz → 330 Hz',
+  'status helper describes selected synth step, ratio, root Hz, and pitch Hz'
+);
+assert.strictEqual(
+  SynthNotes.formatSynthNoteStatusLabel({ stepIndex: 99, ratio: 0.5 }),
+  'STEP 16 · 0.50×',
+  'status helper bounds selected synth step labels to the 16-step grid'
+);
 
 const activeSteps = Array(16).fill(0);
 activeSteps[3] = 1;
@@ -74,6 +87,11 @@ assert(mainJs.includes('const SYNTH_NOTES = State.createSynthNotesBanks()'), 'ru
 assert(mainJs.includes('pitch: getStepSynthPitch(firingStep)'), 'runtime routes step-specific synth pitch into mono synth');
 assert(mainJs.includes('data-synth-note-edit'), 'runtime exposes NOTE EDIT control');
 assert(mainJs.includes('data-synth-rnd-harm'), 'runtime exposes random harmonic interval control');
+assert(mainJs.includes('data-synth-note-status'), 'voice editor exposes selected synth note status marker');
+assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');
+assert(mainJs.includes('formatSynthNoteStatusLabel'), 'voice editor uses synth note status label helper');
+assert(mainJs.includes('State.formatSynthNoteRatioLabel(ratio)'), 'runtime uses synth ratio marker helper for step badges');
+assert(!mainJs.includes("'×' + ratio.toFixed"), 'runtime does not duplicate inline synth ratio marker formatting');
 assert(mainJs.includes('synthNotes: SYNTH_NOTES'), 'runtime saves/exports synth note banks');
 assert(html.includes('src/state/synth-notes.js'), 'page loads synth note state helper before runtime');
 assert(css.includes('.row[data-id="synth"] .sc.syn-note::before'), 'CSS displays per-step synth harmonic ratio markers');
