@@ -108,7 +108,7 @@ assert(/addEventListener\(['"]contextmenu['"],\s*e\s*=>\s*{[\s\S]*?e\.preventDef
 assert(/pointerdown/.test(js) && /LONG_PRESS_MS/.test(js));
 assert(/cycleRatchetCount/.test(js));
 assert(/classList\.add\('r'\s*\+\s*(?:nextRatchet|ratchet)/.test(js));
-assert(/LONG PRESS STEP = 2x\/3x/.test(html) || /LONG PRESS STEP = 2x\/3x/.test(js));
+assert(/LONG PRESS STEP = 2x\/3x/.test(html) || /LONG PRESS STEP = 2x\/3x/.test(js) || /HOLD=2x\/3x/.test(html));
 assert(/\.sc\.r2/.test(css) && /\.sc\.r3/.test(css));
 assert(/ratchets:\s*RATCHETS/.test(js));
 assert(/State\.cloneRatchetGrid\(d\.ratchets\[i\]\)/.test(js));
