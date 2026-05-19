@@ -186,7 +186,7 @@ const requiredIssue003RuntimeRegexes = [
   [/aphex[\s\S]*?inharmonic[\s\S]*?instability[\s\S]*?glitch/i, 'Aphex profile documents inharmonic instability glitch markers'],
   [/const\s+hihatChokeState\s*=\s*\{/, 'hihat choke state exists'],
   [/function\s+triggerHihatChoke\b[\s\S]*?cancelAndHoldAtTime[\s\S]*?setTargetAtTime/, 'hihat choke helper softly cancels tails'],
-  [/function\s+synthHihat\b[\s\S]*?const\s+choke\s*=\s*A\.createGain\(\)[\s\S]*?choke\.connect\(dest\)[\s\S]*?triggerHihatChoke\(t,\s*p\.open/, 'synthHihat routes layers through shared choke gain'],
+  [/function\s+synthHihat\b[\s\S]*?const\s+choke\s*=\s*A\.createGain\(\)[\s\S]*?choke\.connect\(hatPolish\);\s*hatPolish\.connect\(hatAir\);\s*hatAir\.connect\(dest\)[\s\S]*?triggerHihatChoke\(t,\s*p\.open/, 'synthHihat routes layers through shared choke gain and post-choke polish'],
   [/function\s+syncEngineSelector\b[\s\S]*?dataset\.engine\s*===\s*S\.engine/, 'engine selector syncs selected state'],
   [/engineSel[\s\S]*?addEventListener\('click'[\s\S]*?S\.engine\s*=\s*b\.dataset\.engine[\s\S]*?syncEngineSelector\(\)[\s\S]*?autosave\(\)/, 'engine selector wiring updates state without stopping playback'],
   [/applyProjectData\(parsed\.value\);[\s\S]*?syncPatternButtons\(\)[\s\S]*?syncMasterControls\(\)[\s\S]*?syncFxControls\(\)[\s\S]*?syncEngineSelector\(\)/, 'runtime import syncs engine selector after applying project'],

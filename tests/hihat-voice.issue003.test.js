@@ -22,7 +22,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'transientGain', 'glitchChance', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'glitchChance', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -36,6 +36,9 @@ function assertFiniteBounded(spec, label) {
   assert(spec.metalTailSec >= 0.004 && spec.metalTailSec <= 0.56, `${label}: metalTailSec bounded`);
   assert(spec.metalTailSec <= spec.noiseTailSec, `${label}: metallic tail does not outlive noise tail`);
   assert(spec.transientGain >= 0.8 && spec.transientGain <= 1.18, `${label}: transientGain bounded`);
+  assert(spec.outputTrim >= 0.62 && spec.outputTrim <= 1, `${label}: output trim is bounded for hihat headroom`);
+  assert(spec.airLowpassHz >= 8500 && spec.airLowpassHz <= 18000, `${label}: air lowpass is bright but bounded`);
+  assert(spec.airLowpassQ >= 0.2 && spec.airLowpassQ <= 0.9, `${label}: air lowpass Q is gentle and mobile-safe`);
   assert(spec.chokeClosedTau > 0, `${label}: closed choke tau positive`);
   assert(spec.chokeClosedTau < spec.chokeOpenTau, `${label}: closed choke tau is shorter than open`);
   assert(spec.chokeOpenTau <= 0.10, `${label}: open choke tau bounded`);
@@ -62,6 +65,9 @@ assert(tight.noiseTailSec > closed.noiseTailSec, 'tight hihat gets more noise ta
 assert(open.noiseTailSec > tight.noiseTailSec, 'open hihat gets the longest noise tail');
 assert(tight.metalTailSec > closed.metalTailSec, 'tight hihat gets more metallic tail than closed');
 assert(open.transientGain < closed.transientGain, 'open hihat trims transient gain to leave headroom for longer tail');
+assert(tight.outputTrim < closed.outputTrim, 'tight hihat trims post-choke output more than closed for tail headroom');
+assert(open.outputTrim < tight.outputTrim, 'open hihat has the strongest post-choke trim for long-tail headroom');
+assert(open.airLowpassHz < closed.airLowpassHz, 'open hihat gently darkens the longest tail to avoid harsh buildup');
 
 for (const engine of ['808', '909', 'reznor', 'aphex']) {
   const highClosed = resolveHihatVoiceSpec(engine, { ...baseParams, open: 0, decay: 0.40 }, () => 0.5);
@@ -100,5 +106,10 @@ assertFiniteBounded(broken, 'invalid input sanitized');
 assert(html.indexOf('src/rhythm/hihat-voice.js') > -1, 'index.html loads hihat voice helper');
 assert(html.indexOf('src/rhythm/hihat-voice.js') < html.indexOf('src/main.js'), 'hihat helper loads before main.js for GitHub Pages');
 assert(/BighartBeatHihat/.test(main) && /resolveHihatVoiceSpec/.test(main), 'main.js wires synthHihat to pure resolver');
+assert(/const\s+hatPolish\s*=\s*A\.createGain\(\)/.test(main), 'synthHihat adds a bounded post-choke polish gain');
+assert(/hatPolish\.gain\.setValueAtTime\(spec\.outputTrim,\s*t\)/.test(main), 'hihat polish gain uses resolver outputTrim');
+assert(/const\s+hatAir\s*=\s*A\.createBiquadFilter\(\)/.test(main) && /hatAir\.type\s*=\s*'lowpass'/.test(main), 'synthHihat adds a gentle post-choke air lowpass');
+assert(/hatAir\.frequency\.value\s*=\s*spec\.airLowpassHz/.test(main), 'hihat air lowpass uses resolver frequency');
+assert(/choke\.connect\(hatPolish\);\s*hatPolish\.connect\(hatAir\);\s*hatAir\.connect\(dest\);/.test(main), 'all hihat layers pass through choke, polish, and air filter before routeVoice destination');
 
 console.log('Issue 003 hihat voice resolver checks passed.');

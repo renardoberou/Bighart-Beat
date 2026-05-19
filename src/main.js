@@ -511,7 +511,12 @@ function synthHihat(t, v, p) {
   choke.gain.setValueAtTime(0, t);
   choke.gain.linearRampToValueAtTime(1, t + spec.attackSec);
   choke.gain.setTargetAtTime(.0008, t + spec.noiseTailSec, Math.max(.012, dec * .18));
-  choke.connect(dest);
+  const hatPolish = A.createGain();
+  hatPolish.gain.setValueAtTime(spec.outputTrim, t);
+  const hatAir = A.createBiquadFilter(); hatAir.type = 'lowpass';
+  hatAir.frequency.value = spec.airLowpassHz;
+  hatAir.Q.value = spec.airLowpassQ;
+  choke.connect(hatPolish); hatPolish.connect(hatAir); hatAir.connect(dest);
   triggerHihatChoke(t, p.open, choke, spec);
   // noise layer
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;

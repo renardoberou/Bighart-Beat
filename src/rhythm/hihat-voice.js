@@ -51,6 +51,9 @@
     const noiseTailSec = clamp(decaySec * (1 + open * 0.08), 0.006, 0.70);
     const metalTailSec = clamp(decaySec * (0.72 + open * 0.08), 0.004, 0.56);
     const transientGain = clamp(1.12 - open * 0.18 + profile.tone * 0.025, 0.8, 1.18);
+    const outputTrim = clamp(1 - open * 0.10 - open * open * 0.16 - instability * 0.20, 0.62, 1);
+    const airLowpassHz = clamp(freq * profile.bright * (1.35 - open * 0.22), 8500, 18000);
+    const airLowpassQ = clamp(0.45 + instability * 2, 0.2, 0.9);
 
     return {
       engine,
@@ -68,6 +71,9 @@
       noiseTailSec,
       metalTailSec,
       transientGain,
+      outputTrim,
+      airLowpassHz,
+      airLowpassQ,
       oscType: profile.oscType,
       ratios,
       oscillatorFrequencies,

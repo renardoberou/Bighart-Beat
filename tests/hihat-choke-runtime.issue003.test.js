@@ -29,8 +29,8 @@ assert(
   'hihat choke helper records the current tail for the next hat hit'
 );
 assert(
-  /function\s+synthHihat\s*\(\s*t,\s*v,\s*p\s*\)\s*\{[\s\S]*const\s+choke\s*=\s*A\.createGain\(\)[\s\S]*choke\.connect\(dest\)[\s\S]*triggerHihatChoke\(t,\s*p\.open,\s*choke,\s*spec\)/.test(main),
-  'synthHihat routes every hihat through the shared choke gain'
+  /function\s+synthHihat\s*\(\s*t,\s*v,\s*p\s*\)\s*\{[\s\S]*const\s+choke\s*=\s*A\.createGain\(\)[\s\S]*const\s+hatPolish\s*=\s*A\.createGain\(\)[\s\S]*choke\.connect\(hatPolish\);\s*hatPolish\.connect\(hatAir\);\s*hatAir\.connect\(dest\)[\s\S]*triggerHihatChoke\(t,\s*p\.open,\s*choke,\s*spec\)/.test(main),
+  'synthHihat routes every hihat through the shared choke gain before the post-choke polish stage'
 );
 assert(
   /choke\.gain\.linearRampToValueAtTime\(1,\s*t\s*\+\s*spec\.attackSec\)/.test(main),
