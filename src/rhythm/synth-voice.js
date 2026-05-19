@@ -3,9 +3,9 @@
 (function (root) {
   const SYNTH_ENGINE_PROFILES = {
     '808': {
-      personality: 'mono-fm-glass',
-      oscType: 'sine', filterType: 'lowpass', pitch: 1.0, decay: 1.06, tone: 1.30, q: 0.55,
-      drive: 0.16, body: 0.46, sub: 0.12, noise: 0.018, attack: 0.006, release: 0.030, glide: 0.010,
+      personality: 'ms20-bass',
+      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.58, decay: 1.02, tone: 0.66, q: 1.85,
+      drive: 0.50, body: 0.60, sub: 0.30, noise: 0.026, attack: 0.003, release: 0.045, glide: 0.030,
     },
     '909': {
       personality: 'acid-bass',

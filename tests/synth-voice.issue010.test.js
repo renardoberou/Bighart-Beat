@@ -34,27 +34,36 @@ function assertFiniteBounded(spec, label) {
   assert(spec.stopSec > spec.decaySec, `${label}: stopSec leaves release padding`);
   assert(['sine', 'triangle', 'sawtooth', 'square'].includes(spec.oscType), `${label}: oscillator type safe`);
   assert(['lowpass', 'bandpass'].includes(spec.filterType), `${label}: filter type safe`);
-  assert(['mono-fm-glass', 'acid-bass', 'industrial-mono', 'vintage-sh'].includes(spec.personality), `${label}: personality known`);
+  assert(['ms20-bass', 'mono-fm-glass', 'acid-bass', 'industrial-mono', 'vintage-sh'].includes(spec.personality), `${label}: personality known`);
 }
 
 for (const engine of ['808', '909', 'reznor', 'aphex', 'unknown']) {
   assertFiniteBounded(resolveSynthVoiceSpec(engine, { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 }), engine);
 }
 
-const fm808 = resolveSynthVoiceSpec('808', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
+const ms20808 = resolveSynthVoiceSpec('808', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const acid909 = resolveSynthVoiceSpec('909', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const industrial = resolveSynthVoiceSpec('reznor', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const vintage = resolveSynthVoiceSpec('aphex', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const fallback = resolveSynthVoiceSpec('mystery', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 
-assert.strictEqual(fm808.personality, 'mono-fm-glass', '808 maps to FM/glass mono personality');
+assert.strictEqual(ms20808.personality, 'ms20-bass', '808 maps to gritty MS-20-inspired bass personality');
+assert(['sawtooth', 'square'].includes(ms20808.oscType), '808 uses a buzzy oscillator character');
+assert.notStrictEqual(ms20808.oscType, 'sine', '808 is no longer the glassy sine default');
+assert.strictEqual(ms20808.filterType, 'lowpass', '808 uses resonant lowpass shaping');
+assert(ms20808.driveAmount >= 0.45, '808 has strong drive/saturation for gritty bass lead');
+assert(ms20808.filterQ >= 7.0, '808 has a meaningfully resonant filter');
+assert.strictEqual(ms20808.modIndex, 0, '808 avoids the old high glass-FM modulation');
+assert(ms20808.bodyGain > vintage.bodyGain, '808 carries more bass body than aphex fallback voice');
+assert(ms20808.subGain > acid909.subGain, '808 carries stronger sub support than 909 acid voice');
 assert.strictEqual(acid909.personality, 'acid-bass', '909 maps to acid bass personality');
 assert.strictEqual(industrial.personality, 'industrial-mono', 'reznor maps to industrial mono personality');
 assert.strictEqual(vintage.personality, 'vintage-sh', 'aphex maps to vintage SH-style personality');
 assert.strictEqual(fallback.engine, 'aphex', 'unknown engine safely falls back to aphex');
 assert.strictEqual(fallback.fallbackEngine, true, 'fallback is documented in spec');
-assert.notStrictEqual(fm808.oscType, acid909.oscType, '808 and 909 synth oscillator character differs');
-assert(industrial.driveAmount > fm808.driveAmount, 'reznor synth has more industrial drive than 808');
+assert.notStrictEqual(ms20808.pitchHz, acid909.pitchHz, '808 and 909 synth pitch/body character differs');
+assert.notStrictEqual(ms20808.filterType, industrial.filterType, '808 remains distinct from reznor bandpass industrial voice');
+assert(ms20808.driveAmount > vintage.driveAmount, '808 is grittier than aphex vintage voice');
 assert(vintage.filterHz !== acid909.filterHz, 'aphex vintage SH-style tone differs from 909 acid');
 
 const low = resolveSynthVoiceSpec('909', { pitch: 20, decay: -1, tone: -2, shape: -3 });
