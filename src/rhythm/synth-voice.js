@@ -16,8 +16,8 @@
     },
     reznor: {
       personality: 'industrial-mono',
-      oscType: 'square', filterType: 'bandpass', pitch: 0.74, decay: 1.12, tone: 0.58, q: 1.25,
-      drive: 0.58, body: 0.42, sub: 0.18, noise: 0.075, attack: 0.003, release: 0.026, glide: 0.006,
+      oscType: 'square', filterType: 'bandpass', pitch: 0.74, decay: 0.90, tone: 0.58, q: 1.25,
+      drive: 0.70, body: 0.42, sub: 0.18, noise: 0.10, attack: 0.003, release: 0.026, glide: 0.006,
       filterEnv: 0.85, filterEnd: 0.45, filterSnap: 0.002,
     },
     aphex: {
