@@ -232,6 +232,14 @@ body.running #ss  { display: none; }
   padding-left: 5px;
   padding-right: 5px;
 }
+
+@media (max-width: 640px) {
+  #engineSel .div-b {
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+}
+
 .patt {
   display: flex; gap: 3px;
   flex: 0 0 auto;
@@ -455,6 +463,14 @@ body.running #ss  { display: none; }
   letter-spacing: 1px;
   cursor: pointer;
 }
+
+@media (max-width: 640px) {
+  .hht-place-b {
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+}
+
 .hht-place-b.on {
   background: var(--t-hht);
   border-color: var(--amberLt);
