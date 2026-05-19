@@ -53,10 +53,16 @@ assert.notStrictEqual(ms20808.oscType, 'sine', '808 is no longer the glassy sine
 assert.strictEqual(ms20808.filterType, 'lowpass', '808 uses resonant lowpass shaping');
 assert(ms20808.driveAmount >= 0.45, '808 has strong drive/saturation for gritty bass lead');
 assert(ms20808.filterQ >= 7.0, '808 has a meaningfully resonant filter');
+assert(ms20808.attackSec >= 0.008, '808 has a softer/slower synth envelope attack');
+assert(ms20808.attackSec <= 0.020, '808 attack remains playable and not sluggish');
+assert(ms20808.attackSec > acid909.attackSec, '808 synth attack is softer/slower than the sharper 909 acid voice');
 assert.strictEqual(ms20808.modIndex, 0, '808 avoids the old high glass-FM modulation');
 assert(ms20808.bodyGain > vintage.bodyGain, '808 carries more bass body than aphex fallback voice');
 assert(ms20808.subGain > acid909.subGain, '808 carries stronger sub support than 909 acid voice');
 assert.strictEqual(acid909.personality, 'acid-bass', '909 maps to acid bass personality');
+assert(acid909.driveAmount >= 0.35, '909 acid voice has more aggressive drive bite');
+assert(acid909.filterQ > ms20808.filterQ, '909 acid voice has sharper squelchy resonance than 808');
+assert(acid909.noiseGain > 0.010, '909 acid voice has a touch more edge/noise texture');
 assert.strictEqual(industrial.personality, 'industrial-mono', 'reznor maps to industrial mono personality');
 assert.strictEqual(vintage.personality, 'vintage-sh', 'aphex maps to vintage SH-style personality');
 assert.strictEqual(fallback.engine, 'aphex', 'unknown engine safely falls back to aphex');

@@ -5,12 +5,12 @@
     '808': {
       personality: 'ms20-bass',
       oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.58, decay: 1.02, tone: 0.66, q: 1.85,
-      drive: 0.50, body: 0.60, sub: 0.30, noise: 0.026, attack: 0.003, release: 0.045, glide: 0.030,
+      drive: 0.50, body: 0.60, sub: 0.30, noise: 0.026, attack: 0.010, release: 0.045, glide: 0.030,
     },
     '909': {
       personality: 'acid-bass',
-      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.78, q: 1.55,
-      drive: 0.28, body: 0.50, sub: 0.22, noise: 0.010, attack: 0.004, release: 0.040, glide: 0.014,
+      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.84, q: 2.05,
+      drive: 0.38, body: 0.50, sub: 0.22, noise: 0.014, attack: 0.004, release: 0.040, glide: 0.018,
     },
     reznor: {
       personality: 'industrial-mono',
