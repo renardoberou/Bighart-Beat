@@ -21,10 +21,10 @@
       filterEnv: 0.85, filterEnd: 0.45, filterSnap: 0.002,
     },
     aphex: {
-      personality: 'vintage-sh',
-      oscType: 'triangle', filterType: 'lowpass', pitch: 0.86, decay: 1.00, tone: 1.02, q: 1.05,
-      drive: 0.22, body: 0.47, sub: 0.16, noise: 0.028, attack: 0.005, release: 0.050, glide: 0.018,
-      filterEnv: 0.70, filterEnd: 0.48, filterSnap: 0.003,
+      personality: 'mono-fm-glass',
+      oscType: 'sine', filterType: 'lowpass', pitch: 1.08, decay: 0.96, tone: 1.18, q: 1.10,
+      drive: 0.18, body: 0.40, sub: 0.08, noise: 0.034, attack: 0.004, release: 0.045, glide: 0.020,
+      filterEnv: 0.92, filterEnd: 0.34, filterSnap: 0.002,
     },
   };
 
