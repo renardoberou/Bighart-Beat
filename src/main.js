@@ -735,8 +735,10 @@ function synthSynth(t, v, p) {
 
   const filter = A.createBiquadFilter();
   filter.type = spec.filterType;
-  filter.frequency.setValueAtTime(spec.filterHz, t);
-  filter.frequency.exponentialRampToValueAtTime(Math.max(80, spec.filterHz * .42), t + spec.decaySec);
+  filter.frequency.cancelScheduledValues(t);
+  filter.frequency.setValueAtTime(spec.filterRestHz, t);
+  filter.frequency.exponentialRampToValueAtTime(Math.max(80, spec.filterTriggerHz), t + spec.filterAttackSec);
+  filter.frequency.exponentialRampToValueAtTime(Math.max(80, spec.filterRestHz), t + spec.decaySec);
   filter.Q.setValueAtTime(spec.filterQ, t);
   const sat = A.createWaveShaper(); sat.curve = mkSatCurve(spec.driveAmount); sat.oversample = '2x';
   osc.connect(filter); filter.connect(sat); sat.connect(voiceGain);

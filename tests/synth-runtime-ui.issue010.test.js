@@ -15,7 +15,7 @@ assert(/function\s+triggerSynthChoke\s*\(\s*t,\s*voiceGain,\s*spec\s*\)\s*\{[\s\
 assert(/synthVoiceState\.gain\s*=\s*voiceGain/.test(main), 'synth choke stores current voice for next retrigger');
 assert(/function\s+synthSynth\s*\(\s*t,\s*v,\s*p\s*\)\s*\{[\s\S]*routeVoice\(t,\s*6\)[\s\S]*SynthVoice\.resolveSynthVoiceSpec\(S\.engine,\s*p\)[\s\S]*triggerSynthChoke\(t,\s*voiceGain,\s*spec\)/.test(main), 'synthSynth uses routeVoice, selected engine resolver, and mono choke');
 assert(/createOscillator\(\)[\s\S]*\.type\s*=\s*spec\.oscType[\s\S]*frequency\.setValueAtTime\(spec\.pitchHz,\s*t\)/.test(main), 'synthSynth creates oscillator from resolver pitch/type');
-assert(/createBiquadFilter\(\)[\s\S]*\.type\s*=\s*spec\.filterType[\s\S]*frequency\.setValueAtTime\(spec\.filterHz,\s*t\)/.test(main), 'synthSynth shapes tone through resolver filter');
+assert(/createBiquadFilter\(\)[\s\S]*\.type\s*=\s*spec\.filterType[\s\S]*frequency\.setValueAtTime\(spec\.filterRestHz,\s*t\)[\s\S]*frequency\.exponentialRampToValueAtTime\(Math\.max\(80,\s*spec\.filterTriggerHz\),\s*t\s*\+\s*spec\.filterAttackSec\)/.test(main), 'synthSynth shapes tone through resolver trigger filter envelope');
 assert(/case\s+'synth':\s*synthSynth\(t,\s*v,\s*tr\.p\);\s*break;/.test(main), 'fire() dispatches synth track');
 assert(/function\s+previewSynth\s*\(\s*\)\s*\{[\s\S]*initAudio\(\)[\s\S]*triggerCompGate\(t,\s*tr\.id\)[\s\S]*synthSynth\(t,\s*tr\.vol,\s*tr\.p\)/.test(main), 'TEST SYN audition uses same runtime synth path');
 assert(/tr\.n\s*===\s*'SYN'\s*\?\s*'SYNTH'/.test(main), 'voice editor names SYN as SYNTH');
