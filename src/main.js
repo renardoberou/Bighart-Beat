@@ -61,7 +61,10 @@ function syncHihatPlacementControls() {
 
 function wireQuickHihatPlacement() {
   document.querySelectorAll('[data-quick-hht-place]').forEach(b => {
-    b.addEventListener('click', () => setHihatPlacement(b.dataset.quickHhtPlace));
+    b.addEventListener('click', () => {
+      setHihatPlacement(b.dataset.quickHhtPlace);
+      previewHihat(parseFloat(b.dataset.quickHhtPlace));
+    });
   });
   syncHihatPlacementControls();
 }
