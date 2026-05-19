@@ -42,8 +42,8 @@ assert(
   'Brain Loop result formatting names hihat openness as CLOSED, TIGHT, or OPEN'
 );
 assert(
-  /\$\('brainLoopStatus'\)\.textContent\s*=\s*action\s*\?\s*'BRAIN LOOP READY'\s*:\s*'NO ACTION NEEDED'/.test(main),
-  'renderRhythmIntelligence keeps the Brain Loop status truthful before an action is applied'
+  /\$\('brainLoopStatus'\)\.textContent\s*=\s*lastBrainLoopResultStatus\s*\|\|\s*\(action\s*\?\s*'BRAIN LOOP READY'\s*:\s*'NO ACTION NEEDED'\)/.test(main),
+  'renderRhythmIntelligence keeps the Brain Loop status truthful before an action is applied and preserves applied results'
 );
 assert(
   /\$\('brainLoopStatus'\)\.textContent\s*=\s*formatBrainLoopResultStatus\(action,\s*result\.targetIndex\)/.test(main),

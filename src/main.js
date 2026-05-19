@@ -24,6 +24,7 @@ const HHT_OPENNESS = State.createHihatOpennessBanks();
 const PATTERN_FX_SCENES = State.createPatternFxScenes();
 const S = State.createAppState();
 let HHT_PLACE = 0;
+let lastBrainLoopResultStatus = '';
 let firingStep = 0;
 
 /* ═══════════════════════════════════════════════
@@ -1128,7 +1129,7 @@ function renderRhythmIntelligence() {
   riActionBtn.textContent = action && action.reason ? ('APPLY BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
   quickActionBtn.disabled = !action;
   quickActionBtn.textContent = action && action.reason ? ('BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
-  $('brainLoopStatus').textContent = action ? 'BRAIN LOOP READY' : 'NO ACTION NEEDED';
+  $('brainLoopStatus').textContent = lastBrainLoopResultStatus || (action ? 'BRAIN LOOP READY' : 'NO ACTION NEEDED');
 }
 
 /* ═══════════════════════════════════════════════
@@ -1540,6 +1541,8 @@ function createRhythmActionVariation() {
     hihatOpenness: HHT_OPENNESS[S.patt],
   });
   if (!action || !action.edit) {
+    lastBrainLoopResultStatus = '';
+    $('brainLoopStatus').textContent = 'NO ACTION NEEDED';
     toast('ANCHOR OK');
     return;
   }
@@ -1554,6 +1557,7 @@ function createRhythmActionVariation() {
   PATTERNS[result.targetIndex] = result.patterns[result.targetIndex];
   RATCHETS[result.targetIndex] = result.ratchets[result.targetIndex];
   HHT_OPENNESS[result.targetIndex] = result.hihatOpenness[result.targetIndex];
+  lastBrainLoopResultStatus = formatBrainLoopResultStatus(action, result.targetIndex);
   selectPattern(result.targetIndex, { source: 'manual', autosave: false });
   renderRhythmIntelligence();
   $('brainLoopStatus').textContent = formatBrainLoopResultStatus(action, result.targetIndex);
