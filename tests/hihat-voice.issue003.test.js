@@ -22,7 +22,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'glitchChance', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'transientGain', 'glitchChance', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -31,6 +31,11 @@ function assertFiniteBounded(spec, label) {
   assert(spec.bandpassHz >= 4500 && spec.bandpassHz <= 18000, `${label}: bandpassHz bounded`);
   assert(spec.bandpassQ >= 0.5 && spec.bandpassQ <= 2.5, `${label}: bandpassQ bounded`);
   assert(spec.decaySec >= 0.006 && spec.decaySec <= 0.70, `${label}: decaySec bounded`);
+  assert(spec.attackSec >= 0.0008 && spec.attackSec <= 0.004, `${label}: attackSec bounded for mobile-safe transient shaping`);
+  assert(spec.noiseTailSec >= 0.006 && spec.noiseTailSec <= 0.70, `${label}: noiseTailSec bounded`);
+  assert(spec.metalTailSec >= 0.004 && spec.metalTailSec <= 0.56, `${label}: metalTailSec bounded`);
+  assert(spec.metalTailSec <= spec.noiseTailSec, `${label}: metallic tail does not outlive noise tail`);
+  assert(spec.transientGain >= 0.8 && spec.transientGain <= 1.18, `${label}: transientGain bounded`);
   assert(spec.chokeClosedTau > 0, `${label}: closed choke tau positive`);
   assert(spec.chokeClosedTau < spec.chokeOpenTau, `${label}: closed choke tau is shorter than open`);
   assert(spec.chokeOpenTau <= 0.10, `${label}: open choke tau bounded`);
@@ -51,6 +56,12 @@ assert(closed.decaySec >= 0.006 && closed.decaySec <= 0.70, 'closed hihat decay 
 assert(tight.decaySec > closed.decaySec, 'tight hihat placement is audibly longer than closed for the same base decay');
 assert(open.decaySec > tight.decaySec, 'open hihat decay is longer than tight for the same base decay');
 assert(open.decaySec <= 0.70, 'open hihat decay has safe upper bound');
+assert(closed.attackSec < tight.attackSec, 'closed hihat has the fastest transient attack');
+assert(tight.attackSec < open.attackSec, 'open hihat has the softest transient attack');
+assert(tight.noiseTailSec > closed.noiseTailSec, 'tight hihat gets more noise tail than closed');
+assert(open.noiseTailSec > tight.noiseTailSec, 'open hihat gets the longest noise tail');
+assert(tight.metalTailSec > closed.metalTailSec, 'tight hihat gets more metallic tail than closed');
+assert(open.transientGain < closed.transientGain, 'open hihat trims transient gain to leave headroom for longer tail');
 
 for (const engine of ['808', '909', 'reznor', 'aphex']) {
   const highClosed = resolveHihatVoiceSpec(engine, { ...baseParams, open: 0, decay: 0.40 }, () => 0.5);

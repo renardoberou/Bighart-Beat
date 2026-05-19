@@ -33,6 +33,22 @@ assert(
   'synthHihat routes every hihat through the shared choke gain'
 );
 assert(
+  /choke\.gain\.linearRampToValueAtTime\(1,\s*t\s*\+\s*spec\.attackSec\)/.test(main),
+  'synthHihat uses resolver-provided attackSec for the shared choke envelope'
+);
+assert(
+  /ng\.gain\.linearRampToValueAtTime\(clamp\(v\s*\*\s*spec\.noiseGain\s*\*\s*spec\.transientGain,\s*0,\s*\.72\),\s*t\s*\+\s*spec\.attackSec\)/.test(main),
+  'synthHihat applies resolver transientGain and attackSec to the noise attack'
+);
+assert(
+  /ng\.gain\.exponentialRampToValueAtTime\(\.001,\s*t\s*\+\s*spec\.noiseTailSec\)/.test(main),
+  'synthHihat uses resolver-provided noiseTailSec instead of a hard-coded decay tail'
+);
+assert(
+  /mg\.gain\.exponentialRampToValueAtTime\(\.001,\s*t\s*\+\s*spec\.metalTailSec\)/.test(main),
+  'synthHihat uses resolver-provided metalTailSec for metallic hihat tail shaping'
+);
+assert(
   /function\s+previewHihat\s*\(\s*openAmount\s*\)\s*\{[\s\S]*const\s+p\s*=\s*\{\s*\.\.\.tr\.p,\s*open:\s*openAmount\s*\}[\s\S]*synthHihat\(t,\s*tr\.vol,\s*p\)/.test(main),
   'hihat audition/previews exercise the same open/closed choke path as sequenced playback'
 );

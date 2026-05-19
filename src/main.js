@@ -502,8 +502,8 @@ function synthHihat(t, v, p) {
   const dec = spec.decaySec;
   const choke = A.createGain();
   choke.gain.setValueAtTime(0, t);
-  choke.gain.linearRampToValueAtTime(1, t + .0015);
-  choke.gain.setTargetAtTime(.0008, t + dec, Math.max(.012, dec * .18));
+  choke.gain.linearRampToValueAtTime(1, t + spec.attackSec);
+  choke.gain.setTargetAtTime(.0008, t + spec.noiseTailSec, Math.max(.012, dec * .18));
   choke.connect(dest);
   triggerHihatChoke(t, p.open, choke, spec);
   // noise layer
@@ -512,16 +512,16 @@ function synthHihat(t, v, p) {
   const hf2 = A.createBiquadFilter(); hf2.type = 'bandpass'; hf2.frequency.value = spec.bandpassHz; hf2.Q.value = spec.bandpassQ;
   const ng = A.createGain();
   ng.gain.setValueAtTime(0, t);
-  ng.gain.linearRampToValueAtTime(clamp(v * spec.noiseGain, 0, .72), t + .0012);
-  ng.gain.exponentialRampToValueAtTime(.001, t + dec);
+  ng.gain.linearRampToValueAtTime(clamp(v * spec.noiseGain * spec.transientGain, 0, .72), t + spec.attackSec);
+  ng.gain.exponentialRampToValueAtTime(.001, t + spec.noiseTailSec);
   ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(choke);
-  ns.start(t); ns.stop(t + dec + .05);
+  ns.start(t); ns.stop(t + spec.noiseTailSec + .05);
   // metallic tone mix — only if metal > 0
   if (spec.metalGain > 0.001) {
     const mg = A.createGain();
     mg.gain.setValueAtTime(0, t);
-    mg.gain.linearRampToValueAtTime(clamp(v * spec.metalGain, 0, .34), t + .001);
-    mg.gain.exponentialRampToValueAtTime(.001, t + dec * .8);
+    mg.gain.linearRampToValueAtTime(clamp(v * spec.metalGain, 0, .34), t + Math.max(.0008, spec.attackSec * .8));
+    mg.gain.exponentialRampToValueAtTime(.001, t + spec.metalTailSec);
     const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = spec.metalHighpassHz;
     mg.connect(hp); hp.connect(choke);
     for (const frequency of spec.oscillatorFrequencies) {
@@ -529,7 +529,7 @@ function synthHihat(t, v, p) {
       o.frequency.value = frequency;
       const og = A.createGain(); og.gain.value = spec.oscillatorGain;
       o.connect(og); og.connect(mg);
-      o.start(t); o.stop(t + dec + .025);
+      o.start(t); o.stop(t + spec.metalTailSec + .025);
     }
   }
   if (spec.glitchWillFire) {

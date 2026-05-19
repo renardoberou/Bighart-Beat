@@ -47,6 +47,10 @@
     const glitchChance = clamp(profile.glitchChance || 0, 0, 0.30);
     const glitchWillFire = glitchChance > 0 && rand01(rand) < glitchChance;
     const glitchBandpassHz = clamp(7000 * jitter(rand, 0.4), 3500, 14000);
+    const attackSec = clamp(0.0009 + open * 0.0024 + instability * 0.004, 0.0008, 0.004);
+    const noiseTailSec = clamp(decaySec * (1 + open * 0.08), 0.006, 0.70);
+    const metalTailSec = clamp(decaySec * (0.72 + open * 0.08), 0.004, 0.56);
+    const transientGain = clamp(1.12 - open * 0.18 + profile.tone * 0.025, 0.8, 1.18);
 
     return {
       engine,
@@ -60,6 +64,10 @@
       bandpassHz,
       bandpassQ,
       decaySec,
+      attackSec,
+      noiseTailSec,
+      metalTailSec,
+      transientGain,
       oscType: profile.oscType,
       ratios,
       oscillatorFrequencies,
