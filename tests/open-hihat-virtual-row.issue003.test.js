@@ -21,7 +21,7 @@ assert(/if\s*\(\s*isOpenHihatRow\s*\)\s*\{[\s\S]*State\.setHihatOpenness\(HHT_OP
 assert(/if\s*\(\s*isOpenHihatRow\s*\)\s*\{[\s\S]*State\.clearHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)/.test(main), 'clicking OHH off clears backing hihat openness');
 assert(/if\s*\(\s*isOpenHihatRow\s*\)\s*\{[\s\S]*buildSeq\(\);[\s\S]*return;/.test(main), 'clicking OHH refreshes both split hihat rows after shared backing-state changes');
 assert(/State\.getHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)\s*===\s*1/.test(main), 'OHH row active state is derived from fully-open hihat steps');
-assert(/\.seq\s*\{[\s\S]*grid-template-rows:\s*repeat\(7,\s*1fr\)/.test(css), 'sequencer grid has seven rows including virtual OHH');
+assert(/\.seq\s*\{[\s\S]*grid-template-rows:\s*repeat\(8,\s*minmax\(28px,\s*1fr\)\)/.test(css), 'sequencer grid has eight playable rows including virtual OHH and SYN');
 assert(/\.row\[data-id="open-hihat"\]/.test(css), 'CSS has visible OHH row styling');
 
 console.log('Issue 003 virtual open hihat row checks passed.');
