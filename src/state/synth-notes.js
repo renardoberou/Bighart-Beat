@@ -1,0 +1,108 @@
+'use strict';
+
+(function (root) {
+  const STEP_COUNT = 16;
+  const BANK_COUNT = 4;
+  const SYNTH_MIN_HZ = 40;
+  const SYNTH_MAX_HZ = 10000;
+  const SYNTH_HARMONIC_RATIOS = [0.5, 0.75, 1, 1.25, 4 / 3, 1.5, 5 / 3, 2, 2.5, 3, 4];
+
+  function finiteOr(value, fallback) {
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  function clamp(value, lo, hi) {
+    return Math.min(hi, Math.max(lo, finiteOr(value, lo)));
+  }
+
+  function normalizeSynthNoteRatio(value) {
+    return clamp(value, 0.25, 16);
+  }
+
+  function randomHarmonicRatio() {
+    return SYNTH_HARMONIC_RATIOS[Math.floor(Math.random() * SYNTH_HARMONIC_RATIOS.length)];
+  }
+
+  function createDefaultSynthNotesGrid() {
+    return Array.from({ length: STEP_COUNT }, randomHarmonicRatio);
+  }
+
+  function createSynthNotesBanks() {
+    return Array.from({ length: BANK_COUNT }, createDefaultSynthNotesGrid);
+  }
+
+  function cloneSynthNotesGrid(grid) {
+    const clone = Array(STEP_COUNT).fill(1);
+    if (!Array.isArray(grid)) return clone;
+    for (let i = 0; i < Math.min(STEP_COUNT, grid.length); i++) {
+      if (typeof grid[i] === 'number' && Number.isFinite(grid[i])) clone[i] = normalizeSynthNoteRatio(grid[i]);
+    }
+    return clone;
+  }
+
+  function cloneSynthNotesBanks(banks) {
+    const clone = createSynthNotesBanks();
+    if (!Array.isArray(banks)) return clone;
+    for (let i = 0; i < Math.min(BANK_COUNT, banks.length); i++) clone[i] = cloneSynthNotesGrid(banks[i]);
+    return clone;
+  }
+
+  function getSynthNoteRatio(grid, stepIndex) {
+    if (!Number.isInteger(stepIndex) || stepIndex < 0 || stepIndex >= STEP_COUNT) {
+      throw new Error('Step index must be an integer from 0 to 15');
+    }
+    const value = Array.isArray(grid) ? grid[stepIndex] : 1;
+    return normalizeSynthNoteRatio(value == null ? 1 : value);
+  }
+
+  function setSynthNoteRatio(grid, stepIndex, ratio) {
+    if (!Number.isInteger(stepIndex) || stepIndex < 0 || stepIndex >= STEP_COUNT) {
+      throw new Error('Step index must be an integer from 0 to 15');
+    }
+    const next = cloneSynthNotesGrid(grid);
+    next[stepIndex] = normalizeSynthNoteRatio(ratio);
+    return next;
+  }
+
+  function cycleSynthNoteRatio(grid, stepIndex) {
+    const current = getSynthNoteRatio(grid, stepIndex);
+    let currentIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => Math.abs(r - current) < 0.001);
+    if (currentIndex < 0) currentIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => r > current) - 1;
+    const nextIndex = (Math.max(-1, currentIndex) + 1) % SYNTH_HARMONIC_RATIOS.length;
+    return setSynthNoteRatio(grid, stepIndex, SYNTH_HARMONIC_RATIOS[nextIndex]);
+  }
+
+  function synthPitchForStep(rootHz, ratio) {
+    return clamp(finiteOr(rootHz, 220) * normalizeSynthNoteRatio(ratio == null ? 1 : ratio), SYNTH_MIN_HZ, SYNTH_MAX_HZ);
+  }
+
+  function randomHarmonicSynthNotes(grid, activeSteps) {
+    const next = cloneSynthNotesGrid(grid);
+    const steps = Array.isArray(activeSteps) && activeSteps.some(Boolean)
+      ? activeSteps.map((active, i) => active ? i : -1).filter(i => i >= 0 && i < STEP_COUNT)
+      : Array.from({ length: STEP_COUNT }, (_, i) => i);
+    steps.forEach(step => {
+      next[step] = SYNTH_HARMONIC_RATIOS[Math.floor(Math.random() * SYNTH_HARMONIC_RATIOS.length)];
+    });
+    return next;
+  }
+
+  const api = {
+    SYNTH_MIN_HZ,
+    SYNTH_MAX_HZ,
+    SYNTH_HARMONIC_RATIOS,
+    normalizeSynthNoteRatio,
+    createDefaultSynthNotesGrid,
+    createSynthNotesBanks,
+    cloneSynthNotesGrid,
+    cloneSynthNotesBanks,
+    getSynthNoteRatio,
+    setSynthNoteRatio,
+    cycleSynthNoteRatio,
+    synthPitchForStep,
+    randomHarmonicSynthNotes,
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  if (root) root.BighartBeatState = Object.assign(root.BighartBeatState || {}, api);
+})(typeof globalThis !== 'undefined' ? globalThis : undefined);

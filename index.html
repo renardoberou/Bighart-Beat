@@ -63,6 +63,7 @@
 <script src="src/state/tracks.js" defer></script>
 <script src="src/state/patterns.js" defer></script>
 <script src="src/state/fx-state.js" defer></script>
+<script src="src/state/synth-notes.js" defer></script>
 <script src="src/state/pattern-chain.js" defer></script>
 <script src="src/state/pattern-variation.js" defer></script>
 <script src="src/state/app-state.js" defer></script>
@@ -175,7 +176,7 @@
     <div class="panel">
       <div class="p-hdr">
         <div class="p-t">MIX</div>
-        <div class="p-sub">VOL · MUTE · DLY · REV</div>
+        <div class="p-sub">VOL · MUTE · DLY · REV · W</div>
       </div>
       <div class="mix" id="mix"></div>
     </div>
@@ -340,6 +341,7 @@
           <button class="div-b" data-curve="glass">GLASS</button>
           <button class="div-b" data-curve="shard">SHARD</button>
         </div>
+        <button class="mstr-btn" id="wreckOrderToggle">ORDER: COMP→WRK</button>
         <div class="fx-row">
           <div class="fx-lbl">BITS</div>
           <input type="range" class="fdr b" id="wreckBits" min="4" max="16" value="12">
@@ -370,7 +372,7 @@
           <input type="range" class="fdr b" id="wreckOut" min="0" max="100" value="85">
           <div class="fx-val" id="vWreckOut">85%</div>
         </div>
-        <div class="p-sub">SYNTH DIGITAL · POST PUMP · PRE LIMITER</div>
+        <div class="p-sub">PER-TRACK SEND · ORDER TOGGLE · PRE LIMITER</div>
       </div>
     </div>
 

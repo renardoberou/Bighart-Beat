@@ -26,7 +26,9 @@ const tracks = createDefaultTracks();
 tracks[0].mute = true;
 tracks[1].vol = 0.42;
 tracks[2].dlyS = true;
+tracks[2].wreckS = true;
 tracks[3].revS = true;
+tracks[4].wreckS = true;
 const fx = createDefaultFxState();
 fx.dly.on = true;
 fx.dly.fb = 0.67;
@@ -41,7 +43,7 @@ const scene = capturePatternFxScene({ appState, tracks, fx });
 assert.strictEqual(scene.fx.dly.on, true, 'captured scene stores delay enabled state');
 assert.strictEqual(scene.fx.dly.fb, 0.67, 'captured scene stores delay feedback');
 assert.strictEqual(scene.fx.wreck.curve, 'shard', 'captured scene stores digi-wreck mode');
-assert.deepStrictEqual(scene.mix[2], { id: 'hihat', mute: false, vol: tracks[2].vol, dlyS: true, revS: false }, 'captured scene stores per-track mix/sends');
+assert.deepStrictEqual(scene.mix[2], { id: 'hihat', mute: false, vol: tracks[2].vol, dlyS: true, revS: false, wreckS: true }, 'captured scene stores per-track mix/sends');
 assert.strictEqual(scene.engine, '909', 'captured scene stores selected engine');
 assert.strictEqual(scene.mstVol, 0.61, 'captured scene stores master level');
 
@@ -50,6 +52,7 @@ tracks[2].dlyS = false;
 appState.engine = 'aphex';
 assert.strictEqual(scene.fx.dly.fb, 0.67, 'captured scene is independent from later FX mutations');
 assert.strictEqual(scene.mix[2].dlyS, true, 'captured scene is independent from later mix mutations');
+assert.strictEqual(scene.mix[2].wreckS, true, 'captured scene is independent from later Wreck-send mutations');
 assert.strictEqual(scene.engine, '909', 'captured scene is independent from later engine mutations');
 
 const targetAppState = createAppState();
@@ -60,6 +63,7 @@ assert.strictEqual(targetFx.dly.on, true, 'applied scene restores delay toggle')
 assert.strictEqual(targetFx.dly.fb, 0.67, 'applied scene restores delay feedback');
 assert.strictEqual(targetFx.wreck.curve, 'shard', 'applied scene restores digi-wreck mode');
 assert.strictEqual(targetTracks[2].dlyS, true, 'applied scene restores track delay send');
+assert.strictEqual(targetTracks[2].wreckS, true, 'applied scene restores track Digi Wreck send');
 assert.strictEqual(targetTracks[3].revS, true, 'applied scene restores track reverb send');
 assert.strictEqual(targetTracks[0].mute, true, 'applied scene restores mix mute');
 assert.strictEqual(targetAppState.engine, '909', 'applied scene restores engine');
@@ -81,6 +85,7 @@ const parsed = parseProjectImport(serializeProject({ appState: targetAppState, t
 assert.strictEqual(parsed.ok, true, 'parseProjectImport accepts valid latched pattern FX scenes');
 assert.strictEqual(parsed.value.patternFxScenes[1].fx.dly.fb, 0.67, 'parseProjectImport round-trips latched scene FX');
 assert.strictEqual(parsed.value.patternFxScenes[1].mix[2].dlyS, true, 'parseProjectImport round-trips latched scene mix');
+assert.strictEqual(parsed.value.patternFxScenes[1].mix[2].wreckS, true, 'parseProjectImport round-trips latched scene DIGI WRECK send');
 
 const legacyParsed = parseProjectImport(serializeProject({ appState: targetAppState, tracks: targetTracks, fx: targetFx, patterns }));
 assert.strictEqual(legacyParsed.ok, true, 'legacy projects without patternFxScenes still import');

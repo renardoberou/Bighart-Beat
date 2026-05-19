@@ -21,9 +21,11 @@ const FX = State.createDefaultFxState();
 const PATTERNS = State.createPatternBanks();
 const RATCHETS = State.createRatchetBanks();
 const HHT_OPENNESS = State.createHihatOpennessBanks();
+const SYNTH_NOTES = State.createSynthNotesBanks();
 const PATTERN_FX_SCENES = State.createPatternFxScenes();
 const S = State.createAppState();
 let HHT_PLACE = 0;
+let SYNTH_NOTE_EDIT = false;
 let lastBrainLoopResultStatus = '';
 let firingStep = 0;
 
@@ -37,6 +39,7 @@ const KICK_PUMP_WEIGHT = 1;
 const NON_KICK_PUMP_WEIGHT = 0.35;
 const DLY_SEND_TRIM = 0.55;
 const REV_SEND_TRIM = 0.5;
+const WRECK_SEND_TRIM = 0.7;
 const GATE_ANALOG_JITTER_MS = 6;
 const GATE_ANALOG_CLOSED_DB = 3;
 const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
@@ -155,9 +158,9 @@ function buildGraph() {
   N.compGate.connect(N.mstComp);
   N.mstComp.connect(N.compMakeup);
 
-  // DIGI WRECK digital destruction: post-drum-bus/pump, pre-master safety chain.
+  // DIGI WRECK is a per-track wet send, not a full-master insert. Voices with W enabled
+  // tap N.wreckIn in routeVoice(); the dry track path remains on N.bus so no wreckDry path is audible.
   N.wreckIn = A.createGain();
-  N.wreckDry = A.createGain();
   N.wreckDownsample = A.createScriptProcessor(256, 1, 1);
   N.wreckDownsample.wreckRate = FX.wreck.rate;
   N.wreckDownsample.wreckHeldSample = 0;
@@ -170,18 +173,23 @@ function buildGraph() {
   N.wreckTone.frequency.value = wreckToneHz(FX.wreck.tone);
   N.wreckTone.Q.value = .35;
   N.wreckWet = A.createGain();
-  N.wreckOut = A.createGain(); N.wreckOut.gain.value = FX.wreck.on ? FX.wreck.out : 1;
-  N.compMakeup.connect(N.wreckIn);
-  N.wreckIn.connect(N.wreckDry); N.wreckDry.connect(N.wreckOut);
+  N.wreckOut = A.createGain(); N.wreckOut.gain.value = FX.wreck.on ? FX.wreck.out : 0;
+  N.wreckPreCompGain = A.createGain();
+  N.wreckPostCompGain = A.createGain();
   N.wreckWetFeedConnected = false;
   N.wreckDownsample.connect(N.wreckCrusher); N.wreckCrusher.connect(N.wreckTone); N.wreckTone.connect(N.wreckWet); N.wreckWet.connect(N.wreckOut);
-  updateWreckProcessorFeed(shouldFeedWreckProcessor());
+  // Order toggle meaning for send-style Wreck:
+  //   wreck-comp: wreck wet return joins N.mstSum and is compressed with the master.
+  //   comp-wreck: wreck wet return joins after compressor/makeup, before master saturation/limiter.
+  N.wreckOut.connect(N.wreckPreCompGain); N.wreckPreCompGain.connect(N.mstSum);
 
   // gentle warmth saturation, AFTER comp and optional digital destruction
   N.mstSat = A.createWaveShaper();
   N.mstSat.curve = mkSatCurve(.05);
   N.mstSat.oversample = '2x';
-  N.wreckOut.connect(N.mstSat);
+  N.compMakeup.connect(N.mstSat);
+  N.wreckOut.connect(N.wreckPostCompGain); N.wreckPostCompGain.connect(N.mstSat);
+  updateWreckProcessorFeed(shouldFeedWreckProcessor());
 
   // master volume
   N.mstVol = A.createGain(); N.mstVol.gain.value = S.mstVol;
@@ -371,6 +379,11 @@ function routeVoice(t, ti) {
     const rs = A.createGain(); rs.gain.value = REV_SEND_TRIM;
     out.connect(rs); rs.connect(N.revSend);
     triggerGate(t);
+  }
+  const wreckSendActive = tr.wreckS && shouldFeedWreckProcessor();
+  if (wreckSendActive) {
+    const ws = A.createGain(); ws.gain.value = WRECK_SEND_TRIM;
+    out.connect(ws); ws.connect(N.wreckIn);
   }
   return out;
 }
@@ -786,6 +799,14 @@ function getStepHihatOpen(step) {
   return State.getHihatOpenness(HHT_OPENNESS[S.patt], step);
 }
 
+function getStepSynthRatio(step) {
+  return State.getSynthNoteRatio(SYNTH_NOTES[S.patt], step);
+}
+
+function getStepSynthPitch(step) {
+  return State.synthPitchForStep(TRACKS[6].p.pitch, getStepSynthRatio(step));
+}
+
 function fire(ti, t) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
@@ -798,7 +819,7 @@ function fire(ti, t) {
     case 'clap':  synthClap(t, v, tr.p); break;
     case 'input': synthInput(t, v, tr.p); break;
     case 'ether': synthEther(t, v, tr.p); break;
-    case 'synth': synthSynth(t, v, tr.p); break;
+    case 'synth': synthSynth(t, v, { ...tr.p, pitch: getStepSynthPitch(firingStep) }); break;
   }
 }
 
@@ -961,6 +982,14 @@ function buildSeq() {
       if (i % 8 === 0)  c.classList.add('db4');
       const isOpenHihatStep = () => PATTERNS[S.patt][trackId][i] && State.getHihatOpenness(HHT_OPENNESS[S.patt], i) === 1;
       const isCellOn = () => isOpenHihatRow ? isOpenHihatStep() : !!PATTERNS[S.patt][trackId][i] && (trackId !== 'hihat' || !isOpenHihatStep());
+      const setSynthNoteMarker = () => {
+        c.classList.remove('syn-note');
+        delete c.dataset.note;
+        if (trackId !== 'synth' || !PATTERNS[S.patt][trackId][i]) return;
+        const ratio = getStepSynthRatio(i);
+        c.classList.add('syn-note');
+        c.dataset.note = ratio >= 1 ? '×' + ratio.toFixed(ratio % 1 ? 2 : 0) : ratio.toFixed(2) + '×';
+      };
       const setHihatCellMarker = () => {
         c.classList.remove('hht-tight', 'hht-open');
         delete c.dataset.hat;
@@ -976,6 +1005,7 @@ function buildSeq() {
       };
       if (isCellOn()) c.classList.add('on');
       setHihatCellMarker();
+      setSynthNoteMarker();
       const ratchet = State.getRatchetCount(RATCHETS[S.patt], trackId, i);
       if (ratchet > 1) {
         c.classList.add('r' + ratchet);
@@ -991,6 +1021,7 @@ function buildSeq() {
           c.dataset.r = nextRatchet + 'x';
         }
         setHihatCellMarker();
+        setSynthNoteMarker();
       };
       const cycleCellRatchet = () => {
         const wasOn = isCellOn();
@@ -1023,6 +1054,14 @@ function buildSeq() {
             RATCHETS[S.patt] = result.ratchets;
             HHT_OPENNESS[S.patt] = State.clearHihatOpenness(HHT_OPENNESS[S.patt], i);
           }
+          buildSeq();
+          renderRhythmIntelligence();
+          autosave();
+          return;
+        }
+        if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT) {
+          if (!PATTERNS[S.patt][trackId][i]) PATTERNS[S.patt][trackId][i] = 1;
+          SYNTH_NOTES[S.patt] = State.cycleSynthNoteRatio(SYNTH_NOTES[S.patt], i);
           buildSeq();
           renderRhythmIntelligence();
           autosave();
@@ -1150,6 +1189,7 @@ function buildMix() {
         <button class="mt-btn mute${tr.mute?' on':''}" data-k="mute" title="Mute">M</button>
         <button class="mt-btn${tr.dlyS?' on':''}" data-k="dlyS" title="Delay send">D</button>
         <button class="mt-btn${tr.revS?' on':''}" data-k="revS" title="Reverb send">R</button>
+        <button class="mt-btn${tr.wreckS?' on':''}" data-k="wreckS" title="Digi Wreck send">W</button>
       </div>
       <input type="range" class="fdr ${tr.col}" min="0" max="100" value="${Math.round(tr.vol*100)}">
       <div class="mt-val">${Math.round(tr.vol*100)}%</div>
@@ -1300,12 +1340,26 @@ function buildVE() {
     syn.innerHTML = `<div class="hat-help">
         <div class="hat-help-engine">SYNTH ENGINE: ${S.engine.toUpperCase()}</div>
         <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.toUpperCase()}</div>
-        <div>RETRIGGER CHOKE KEEPS SYN ROW TIGHT</div>
+        <div>ROOT 40 Hz–10 kHz · STEP NOTES ARE HARMONIC RATIOS</div>
+        <div>${SYNTH_NOTE_EDIT ? 'NOTE EDIT ON: TAP SYN STEPS TO CYCLE RATIOS' : 'ENABLE NOTE EDIT TO CHANGE SYN STEPS'}</div>
       </div>
-      <button class="mstr-btn" data-synth-test="1">TEST SYN</button>`;
+      <button class="mstr-btn" data-synth-test="1">TEST SYN</button>
+      <button class="mstr-btn${SYNTH_NOTE_EDIT?' on':''}" data-synth-note-edit="1">NOTE EDIT</button>
+      <button class="mstr-btn" data-synth-rnd-harm="1">RND HARM</button>`;
     pn.appendChild(syn);
     syn.querySelector('[data-synth-test]').addEventListener('click', previewSynth);
-    mkRow('PITCH', 40, 1600, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>tr.p.pitch=v, c);
+    syn.querySelector('[data-synth-note-edit]').addEventListener('click', () => {
+      SYNTH_NOTE_EDIT = !SYNTH_NOTE_EDIT;
+      buildVE();
+      buildSeq();
+    });
+    syn.querySelector('[data-synth-rnd-harm]').addEventListener('click', () => {
+      SYNTH_NOTES[S.patt] = State.randomHarmonicSynthNotes(SYNTH_NOTES[S.patt], PATTERNS[S.patt].synth);
+      buildSeq();
+      autosave();
+      toast('SYN harmonic steps randomized');
+    });
+    mkRow('PITCH', 40, 10000, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>tr.p.pitch=v, c);
     mkRow('DECAY', 4, 220, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
     mkRow('TONE', 0, 100, 1, Math.round(tr.p.tone*100), x=>`${x}%`, v=>tr.p.tone=v/100, c);
     mkRow('SHAPE', 0, 100, 1, Math.round(tr.p.shape*100), x=>`${x}%`, v=>tr.p.shape=v/100, c);
@@ -1338,9 +1392,10 @@ function applyFXState() {
   N.wreckDownsample.wreckRate = FX.wreck.rate;
   updateWreckProcessorFeed(shouldFeedWreckProcessor());
   N.wreckTone.frequency.setTargetAtTime(wreckToneHz(FX.wreck.tone), A.currentTime, .02);
-  N.wreckDry.gain.setTargetAtTime(FX.wreck.on ? 1 - FX.wreck.mix : 1, A.currentTime, .02);
   N.wreckWet.gain.setTargetAtTime(FX.wreck.on ? FX.wreck.mix : 0, A.currentTime, .02);
-  N.wreckOut.gain.setTargetAtTime(FX.wreck.on ? FX.wreck.out : 1, A.currentTime, .02);
+  N.wreckOut.gain.setTargetAtTime(FX.wreck.on ? FX.wreck.out : 0, A.currentTime, .02);
+  N.wreckPreCompGain.gain.setTargetAtTime(FX.wreck.order === 'wreck-comp' ? 1 : 0, A.currentTime, .02);
+  N.wreckPostCompGain.gain.setTargetAtTime(FX.wreck.order === 'comp-wreck' ? 1 : 0, A.currentTime, .02);
   // master
   N.mstVol.gain.setTargetAtTime(S.mstVol, A.currentTime, .02);
 }
@@ -1388,7 +1443,7 @@ function autosave() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try {
-      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain });
+      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, synthNotes: SYNTH_NOTES, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain });
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch(e) {}
   }, 250);
@@ -1652,6 +1707,7 @@ function syncFxControls() {
   setFdr('wreckTone', Math.round(FX.wreck.tone * 100), v => v + '%');
   setFdr('wreckMix', Math.round(FX.wreck.mix * 100), v => v + '%');
   setFdr('wreckOut', Math.round(FX.wreck.out * 100), v => v + '%');
+  if ($('wreckOrderToggle')) $('wreckOrderToggle').textContent = FX.wreck.order === 'wreck-comp' ? 'ORDER: WRK→COMP' : 'ORDER: COMP→WRK';
 }
 
 const SWING_OPTIONS = [0, 0.25, 0.5, 0.75];
@@ -1717,6 +1773,7 @@ function applyProjectData(d) {
     PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
     RATCHETS[i] = State.cloneRatchetGrid(d.ratchets[i]);
     HHT_OPENNESS[i] = State.cloneHihatOpennessGrid(d.hihatOpenness[i]);
+    SYNTH_NOTES[i] = State.cloneSynthNotesGrid(d.synthNotes && d.synthNotes[i]);
     PATTERN_FX_SCENES[i] = d.patternFxScenes ? State.clonePatternFxScene(d.patternFxScenes[i]) : null;
   }
   d.tracks.forEach(st => {
@@ -1724,7 +1781,7 @@ function applyProjectData(d) {
     if (tr) {
       tr.mute = !!st.mute;
       tr.vol = typeof st.vol === 'number' ? st.vol : tr.vol;
-      tr.dlyS = !!st.dlyS; tr.revS = !!st.revS;
+      tr.dlyS = !!st.dlyS; tr.revS = !!st.revS; tr.wreckS = !!st.wreckS;
       if (st.p) Object.assign(tr.p, st.p);
     }
   });
@@ -1824,7 +1881,7 @@ function wire() {
       S.engine = b.dataset.engine;
       syncEngineSelector();
       previewEngineKit();
-      if (TRACKS[S.sel].id === 'hihat') buildVE();
+      if (TRACKS[S.sel].id === 'hihat' || TRACKS[S.sel].id === 'synth') buildVE();
       autosave();
     });
   });
@@ -1908,6 +1965,16 @@ function wire() {
       autosave();
     });
   });
+  const orderToggle = $('wreckOrderToggle');
+  if (orderToggle) {
+    orderToggle.addEventListener('click', () => {
+      FX.wreck.order = FX.wreck.order === 'wreck-comp' ? 'comp-wreck' : 'wreck-comp';
+      syncFxControls();
+      applyFXState();
+      autosave();
+      toast(FX.wreck.order === 'wreck-comp' ? 'DIGI WRECK → COMP' : 'COMP → DIGI WRECK');
+    });
+  }
   bindF('wreckBits', v => { FX.wreck.bits = v; applyFXState(); }, v => v + ' bit');
   bindF('wreckRate', v => { FX.wreck.rate = v / 100; applyFXState(); }, v => v + '%');
   bindF('wreckThresh', v => { FX.wreck.threshold = v; applyFXState(); }, v => v + ' dB');
@@ -1943,6 +2010,7 @@ function wire() {
     PATTERNS[S.patt] = State.clearPattern();
     RATCHETS[S.patt] = State.createDefaultRatchetGrid();
     HHT_OPENNESS[S.patt] = State.createDefaultHihatOpennessGrid();
+    SYNTH_NOTES[S.patt] = State.createDefaultSynthNotesGrid();
     buildSeq();
     renderRhythmIntelligence();
     autosave();
@@ -2039,7 +2107,7 @@ function doTap() {
 }
 
 function exportJSON() {
-  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain, timestamp: new Date().toISOString() });
+  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, synthNotes: SYNTH_NOTES, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain, timestamp: new Date().toISOString() });
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

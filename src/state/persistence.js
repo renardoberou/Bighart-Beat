@@ -17,7 +17,7 @@
     clap:  { spread:[2,30], decay:[0.04,0.40], tone:[900,3000] },
     input: { pitch:[0.25,3], decay:[0.10,1] },
     ether: { freq:[20,400], harmonics:[0,1], texture:[0,1], grit:[0,1], decay:[0.05,0.80] },
-    synth: { pitch:[20,2000], decay:[0.05,2], tone:[0,1], shape:[0,1] },
+    synth: { pitch:[40,10000], decay:[0.05,2], tone:[0,1], shape:[0,1] },
   };
   const FX_RANGES = {
     dly: { mult:[0.25,1.5], fb:[0,0.8], tone:[0,1], wet:[0,1] },
@@ -26,6 +26,7 @@
     wreck: { bits:[4,16], rate:[0,1], threshold:[-80,0], tone:[0,1], mix:[0,1], out:[0,1] },
   };
   const WRECK_CURVES = ['pixel', 'glass', 'shard'];
+  const WRECK_ORDERS = ['comp-wreck', 'wreck-comp'];
   const LEGACY_WRECK_CURVE_MAP = { clip: 'pixel', fold: 'glass', crush: 'shard' };
 
   function getDefaultTracks() {
@@ -54,6 +55,25 @@
     }
     if (typeof require === 'function') return require('./pattern-chain.js');
     return null;
+  }
+
+  function getSynthNotesApi() {
+    if (root && root.BighartBeatState && typeof root.BighartBeatState.createSynthNotesBanks === 'function') return root.BighartBeatState;
+    if (typeof require === 'function') return require('./synth-notes.js');
+    return null;
+  }
+
+  function createSynthNotesBanks() {
+    const api = getSynthNotesApi();
+    return api && typeof api.createSynthNotesBanks === 'function'
+      ? api.createSynthNotesBanks()
+      : Array.from({ length: BANK_COUNT }, () => Array(STEP_COUNT).fill(1));
+  }
+
+  function cloneSynthNotesBanks(synthNotes) {
+    const api = getSynthNotesApi();
+    if (api && typeof api.cloneSynthNotesBanks === 'function') return api.cloneSynthNotesBanks(synthNotes);
+    return createSynthNotesBanks();
   }
 
   function createDefaultPatternChain() {
@@ -137,6 +157,7 @@
       vol: t.vol,
       dlyS: !!t.dlyS,
       revS: !!t.revS,
+      wreckS: !!t.wreckS,
       p: cloneValue(t.p || {}),
     }));
   }
@@ -160,6 +181,7 @@
     };
     if (input.ratchets !== undefined) project.ratchets = cloneRatchets(input.ratchets);
     if (input.hihatOpenness !== undefined) project.hihatOpenness = cloneHihatOpennessBanks(input.hihatOpenness);
+    if (input.synthNotes !== undefined) project.synthNotes = cloneSynthNotesBanks(input.synthNotes);
     if (input.patternFxScenes !== undefined) project.patternFxScenes = clonePatternFxScenes(input.patternFxScenes);
     project.patternChain = normalizePatternChain(input.patternChain || appState.patternChain || createDefaultPatternChain());
     return project;
@@ -190,6 +212,7 @@
     validatePatterns(data.patterns, errors);
     validateRatchets(data.ratchets, errors);
     validateHihatOpenness(data.hihatOpenness, errors);
+    validateSynthNotes(data.synthNotes, errors);
     validatePatternFxScenes(data.patternFxScenes, errors);
     validatePatternChain(data.patternChain, errors);
     validateTracks(data.tracks, errors);
@@ -290,6 +313,25 @@
     });
   }
 
+  function validateSynthNotes(synthNotes, errors) {
+    if (synthNotes === undefined) return;
+    if (!Array.isArray(synthNotes) || synthNotes.length !== BANK_COUNT) {
+      errors.push('synthNotes must contain exactly 4 banks');
+      return;
+    }
+    synthNotes.forEach((bank, bankIndex) => {
+      if (!Array.isArray(bank) || bank.length !== STEP_COUNT) {
+        errors.push('synthNotes[' + bankIndex + '] must contain 16 harmonic ratios');
+        return;
+      }
+      bank.forEach((value, stepIndex) => {
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0.25 || value > 16) {
+          errors.push('synthNotes[' + bankIndex + '][' + stepIndex + '] must be a finite ratio from 0.25 to 16');
+        }
+      });
+    });
+  }
+
   function validatePatternFxScenes(patternFxScenes, errors) {
     if (patternFxScenes === undefined) return;
     if (!Array.isArray(patternFxScenes) || patternFxScenes.length !== BANK_COUNT) {
@@ -333,7 +375,7 @@
       } else {
         seen[track.id] = true;
       }
-      ['mute', 'dlyS', 'revS'].forEach(field => {
+      ['mute', 'dlyS', 'revS', 'wreckS'].forEach(field => {
         if (typeof track[field] !== 'boolean') errors.push(path + '.' + field + ' must be a boolean');
       });
       if (track.vol !== undefined) validateNumberInRange(track.vol, 0, 1, errors, path + '.vol');
@@ -370,7 +412,7 @@
       } else {
         seen[track.id] = true;
       }
-      ['mute', 'dlyS', 'revS'].forEach(field => {
+      ['mute', 'dlyS', 'revS', 'wreckS'].forEach(field => {
         if (typeof track[field] !== 'boolean') errors.push('tracks[' + index + '].' + field + ' must be a boolean');
       });
       if (track.vol !== undefined) validateNumberInRange(track.vol, 0, 1, errors, 'tracks[' + index + '].vol');
@@ -462,6 +504,8 @@
         if (!WRECK_CURVES.includes(value) && !Object.prototype.hasOwnProperty.call(LEGACY_WRECK_CURVE_MAP, value)) {
           errors.push(path + '.' + sectionName + '.curve must be one of: ' + WRECK_CURVES.join(', '));
         }
+      } else if (field === 'order') {
+        if (!WRECK_ORDERS.includes(value)) errors.push(path + '.' + sectionName + '.order must be one of: ' + WRECK_ORDERS.join(', '));
       } else {
         const range = FX_RANGES[sectionName] && FX_RANGES[sectionName][field];
         validateNumberInRange(value, range && range[0], range && range[1], errors, path + '.' + sectionName + '.' + field);
@@ -494,6 +538,7 @@
     if (dangerousKeyErrors.length) return { ok: false, errors: dangerousKeyErrors };
 
     data = hydrateLegacySixTrackProject(data);
+    data = hydrateMissingWreckS(data);
     const validation = validateProjectData(data);
     if (!validation.ok) return validation;
     const value = cloneValue(data);
@@ -501,6 +546,7 @@
     if (value.swing === undefined) value.swing = 0;
     if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
     if (value.hihatOpenness === undefined) value.hihatOpenness = createHihatOpennessBanks();
+    if (value.synthNotes === undefined) value.synthNotes = createSynthNotesBanks();
     if (value.patternFxScenes === undefined) value.patternFxScenes = Array(BANK_COUNT).fill(null);
     value.patternChain = value.patternChain === undefined ? createDefaultPatternChain() : normalizePatternChain(value.patternChain);
     normalizeLegacyFx(value.fx);
@@ -511,9 +557,18 @@
     if (!isLegacySixTrackProject(data)) return data;
     const hydrated = { ...data };
     hydrated.tracks = data.tracks.map(track => cloneValue(track));
+    hydrated.tracks.forEach(track => { if (track.wreckS === undefined) track.wreckS = false; });
     hydrated.tracks.push(serializeTracks([getDefaultSynthTrack()])[0]);
     if (Array.isArray(data.patterns)) hydrated.patterns = hydrateLegacyBanks(data.patterns, 0);
     if (Array.isArray(data.ratchets)) hydrated.ratchets = hydrateLegacyBanks(data.ratchets, 1);
+    return hydrated;
+  }
+
+  function hydrateMissingWreckS(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data) || !Array.isArray(data.tracks)) return data;
+    if (data.tracks.every(track => track && Object.prototype.hasOwnProperty.call(track, 'wreckS'))) return data;
+    const hydrated = { ...data, tracks: data.tracks.map(track => cloneValue(track)) };
+    hydrated.tracks.forEach(track => { if (track && track.wreckS === undefined) track.wreckS = false; });
     return hydrated;
   }
 
@@ -527,7 +582,7 @@
   function getDefaultSynthTrack() {
     const synth = getDefaultTracks().find(track => track.id === 'synth');
     if (!synth) {
-      return { id:'synth', mute:false, vol:.52, dlyS:true, revS:true, p:{ pitch:220, decay:.35, tone:.50, shape:.50 } };
+      return { id:'synth', mute:false, vol:.52, dlyS:true, revS:true, wreckS:false, p:{ pitch:220, decay:.35, tone:.50, shape:.50 } };
     }
     return synth;
   }
@@ -547,6 +602,7 @@
       fx.wreck.curve = LEGACY_WRECK_CURVE_MAP[fx.wreck.curve];
     }
     if (fx.wreck.threshold === undefined) fx.wreck.threshold = -24;
+    if (fx.wreck.order === undefined) fx.wreck.order = 'comp-wreck';
   }
 
   const api = {

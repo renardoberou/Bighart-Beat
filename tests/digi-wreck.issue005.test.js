@@ -20,6 +20,7 @@ assert.deepStrictEqual(fx.wreck, {
   tone: 0.65,
   mix: 0.35,
   out: 0.85,
+  order: 'comp-wreck',
 }, 'default fx includes compact DIGI WRECK digital-destruction state');
 assert(!Object.keys(fx).includes('geiger'), 'fx state must avoid protected/clone branding');
 
@@ -34,6 +35,7 @@ fx.wreck.threshold = -18;
 fx.wreck.tone = 0.42;
 fx.wreck.mix = 0.8;
 fx.wreck.out = 0.74;
+fx.wreck.order = 'wreck-comp';
 const serialized = serializeProject({ appState, tracks, fx, patterns });
 assert.deepStrictEqual(serialized.fx.wreck, fx.wreck, 'serializeProject persists DIGI WRECK settings');
 const parsed = parseProjectImport(serialized);
@@ -61,6 +63,7 @@ rejected(p => { p.fx.wreck.rate = 1.1; }, /fx\.wreck\.rate|between/i, 'too-high 
 rejected(p => { p.fx.wreck.threshold = -81; }, /fx\.wreck\.threshold|between/i, 'too-low threshold');
 rejected(p => { p.fx.wreck.threshold = 1; }, /fx\.wreck\.threshold|between/i, 'too-high threshold');
 rejected(p => { p.fx.wreck.curve = 'geiger'; }, /fx\.wreck\.curve|pixel|glass|shard/i, 'clone-branded/unknown curve mode');
+rejected(p => { p.fx.wreck.order = 'sideways'; }, /fx\.wreck\.order|comp-wreck|wreck-comp/i, 'unknown DIGI WRECK wet-return order');
 rejected(p => { p.fx.wreck.extra = 1; }, /fx\.wreck\.extra|unknown/i, 'unknown DIGI WRECK field');
 
 console.log('Issue 005 DIGI WRECK state/persistence checks passed.');

@@ -20,7 +20,7 @@
         gateRate:120,
         gateAnalog:.35,
       },
-      wreck: { on:false, bits:12, rate:.75, curve:'pixel', threshold:-24, tone:.65, mix:.35, out:.85 },
+      wreck: { on:false, bits:12, rate:.75, curve:'pixel', threshold:-24, tone:.65, mix:.35, out:.85, order:'comp-wreck' },
     };
   }
 
@@ -46,6 +46,7 @@
         vol: typeof t.vol === 'number' ? t.vol : 0,
         dlyS: !!t.dlyS,
         revS: !!t.revS,
+        wreckS: !!t.wreckS,
       })),
       engine: appState.engine,
       mstVol: appState.mstVol,
@@ -84,6 +85,7 @@
         if (typeof savedTrack.vol === 'number') track.vol = savedTrack.vol;
         track.dlyS = !!savedTrack.dlyS;
         track.revS = !!savedTrack.revS;
+        track.wreckS = !!savedTrack.wreckS;
       });
     }
     const appState = target.appState || target.state;
