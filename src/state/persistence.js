@@ -3,7 +3,8 @@
 (function (root) {
   const SCHEMA_VERSION = 1;
   const PROJECT_APP = 'bighart-beat-v4';
-  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'];
+  const LEGACY_TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
   const ENGINES = ['808', '909', 'reznor', 'aphex'];
   const ETHER_MODES = ['hum', 'clock', 'wifi', 'ether'];
   const STEP_COUNT = 16;
@@ -16,6 +17,7 @@
     clap:  { spread:[2,30], decay:[0.04,0.40], tone:[900,3000] },
     input: { pitch:[0.25,3], decay:[0.10,1] },
     ether: { freq:[20,400], harmonics:[0,1], texture:[0,1], grit:[0,1], decay:[0.05,0.80] },
+    synth: { pitch:[20,2000], decay:[0.05,2], tone:[0,1], shape:[0,1] },
   };
   const FX_RANGES = {
     dly: { mult:[0.25,1.5], fb:[0,0.8], tone:[0,1], wet:[0,1] },
@@ -353,7 +355,7 @@
       return;
     }
     if (tracks.length !== TRACK_IDS.length) {
-      errors.push('tracks must contain exactly 6 canonical tracks');
+      errors.push('tracks must contain exactly 7 canonical tracks (or 6 legacy tracks for import hydration)');
     }
     const seen = {};
     tracks.forEach((track, index) => {
@@ -487,6 +489,11 @@
       }
     }
 
+    const dangerousKeyErrors = [];
+    validateNoDangerousKeys(data, dangerousKeyErrors, 'project');
+    if (dangerousKeyErrors.length) return { ok: false, errors: dangerousKeyErrors };
+
+    data = hydrateLegacySixTrackProject(data);
     const validation = validateProjectData(data);
     if (!validation.ok) return validation;
     const value = cloneValue(data);
@@ -498,6 +505,40 @@
     value.patternChain = value.patternChain === undefined ? createDefaultPatternChain() : normalizePatternChain(value.patternChain);
     normalizeLegacyFx(value.fx);
     return { ok: true, value, errors: [] };
+  }
+
+  function hydrateLegacySixTrackProject(data) {
+    if (!isLegacySixTrackProject(data)) return data;
+    const hydrated = { ...data };
+    hydrated.tracks = data.tracks.map(track => cloneValue(track));
+    hydrated.tracks.push(serializeTracks([getDefaultSynthTrack()])[0]);
+    if (Array.isArray(data.patterns)) hydrated.patterns = hydrateLegacyBanks(data.patterns, 0);
+    if (Array.isArray(data.ratchets)) hydrated.ratchets = hydrateLegacyBanks(data.ratchets, 1);
+    return hydrated;
+  }
+
+  function isLegacySixTrackProject(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data) || !Array.isArray(data.tracks)) return false;
+    if (data.tracks.length !== LEGACY_TRACK_IDS.length) return false;
+    const ids = data.tracks.map(track => track && track.id);
+    return LEGACY_TRACK_IDS.every(id => ids.includes(id)) && !ids.includes('synth');
+  }
+
+  function getDefaultSynthTrack() {
+    const synth = getDefaultTracks().find(track => track.id === 'synth');
+    if (!synth) {
+      return { id:'synth', mute:false, vol:.52, dlyS:true, revS:true, p:{ pitch:220, decay:.35, tone:.50, shape:.50 } };
+    }
+    return synth;
+  }
+
+  function hydrateLegacyBanks(banks, fillValue) {
+    return banks.map(bank => {
+      if (!bank || typeof bank !== 'object' || Array.isArray(bank) || bank.synth !== undefined) return bank;
+      const hydrated = { ...bank };
+      hydrated.synth = Array(STEP_COUNT).fill(fillValue);
+      return hydrated;
+    });
   }
 
   function normalizeLegacyFx(fx) {

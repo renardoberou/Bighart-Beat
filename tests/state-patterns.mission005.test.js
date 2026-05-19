@@ -11,7 +11,7 @@ const {
   clearPattern,
 } = require(path.join(root, 'src', 'state', 'pattern-operations.js'));
 
-const trackIds = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+const trackIds = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'];
 
 const empty = createEmptyGrid();
 assert.deepStrictEqual(Object.keys(empty), trackIds, 'createEmptyGrid preserves canonical track order');
@@ -50,6 +50,7 @@ const normalizedPartial = clonePatternGrid(partialGrid);
 assert.deepStrictEqual(normalizedPartial.kick, [1, 0, 1, ...Array(13).fill(0)], 'clonePatternGrid pads short track arrays');
 assert.deepStrictEqual(normalizedPartial.snare, [1, ...Array(15).fill(0)], 'clonePatternGrid pads partial grid tracks');
 assert.deepStrictEqual(normalizedPartial.hihat, Array(16).fill(0), 'clonePatternGrid fills missing canonical tracks');
+assert.deepStrictEqual(normalizedPartial.synth, Array(16).fill(0), 'clonePatternGrid fills missing synth track');
 
 const longGrid = createEmptyGrid();
 longGrid.kick = Array(20).fill(1);

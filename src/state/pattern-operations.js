@@ -1,7 +1,7 @@
 'use strict';
 
 (function (root) {
-  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'];
   const STEP_COUNT = 16;
 
   function assertKnownTrack(trackId) {

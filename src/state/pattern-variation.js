@@ -1,7 +1,7 @@
 'use strict';
 
 (function (root) {
-  const FALLBACK_TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+  const FALLBACK_TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'];
   const STEP_COUNT = 16;
   const BANK_COUNT = 4;
 

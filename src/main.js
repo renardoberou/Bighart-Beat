@@ -14,6 +14,7 @@ const HihatVoice = globalThis.BighartBeatHihat;
 const KickVoice = window.BighartBeatKick;
 const SnareVoice = window.BighartBeatSnare;
 const ClapVoice = window.BighartBeatClap;
+const SynthVoice = globalThis.BighartBeatSynth;
 const EngineProfiles = globalThis.BighartBeatEngineProfiles;
 const TRACKS = State.createDefaultTracks();
 const FX = State.createDefaultFxState();
@@ -40,6 +41,7 @@ const CHAIN_SLOT_BAR_CHOICES = [1, 2, 4, 8, 16];
 const OPEN_HIHAT_ROW_ID = 'open-hihat';
 const OPEN_HIHAT_ROW_LABEL = 'OHH';
 const hihatChokeState = { gain: null, open: false };
+const synthVoiceState = { gain: null };
 
 function setHihatPlacement(value) {
   const next = parseFloat(value);
@@ -688,6 +690,85 @@ function synthEther(t, v, p) {
   }
 }
 
+function triggerSynthChoke(t, voiceGain, spec) {
+  const previous = synthVoiceState.gain;
+  if (previous && previous.gain) {
+    const g = previous.gain;
+    if (g.cancelAndHoldAtTime) {
+      g.cancelAndHoldAtTime(t);
+    } else {
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(Math.max(.001, g.value || .001), t);
+    }
+    g.setTargetAtTime(.0008, t, spec.chokeTau);
+  }
+  synthVoiceState.gain = voiceGain;
+}
+
+// ── SYNTH ── playable monophonic row with engine-selected personalities
+function synthSynth(t, v, p) {
+  const dest = routeVoice(t, 6);
+  const spec = SynthVoice.resolveSynthVoiceSpec(S.engine, p);
+  const voiceGain = A.createGain();
+  voiceGain.gain.setValueAtTime(0, t);
+  voiceGain.gain.linearRampToValueAtTime(clamp(v * spec.bodyGain, 0, .7), t + spec.attackSec);
+  voiceGain.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec);
+  voiceGain.connect(dest);
+  triggerSynthChoke(t, voiceGain, spec);
+
+  const osc = A.createOscillator();
+  osc.type = spec.oscType;
+  osc.frequency.setValueAtTime(spec.pitchHz, t);
+  if (spec.glideSec > 0) osc.frequency.setTargetAtTime(spec.pitchHz * .995, t + .002, spec.glideSec);
+  if (Number.isFinite(spec.detuneCents)) osc.detune.setValueAtTime(spec.detuneCents, t);
+
+  const filter = A.createBiquadFilter();
+  filter.type = spec.filterType;
+  filter.frequency.setValueAtTime(spec.filterHz, t);
+  filter.frequency.exponentialRampToValueAtTime(Math.max(80, spec.filterHz * .42), t + spec.decaySec);
+  filter.Q.setValueAtTime(spec.filterQ, t);
+  const sat = A.createWaveShaper(); sat.curve = mkSatCurve(spec.driveAmount); sat.oversample = '2x';
+  osc.connect(filter); filter.connect(sat); sat.connect(voiceGain);
+  osc.start(t); osc.stop(t + spec.stopSec);
+
+  if (spec.modIndex > 0) {
+    const mod = A.createOscillator(); mod.type = 'sine'; mod.frequency.value = spec.pitchHz * spec.modRatio;
+    const modGain = A.createGain();
+    modGain.gain.setValueAtTime(spec.modIndex, t);
+    modGain.gain.exponentialRampToValueAtTime(.001, t + Math.min(spec.decaySec, .65));
+    mod.connect(modGain); modGain.connect(osc.frequency);
+    mod.start(t); mod.stop(t + spec.stopSec);
+  }
+
+  if (spec.subGain > 0.001) {
+    const sub = A.createOscillator(); sub.type = 'sine'; sub.frequency.value = spec.pitchHz * .5;
+    const sg = A.createGain();
+    sg.gain.setValueAtTime(0, t);
+    sg.gain.linearRampToValueAtTime(clamp(v * spec.subGain, 0, .35), t + spec.attackSec * 1.3);
+    sg.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec * .9);
+    sub.connect(sg); sg.connect(voiceGain);
+    sub.start(t); sub.stop(t + spec.stopSec);
+  }
+
+  if (spec.noiseGain > 0.001) {
+    const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
+    const nf = A.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = spec.filterHz; nf.Q.value = Math.max(2, spec.filterQ);
+    const ng = A.createGain();
+    ng.gain.setValueAtTime(clamp(v * spec.noiseGain, 0, .16), t);
+    ng.gain.exponentialRampToValueAtTime(.001, t + Math.min(.16, spec.decaySec));
+    ns.connect(nf); nf.connect(ng); ng.connect(voiceGain);
+    ns.start(t); ns.stop(t + Math.min(.22, spec.stopSec));
+  }
+}
+
+function previewSynth() {
+  initAudio();
+  const tr = TRACKS[6];
+  const t = A.currentTime + .015;
+  triggerCompGate(t, tr.id);
+  synthSynth(t, tr.vol, tr.p);
+}
+
 function getStepHihatOpen(step) {
   return State.getHihatOpenness(HHT_OPENNESS[S.patt], step);
 }
@@ -704,6 +785,7 @@ function fire(ti, t) {
     case 'clap':  synthClap(t, v, tr.p); break;
     case 'input': synthInput(t, v, tr.p); break;
     case 'ether': synthEther(t, v, tr.p); break;
+    case 'synth': synthSynth(t, v, tr.p); break;
   }
 }
 
@@ -1026,7 +1108,7 @@ function buildMix() {
   const mix = $('mix');
   mix.innerHTML = '';
   TRACKS.forEach((tr, ti) => {
-    const colKey = tr.id === 'kick'?'kck':tr.id === 'snare'?'snr':tr.id === 'hihat'?'hht':tr.id === 'clap'?'clp':tr.id === 'input'?'inp':'eth';
+    const colKey = tr.id === 'kick'?'kck':tr.id === 'snare'?'snr':tr.id === 'hihat'?'hht':tr.id === 'clap'?'clp':tr.id === 'input'?'inp':tr.id === 'synth'?'syn':'eth';
     const row = document.createElement('div');
     row.className = 'mt';
     row.innerHTML = `
@@ -1072,6 +1154,7 @@ function buildVE() {
                           : tr.n === 'HHT' ? 'HIHAT'
                           : tr.n === 'CLP' ? 'CLAP'
                           : tr.n === 'INP' ? 'INPUT'
+                          : tr.n === 'SYN' ? 'SYNTH'
                           : 'ETHER';
   const pn = $('vePanel'); pn.innerHTML = '';
 
@@ -1177,6 +1260,21 @@ function buildVE() {
     mkRow('TEXT',  0, 100, 1, Math.round(tr.p.texture*100), x=>`${x}%`, v=>tr.p.texture=v/100, c);
     mkRow('GRIT',  0, 100, 1, Math.round(tr.p.grit*100), x=>`${x}%`, v=>tr.p.grit=v/100, c);
     mkRow('DECAY', 5, 80, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
+  } else if (tr.id === 'synth') {
+    const syn = document.createElement('div');
+    syn.className = 'syn-test';
+    syn.innerHTML = `<div class="hat-help">
+        <div class="hat-help-engine">SYNTH ENGINE: ${S.engine.toUpperCase()}</div>
+        <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.toUpperCase()}</div>
+        <div>RETRIGGER CHOKE KEEPS SYN ROW TIGHT</div>
+      </div>
+      <button class="mstr-btn" data-synth-test="1">TEST SYN</button>`;
+    pn.appendChild(syn);
+    syn.querySelector('[data-synth-test]').addEventListener('click', previewSynth);
+    mkRow('PITCH', 40, 1600, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>tr.p.pitch=v, c);
+    mkRow('DECAY', 4, 220, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
+    mkRow('TONE', 0, 100, 1, Math.round(tr.p.tone*100), x=>`${x}%`, v=>tr.p.tone=v/100, c);
+    mkRow('SHAPE', 0, 100, 1, Math.round(tr.p.shape*100), x=>`${x}%`, v=>tr.p.shape=v/100, c);
   }
 }
 

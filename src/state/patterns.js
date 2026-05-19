@@ -1,7 +1,7 @@
 'use strict';
 
 (function (root) {
-  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'];
   const STEP_COUNT = 16;
   const BANK_COUNT = 4;
 
@@ -13,6 +13,7 @@
       clap:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
       input: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
       ether: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      synth: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     };
   }
 

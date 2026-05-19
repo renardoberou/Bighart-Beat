@@ -10,7 +10,7 @@ const { createDefaultTracks } = require(path.join(root, 'src', 'state', 'tracks.
 const { createDefaultFxState } = require(path.join(root, 'src', 'state', 'fx-state.js'));
 const { serializeProject, parseProjectImport } = require(path.join(root, 'src', 'state', 'persistence.js'));
 
-const trackIds = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+const trackIds = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'];
 const { createDefaultRatchetGrid, createRatchetBanks, cloneRatchetGrid } = patternsModule;
 const { getRatchetCount, setRatchetCount, cycleRatchetCount } = ops;
 assert.strictEqual(typeof createDefaultRatchetGrid, 'function');

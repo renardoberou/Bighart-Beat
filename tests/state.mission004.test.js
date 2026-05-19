@@ -15,6 +15,7 @@ const canonicalGrid = {
   clap:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
   input: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
   ether: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  synth: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 };
 
 const canonicalTracks = [
@@ -30,6 +31,8 @@ const canonicalTracks = [
     p:{ pitch:1.0, decay:1.0 }, smp:null, smpN:null },
   { id:'ether', n:'ETH', col:'e', mute:false, vol:.62, dlyS:true,  revS:true,
     p:{ mode:'ether', freq:55, harmonics:.5, texture:.5, decay:.28, grit:.4 } },
+  { id:'synth', n:'SYN', col:'p', mute:false, vol:.52, dlyS:true,  revS:true,
+    p:{ pitch:220, decay:.35, tone:.50, shape:.50 } },
 ];
 
 function assertIndependent(makeA, makeB, mutate, read, label) {
@@ -40,7 +43,7 @@ function assertIndependent(makeA, makeB, mutate, read, label) {
 }
 
 const grid = createDefaultGrid();
-assert.deepStrictEqual(Object.keys(grid), ['kick', 'snare', 'hihat', 'clap', 'input', 'ether']);
+assert.deepStrictEqual(Object.keys(grid), ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth']);
 assert.deepStrictEqual(grid, canonicalGrid, 'createDefaultGrid returns canonical v4 default pattern');
 for (const [trackId, steps] of Object.entries(grid)) {
   assert.strictEqual(steps.length, 16, `${trackId} has 16 steps`);
@@ -56,9 +59,9 @@ banks[1].ether[15] = 1;
 assert.strictEqual(banks[2].ether[15], 0, 'pattern banks do not share nested track arrays');
 
 const tracks = createDefaultTracks();
-assert.deepStrictEqual(tracks, canonicalTracks, 'createDefaultTracks returns canonical six track objects');
-assert.strictEqual(tracks.length, 6, 'createDefaultTracks returns six tracks');
-assert.deepStrictEqual(tracks.map(t => t.id), ['kick', 'snare', 'hihat', 'clap', 'input', 'ether']);
+assert.deepStrictEqual(tracks, canonicalTracks, 'createDefaultTracks returns canonical seven track objects');
+assert.strictEqual(tracks.length, 7, 'createDefaultTracks returns seven tracks');
+assert.deepStrictEqual(tracks.map(t => t.id), ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth']);
 assert.strictEqual(tracks[4].smp, null, 'input sample buffer starts null');
 assert.strictEqual(tracks[4].smpN, null, 'input sample name starts null');
 assertIndependent(createDefaultTracks, null, t => { t[0].p.pitch = 999; t[4].smpN = 'sample'; }, t => [t[0].p.pitch, t[4].smpN], 'createDefaultTracks');

@@ -44,6 +44,20 @@ assert.strictEqual(Object.prototype.hasOwnProperty.call(fx.comp, 'output'), fals
 const patterns = createPatternBanks();
 patterns[2].ether[15] = 1;
 
+function omitSynthFromBanks(banks) {
+  return banks.map(bank => {
+    const clone = { ...bank };
+    delete clone.synth;
+    return clone;
+  });
+}
+function omitSynthTrack(list) {
+  return list.filter(track => track.id !== 'synth');
+}
+
+const legacySixPatterns = omitSynthFromBanks(patterns);
+const legacySixTracks = omitSynthTrack(tracks);
+
 const serialized = serializeProject({ appState, tracks, fx, patterns });
 assert.deepStrictEqual(Object.keys(serialized), ['schemaVersion', 'bpm', 'swing', 'patt', 'engine', 'mstVol', 'patterns', 'tracks', 'fx', 'meta', 'patternChain'], 'serializeProject uses deterministic v4-compatible top-level shape including swing and pattern chain');
 assert.strictEqual(serialized.schemaVersion, 1);
@@ -55,7 +69,11 @@ assert.strictEqual(serialized.engine, '909', 'serializeProject persists selected
 assert.strictEqual(serialized.mstVol, 0.64);
 assert.strictEqual(serialized.tracks[0].mute, true);
 assert.strictEqual(serialized.tracks[0].p.pitch, 123);
+assert.strictEqual(serialized.tracks.length, 7, 'serializeProject persists all seven canonical tracks');
+assert.strictEqual(serialized.tracks[6].id, 'synth', 'serializeProject includes the canonical synth track');
+assert.deepStrictEqual(serialized.tracks[6].p, { pitch:220, decay:.35, tone:.50, shape:.50 }, 'serialized synth track includes default params');
 assert.strictEqual(serialized.patterns[2].ether[15], 1);
+assert.deepStrictEqual(serialized.patterns[0].synth, Array(16).fill(0), 'serializeProject includes empty synth pattern lanes');
 assert.strictEqual(serialized.tracks[0].n, undefined, 'serialized tracks include only runtime save/import fields');
 assert.strictEqual(serialized.tracks[4].smp, undefined, 'serialized tracks omit sample buffers');
 
@@ -90,14 +108,20 @@ assert.strictEqual(parsedFromString.ok, true, 'parseProjectImport accepts JSON s
 const legacyShape = {
   bpm: 118,
   mstVol: 0.5,
-  patterns,
-  tracks: tracks.map(t => ({ id: t.id, mute: t.mute, vol: t.vol, dlyS: t.dlyS, revS: t.revS, p: t.p })),
+  patterns: legacySixPatterns,
+  tracks: legacySixTracks.map(t => ({ id: t.id, mute: t.mute, vol: t.vol, dlyS: t.dlyS, revS: t.revS, p: t.p })),
   fx,
 };
-assert.strictEqual(parseProjectImport(legacyShape).ok, true, 'parseProjectImport accepts current v4 export shape without schemaVersion');
-assert.strictEqual(parseProjectImport({ ...legacyShape, patt: 1 }).ok, true, 'parseProjectImport accepts legacy shape with patt and without schemaVersion');
+assert.strictEqual(parseProjectImport(legacyShape).ok, true, 'parseProjectImport accepts legacy six-track export shape without schemaVersion');
+assert.strictEqual(parseProjectImport({ ...legacyShape, patt: 1 }).ok, true, 'parseProjectImport accepts legacy six-track shape with patt and without schemaVersion');
 assert.strictEqual(parseProjectImport(legacyShape).value.engine, 'aphex', 'legacy imports without engine default to aphex');
 assert.strictEqual(parseProjectImport(legacyShape).value.swing, 0, 'legacy imports without swing default to straight timing');
+const hydratedLegacy = parseProjectImport(legacyShape);
+assert.strictEqual(hydratedLegacy.ok, true, 'legacy six-track import parses');
+assert.deepStrictEqual(hydratedLegacy.value.tracks.map(t => t.id), ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'], 'legacy six-track import hydrates canonical synth track');
+assert.deepStrictEqual(hydratedLegacy.value.tracks[6], serialized.tracks[6], 'legacy six-track import hydrates default synth mixer and params');
+assert.deepStrictEqual(hydratedLegacy.value.patterns[0].synth, Array(16).fill(0), 'legacy six-track import hydrates empty synth pattern lane');
+assert.deepStrictEqual(hydratedLegacy.value.ratchets[0].synth, Array(16).fill(1), 'legacy six-track import hydrates default synth ratchet lane');
 
 function assertImportRejected(project, pattern, label) {
   const result = parseProjectImport(project);
@@ -115,8 +139,8 @@ assertImportRejected({ ...serialized, fx: { dly: serialized.fx.dly } }, /fx\.rev
 assertImportRejected({ ...serialized, fx: { rev: serialized.fx.rev } }, /fx\.dly|missing/i, 'missing fx.dly object');
 assertImportRejected({ ...serialized, fx: { dly: serialized.fx.dly, rev: serialized.fx.rev } }, /fx\.comp|missing/i, 'missing fx.comp object');
 
-assertImportRejected({ ...serialized, tracks: serialized.tracks.slice(0, 5) }, /six|6|exactly/i, 'short tracks array');
-assertImportRejected({ ...serialized, tracks: [...serialized.tracks, { ...serialized.tracks[0] }] }, /six|6|exactly/i, 'long tracks array');
+assertImportRejected({ ...serialized, tracks: serialized.tracks.slice(0, 5) }, /six|seven|6|7|exactly|legacy/i, 'short tracks array');
+assertImportRejected({ ...serialized, tracks: [...serialized.tracks, { ...serialized.tracks[0] }] }, /seven|7|exactly/i, 'long tracks array');
 assertImportRejected({ ...serialized, tracks: serialized.tracks.map((t, i) => i === 1 ? { ...t, id: 'kick' } : t) }, /duplicate|missing|exactly once/i, 'duplicate track id');
 assertImportRejected({ ...serialized, tracks: serialized.tracks.map((t, i) => i === 1 ? { ...t, id: 'rim' } : t) }, /unknown|known|canonical/i, 'unknown track id');
 
@@ -125,8 +149,8 @@ patternWithExtraTrack.patterns[0].rim = Array(16).fill(0);
 assertImportRejected(patternWithExtraTrack, /unknown|extra|track key/i, 'pattern bank with unknown extra track key');
 
 const patternWithMissingTrack = serializeProject({ appState, tracks, fx, patterns });
-delete patternWithMissingTrack.patterns[0].ether;
-assertImportRejected(patternWithMissingTrack, /ether|missing|16/i, 'pattern bank with missing canonical track');
+delete patternWithMissingTrack.patterns[0].synth;
+assertImportRejected(patternWithMissingTrack, /synth|missing|16/i, 'current seven-track pattern bank with missing synth track');
 
 assertImportRejected({ ...serialized, schemaVersion: 2 }, /schemaVersion/i, 'unsupported schema version');
 assertImportRejected({ ...serialized, engine: 'linndrum' }, /engine|808|909|reznor|aphex/i, 'unknown engine');
