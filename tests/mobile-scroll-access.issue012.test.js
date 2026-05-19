@@ -60,7 +60,7 @@ assertRule(
   'mobile control panels participate in the document scroll with safe-area bottom padding'
 );
 
-assert(/@media\s*\(max-width:\s*640px\)\s*\{[\s\S]*\.swing-strip\s*\{[\s\S]*margin-top\s*:\s*8px[\s\S]*padding\s*:\s*8px[\s\S]*gap\s*:\s*8px/.test(css), 'mobile swing strip is compact enough to avoid dominating the vertical viewport');
-assert(/@media\s*\(max-width:\s*640px\)\s*\{[\s\S]*\.swing-step\s*\{[\s\S]*min-height\s*:\s*48px[\s\S]*\.swing-knob-control\s*\{[\s\S]*min-width\s*:\s*84px[\s\S]*min-height\s*:\s*84px/.test(css), 'mobile swing controls stay touch-friendly while reducing vertical pressure');
+assert(/@media\s*\(max-width:\s*640px\)\s*\{[\s\S]*\.swing-strip\s*\{[\s\S]*grid-template-columns\s*:\s*minmax\(44px, max-content\) 30px 40px 30px[\s\S]*width\s*:\s*fit-content[\s\S]*margin-top\s*:\s*6px[\s\S]*padding\s*:\s*5px 6px[\s\S]*gap\s*:\s*6px/.test(css), 'mobile swing strip stays compact and avoids dominating the vertical viewport');
+assert(/@media\s*\(max-width:\s*640px\)\s*\{[\s\S]*\.swing-step\s*\{[\s\S]*min-height\s*:\s*30px[\s\S]*\.swing-knob-control\s*\{[\s\S]*min-width\s*:\s*40px[\s\S]*min-height\s*:\s*40px/.test(css), 'mobile swing controls stay proportional while preserving button/slider semantics');
 
 console.log('mobile scroll access issue012 checks passed');

@@ -1280,6 +1280,21 @@ function syncPatternButtons() {
       ? 'Pattern ' + 'ABCD'[patternIndex] + ' has a latched FX scene'
       : 'Pattern ' + 'ABCD'[patternIndex];
   });
+  syncLatchFxButton();
+}
+
+function syncLatchFxButton() {
+  const latchBtn = $('latchFxBtn');
+  if (!latchBtn) return;
+  const hasAnyPatternLatch = PATTERN_FX_SCENES.some(Boolean);
+  latchBtn.classList.toggle('latched', hasAnyPatternLatch);
+  latchBtn.textContent = hasAnyPatternLatch ? 'UNLATCH FX' : 'LATCH FX';
+  latchBtn.title = hasAnyPatternLatch
+    ? 'Clear all latched pattern FX/mix scenes and keep the current settings shared across every pattern'
+    : 'Save current FX/mix scene to selected pattern';
+  latchBtn.setAttribute('aria-label', hasAnyPatternLatch
+    ? 'Unlatch FX: clear all pattern FX and mix latches'
+    : 'Latch current FX and mix scene to selected pattern');
 }
 
 function selectPattern(patternIndex, options) {
@@ -1352,10 +1367,23 @@ function cyclePatternChainSlotBars(slot) {
 }
 
 function latchCurrentPatternFxScene() {
+  if (PATTERN_FX_SCENES.some(Boolean)) {
+    clearAllPatternFxScenes();
+    return;
+  }
   PATTERN_FX_SCENES[S.patt] = State.capturePatternFxScene({ appState: S, tracks: TRACKS, fx: FX });
   syncPatternButtons();
   autosave();
   toast('FX latched to pattern ' + 'ABCD'[S.patt]);
+}
+
+function clearAllPatternFxScenes() {
+  for (let i = 0; i < PATTERN_FX_SCENES.length; i++) {
+    PATTERN_FX_SCENES[i] = null;
+  }
+  syncPatternButtons();
+  autosave();
+  toast('FX latches cleared · shared settings active');
 }
 
 function analyzeCurrentRhythm() {

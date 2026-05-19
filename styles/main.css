@@ -464,33 +464,35 @@ body.running #ss  { display: none; }
 .swing-strip {
   --swing-angle: -135deg;
   display: grid;
-  grid-template-columns: minmax(96px, 1fr) 56px 84px 56px;
+  grid-template-columns: minmax(44px, max-content) 30px 40px 30px;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  padding: 10px;
+  width: fit-content;
+  max-width: 100%;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 5px 6px;
   border: 1px solid rgba(232,184,75,.28);
-  border-radius: 14px;
+  border-radius: 10px;
   background: linear-gradient(135deg, rgba(232,184,75,.10), rgba(21,21,17,.74));
   color: var(--amberLt);
-  font-size: 7px;
-  letter-spacing: 1px;
-  min-width: 340px;
+  font-size: 6px;
+  letter-spacing: .7px;
+  min-width: 0;
 }
 .swing-copy {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 1px;
   min-width: 0;
 }
 .swing-label {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 8px;
 }
 .swing-hint {
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 5px;
   line-height: 1.25;
   white-space: normal;
 }
@@ -498,8 +500,8 @@ body.running #ss  { display: none; }
   position: relative;
   display: grid;
   place-items: center;
-  min-width: 84px;
-  min-height: 84px;
+  min-width: 40px;
+  min-height: 40px;
   border: 1px solid rgba(232,184,75,.56);
   border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, rgba(232,184,75,.22) 0 34%, rgba(34,31,23,.96) 35% 100%);
@@ -507,12 +509,12 @@ body.running #ss  { display: none; }
   font-family: var(--mono);
   cursor: pointer;
   touch-action: none;
-  box-shadow: inset 0 0 18px rgba(0,0,0,.45), 0 0 14px rgba(232,184,75,.18);
+  box-shadow: inset 0 0 10px rgba(0,0,0,.42), 0 0 8px rgba(232,184,75,.16);
 }
 .swing-knob-control::before {
   content: '';
   position: absolute;
-  inset: -7px;
+  inset: -4px;
   border-radius: 50%;
   background: conic-gradient(from -135deg, var(--amberLt) 0deg, var(--amberLt) calc((var(--swing-angle) + 135deg)), rgba(232,184,75,.18) 0deg 270deg, transparent 270deg 360deg);
   z-index: -1;
@@ -520,34 +522,34 @@ body.running #ss  { display: none; }
 }
 .swing-knob-dot {
   position: absolute;
-  width: 6px;
-  height: 22px;
+  width: 4px;
+  height: 11px;
   border-radius: 999px;
   background: var(--amberLt);
-  top: 9px;
-  transform-origin: 50% 33px;
+  top: 5px;
+  transform-origin: 50% 15px;
   transform: rotate(var(--swing-angle));
-  box-shadow: 0 0 8px rgba(232,184,75,.7);
+  box-shadow: 0 0 5px rgba(232,184,75,.7);
 }
 .swing-val {
   color: var(--amberLt);
   font-family: var(--mono);
-  font-size: 15px;
+  font-size: 10px;
   text-align: center;
-  text-shadow: 0 0 7px rgba(232,184,75,.45);
+  text-shadow: 0 0 5px rgba(232,184,75,.45);
 }
 .swing-step {
-  min-width: 56px;
-  min-height: 56px;
+  min-width: 30px;
+  min-height: 30px;
   border: 1px solid rgba(232,184,75,.45);
-  border-radius: 16px;
+  border-radius: 9px;
   background: var(--panel2);
   color: var(--amberLt);
   font-family: var(--mono);
-  font-size: 22px;
+  font-size: 14px;
   cursor: pointer;
   touch-action: manipulation;
-  box-shadow: inset 0 0 10px rgba(0,0,0,.24);
+  box-shadow: inset 0 0 7px rgba(0,0,0,.24);
 }
 .swing-step:active,
 .swing-knob-control:active {
@@ -560,10 +562,10 @@ body.running #ss  { display: none; }
   .variation-btn { width: 100%; min-height: 32px; }
   .hht-place-strip { justify-content: space-between; }
   .hht-place-b { flex: 1 1 0; }
-  .swing-strip { grid-template-columns: 1fr; min-width: 0; margin-top: 8px; padding: 8px; gap: 8px; justify-items: center; }
-  .swing-copy { width: 100%; text-align: center; }
-  .swing-step { width: 100%; min-height: 48px; }
-  .swing-knob-control { min-width: 84px; min-height: 84px; }
+  .swing-strip { grid-template-columns: minmax(44px, max-content) 30px 40px 30px; min-width: 0; width: fit-content; margin-top: 6px; padding: 5px 6px; gap: 6px; justify-items: center; }
+  .swing-copy { width: auto; text-align: left; }
+  .swing-step { width: auto; min-height: 30px; }
+  .swing-knob-control { min-width: 40px; min-height: 40px; }
 }
 .seq {
   flex: 0 0 50vh;

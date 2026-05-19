@@ -99,4 +99,7 @@ assert(index.includes('id="latchFxBtn"'), 'UI exposes LATCH FX button');
 assert(index.includes('LATCH FX'), 'UI button is labeled LATCH FX');
 assert(js.includes('restorePatternFxScene(S.patt)'), 'pattern select restores latched scene');
 assert(js.includes('State.capturePatternFxScene'), 'runtime latches current FX scene through state helper');
+assert(/function\s+syncLatchFxButton\s*\([^)]*\)\s*\{[\s\S]*const hasAnyPatternLatch\s*=\s*PATTERN_FX_SCENES\.some\(Boolean\)[\s\S]*UNLATCH FX/.test(js), 'runtime shows UNLATCH FX whenever any pattern has a latched scene');
+assert(/function\s+clearAllPatternFxScenes\s*\([^)]*\)\s*\{[\s\S]*PATTERN_FX_SCENES\[i\]\s*=\s*null[\s\S]*syncPatternButtons\(\)[\s\S]*autosave\(\)[\s\S]*toast/.test(js), 'unlatch clears every pattern FX scene and persists the shared state');
+assert(/function\s+latchCurrentPatternFxScene\s*\([^)]*\)\s*\{[\s\S]*if \(PATTERN_FX_SCENES\.some\(Boolean\)\)[\s\S]*clearAllPatternFxScenes\(\)/.test(js), 'clicking the latch button resets all pattern latches whenever any latch exists');
 assert(css.includes('.patt-b.latched'), 'latched patterns get a visible UI marker');

@@ -38,10 +38,14 @@ assert(/tlog\.push\(\{\s*step,\s*time:\s*swungT\s*\}\)/.test(main), 'playhead lo
 assert(/swing:\s*S\.swing/.test(main), 'Rhythm Intelligence receives current swing instead of hardcoded swing: 0');
 assert(/S\.swing\s*=\s*Groove\.clampSwing\(d\.swing/.test(main), 'project import applies persisted swing');
 
-assert(/\.swing-strip\s*\{[\s\S]*margin-top:\s*(?:8|10|12|14|16)px[\s\S]*padding:\s*(?:8|10|12)px/.test(css), 'CSS separates the swing control from sequencer hits with a visible top gap/padded strip');
-assert(/\.swing-knob-control\s*\{[\s\S]*min-width:\s*(?:72|76|80|84|88|92|96)px[\s\S]*min-height:\s*(?:72|76|80|84|88|92|96)px[\s\S]*border-radius:\s*50%[\s\S]*touch-action:\s*none/.test(css), 'CSS makes the swing knob large, round, and drag-safe on mobile');
+assert(/\.swing-strip\s*\{[\s\S]*grid-template-columns:\s*minmax\(44px, max-content\) 30px 40px 30px[\s\S]*width:\s*fit-content[\s\S]*margin-top:\s*6px[\s\S]*padding:\s*5px 6px[\s\S]*min-width:\s*0/.test(css), 'CSS keeps the swing strip compact instead of using a huge fixed desktop footprint');
+assert(!/min-width:\s*340px/.test(css), 'CSS no longer gives the swing strip a 340px minimum width');
+assert(/\.swing-knob-control\s*\{[\s\S]*min-width:\s*40px[\s\S]*min-height:\s*40px[\s\S]*border-radius:\s*50%[\s\S]*touch-action:\s*none/.test(css), 'CSS makes the swing knob compact, round, and drag-safe');
+assert(!/\.swing-knob-control\s*\{[\s\S]*min-width:\s*84px[\s\S]*min-height:\s*84px/.test(css), 'CSS no longer uses an 84px swing knob');
 assert(/\.swing-knob-control::before\s*\{[\s\S]*conic-gradient/.test(css), 'CSS gives swing a premium radial/rotary visual');
-assert(/\.swing-step\s*\{[\s\S]*min-width:\s*(?:56|60|64)px[\s\S]*min-height:\s*(?:56|60|64)px/.test(css), 'CSS gives swing +/- controls at least 56px touch targets');
-assert(/@media \(max-width: (?:640|680|720)px\)[\s\S]*\.swing-strip\s*\{[\s\S]*grid-template-columns:\s*1fr/.test(css), 'mobile/tablet CSS stacks the swing knob before the 520px overflow zone');
+assert(/\.swing-step\s*\{[\s\S]*min-width:\s*30px[\s\S]*min-height:\s*30px/.test(css), 'CSS uses compact +/- controls proportional to the rest of the toolbar');
+assert(!/\.swing-step\s*\{[\s\S]*min-width:\s*56px[\s\S]*min-height:\s*56px/.test(css), 'CSS no longer uses 56px swing step buttons');
+assert(/@media \(max-width: (?:640|680|720)px\)[\s\S]*\.swing-strip\s*\{[\s\S]*grid-template-columns:\s*minmax\(44px, max-content\) 30px 40px 30px[\s\S]*width:\s*fit-content/.test(css), 'mobile/tablet CSS keeps the swing module compact instead of stacking into a full-width column');
+assert(!css.includes('.swing-strip { grid-template-columns: 1fr;'), 'mobile CSS no longer turns swing into a giant single-column module');
 
 console.log('Issue 008 swing runtime wiring checks passed.');
