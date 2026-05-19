@@ -465,6 +465,20 @@ body.running #ss  { display: none; }
   border-color: var(--border);
   opacity: .72;
 }
+.brain-loop-status {
+  min-height: 28px;
+  padding: 6px 9px;
+  border: 1px solid rgba(74,184,112,.28);
+  background: rgba(74,184,112,.08);
+  color: var(--greenLt);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 1px;
+  line-height: 1.35;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
 .hht-place-strip {
   display: flex;
   align-items: center;
@@ -599,6 +613,7 @@ body.running #ss  { display: none; }
   .seq-hint { text-align: left; }
   .variation-btn { width: 100%; min-height: 32px; }
   .brain-loop-quick-btn { width: 100%; min-height: 44px; touch-action: manipulation; }
+  .brain-loop-status { width: 100%; min-height: 32px; white-space: normal; }
   .hht-place-strip { justify-content: space-between; }
   .hht-place-b { flex: 1 1 0; }
   .swing-strip { grid-template-columns: minmax(44px, max-content) 30px 40px 30px; min-width: 0; width: fit-content; margin-top: 6px; padding: 5px 6px; gap: 6px; justify-items: center; }

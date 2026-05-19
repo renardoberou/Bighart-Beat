@@ -1071,6 +1071,22 @@ function buildSeq() {
 /* ═══════════════════════════════════════════════
    RHYTHM INTELLIGENCE
 ═══════════════════════════════════════════════ */
+function formatBrainLoopResultStatus(action, targetIndex) {
+  const patternLetter = 'ABCD'[targetIndex] || '?';
+  const edit = action && action.edit ? action.edit : {};
+  const trackLabel = edit.trackId ? edit.trackId.slice(0, 3).toUpperCase() : 'ACT';
+  const stepLabel = Number.isInteger(edit.stepIndex) ? String(edit.stepIndex + 1) : '--';
+  const reason = action && action.reason ? action.reason : 'ACTION';
+  let detail = trackLabel + ' ' + stepLabel;
+  if (edit.trackId === 'hihat') {
+    const hihatOpen = edit.hihatOpen || 0;
+    const openLabel = hihatOpen === 1 ? 'OPEN' : hihatOpen === 0.45 ? 'TIGHT' : 'CLOSED';
+    detail += ' ' + openLabel;
+    if (edit.active) detail += ' · HEARD HAT';
+  }
+  return patternLetter + ' → ' + detail + ' · ' + reason;
+}
+
 function renderRhythmIntelligence() {
   if (!Rhythm || !Rhythm.analyzeRhythm || !$('riPanel')) return;
   const analysis = Rhythm.analyzeRhythm({
@@ -1112,6 +1128,7 @@ function renderRhythmIntelligence() {
   riActionBtn.textContent = action && action.reason ? ('APPLY BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
   quickActionBtn.disabled = !action;
   quickActionBtn.textContent = action && action.reason ? ('BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
+  $('brainLoopStatus').textContent = action ? 'BRAIN LOOP READY' : 'NO ACTION NEEDED';
 }
 
 /* ═══════════════════════════════════════════════
@@ -1539,6 +1556,7 @@ function createRhythmActionVariation() {
   HHT_OPENNESS[result.targetIndex] = result.hihatOpenness[result.targetIndex];
   selectPattern(result.targetIndex, { source: 'manual', autosave: false });
   renderRhythmIntelligence();
+  $('brainLoopStatus').textContent = formatBrainLoopResultStatus(action, result.targetIndex);
   autosave();
   let toastMessage = (action.reason || 'RI ACTION') + ' → pattern ' + 'ABCD'[result.targetIndex];
   if (action.edit.trackId === 'hihat' && action.edit.active) {
