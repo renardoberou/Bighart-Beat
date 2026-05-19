@@ -19,19 +19,19 @@ const canonicalGrid = {
 };
 
 const canonicalTracks = [
-  { id:'kick',  n:'KCK', col:'r', mute:false, vol:.78, dlyS:false, revS:false,
+  { id:'kick',  n:'KCK', col:'r', mute:false, vol:.78, dlyS:false, revS:false, wreckS:false,
     p:{ pitch:150, end:42, decay:.45, click:.42, drive:.32 } },
-  { id:'snare', n:'SNR', col:'o', mute:false, vol:.68, dlyS:false, revS:true,
+  { id:'snare', n:'SNR', col:'o', mute:false, vol:.68, dlyS:false, revS:true, wreckS:false,
     p:{ tone:210, snap:.70, decay:.18, body:.55 } },
-  { id:'hihat', n:'HHT', col:'a', mute:false, vol:.46, dlyS:false, revS:false,
+  { id:'hihat', n:'HHT', col:'a', mute:false, vol:.46, dlyS:false, revS:false, wreckS:false,
     p:{ freq:8200, decay:.055, open:.0, metal:.30 } },
-  { id:'clap',  n:'CLP', col:'b', mute:false, vol:.58, dlyS:true,  revS:true,
+  { id:'clap',  n:'CLP', col:'b', mute:false, vol:.58, dlyS:true,  revS:true, wreckS:false,
     p:{ spread:10, decay:.14, tone:1700 } },
-  { id:'input', n:'INP', col:'g', mute:false, vol:.70, dlyS:false, revS:false,
+  { id:'input', n:'INP', col:'g', mute:false, vol:.70, dlyS:false, revS:false, wreckS:false,
     p:{ pitch:1.0, decay:1.0 }, smp:null, smpN:null },
-  { id:'ether', n:'ETH', col:'e', mute:false, vol:.62, dlyS:true,  revS:true,
+  { id:'ether', n:'ETH', col:'e', mute:false, vol:.62, dlyS:true,  revS:true, wreckS:false,
     p:{ mode:'ether', freq:55, harmonics:.5, texture:.5, decay:.28, grit:.4 } },
-  { id:'synth', n:'SYN', col:'p', mute:false, vol:.52, dlyS:true,  revS:true,
+  { id:'synth', n:'SYN', col:'p', mute:false, vol:.52, dlyS:true,  revS:true, wreckS:false,
     p:{ pitch:220, decay:.35, tone:.50, shape:.50 } },
 ];
 
@@ -71,7 +71,7 @@ assert.deepStrictEqual(fx, {
   dly: { on:false, mult:0.75, fb:.32, tone:.55, wet:.26 },
   rev: { on:false, size:.60, damp:.55, gate:180, wet:.28 },
   comp: { on:false, threshold:-24, ratio:4, attack:8, release:280, detector:'rms', gateOn:false, gateThreshold:-60, gateRate:120, gateAnalog:0.35 },
-  wreck: { on:false, bits:12, rate:.75, curve:'pixel', threshold:-24, tone:.65, mix:.35, out:.85 },
+  wreck: { on:false, bits:12, rate:.75, curve:'pixel', threshold:-24, tone:.65, mix:.35, out:.85, order:'comp-wreck' },
 }, 'createDefaultFxState returns canonical delay/reverb/compressor/DIGI WRECK defaults');
 assertIndependent(createDefaultFxState, null, f => { f.dly.on = true; f.rev.wet = .99; f.comp.release = 900; f.wreck.bits = 6; }, f => [f.dly.on, f.rev.wet, f.comp.release, f.wreck.bits], 'createDefaultFxState');
 
