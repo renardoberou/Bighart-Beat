@@ -71,6 +71,9 @@
     const glitchWillFire = glitchChance > 0 && rand01(rand) < glitchChance;
     const glitchBandpassHz = clamp(7000 * jitter(rand, 0.4), 3500, 14000);
     const attackSec = clamp(0.0009 + open * 0.0024 + instability * 0.004, 0.0008, 0.004);
+    const tailReleaseTau = clamp(0.014 + open * 0.062 + open * open * 0.036 + instability * 0.20, 0.010, 0.16);
+    const openTailDamp = clamp(1 - open * 0.10 - open * open * 0.16, 0.68, 1);
+    const tailHeadroomTrim = clamp(1 - open * 0.08 - open * open * 0.14 - accentedHit * 0.03, 0.70, 1);
     const velocityTail = 1 - softHit * 0.12;
     const noiseTailSec = clamp(decaySec * characterTailDamp * (1 + open * 0.08) * velocityTail, 0.006, 0.70);
     const metalTailSec = clamp(decaySec * characterTailDamp * (0.72 + open * 0.08) * velocityTail, 0.004, 0.56);
@@ -94,6 +97,9 @@
       attackSec,
       noiseTailSec,
       metalTailSec,
+      tailReleaseTau,
+      openTailDamp,
+      tailHeadroomTrim,
       transientGain,
       outputTrim,
       airLowpassHz,

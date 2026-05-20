@@ -540,11 +540,10 @@ function triggerHihatChoke(t, openAmount, choke, spec) {
 function synthHihat(t, v, p) {
   const dest = routeVoice(t, 2);
   const spec = HihatVoice.resolveHihatVoiceSpec(S.engine, p, Math.random, v);
-  const dec = spec.decaySec;
   const choke = A.createGain();
   choke.gain.setValueAtTime(0, t);
   choke.gain.linearRampToValueAtTime(1, t + spec.attackSec);
-  choke.gain.setTargetAtTime(.0008, t + spec.noiseTailSec, Math.max(.012, dec * .18));
+  choke.gain.setTargetAtTime(.0008, t + spec.noiseTailSec, spec.tailReleaseTau);
   const hatPolish = A.createGain();
   hatPolish.gain.setValueAtTime(spec.outputTrim, t);
   const hatAir = A.createBiquadFilter(); hatAir.type = 'lowpass';
@@ -559,14 +558,16 @@ function synthHihat(t, v, p) {
   const ng = A.createGain();
   ng.gain.setValueAtTime(0, t);
   ng.gain.linearRampToValueAtTime(clamp(v * spec.noiseGain * spec.transientGain, 0, .72), t + spec.attackSec);
+  ng.gain.setTargetAtTime(.001, t + spec.noiseTailSec * spec.openTailDamp, spec.tailReleaseTau);
   ng.gain.exponentialRampToValueAtTime(.001, t + spec.noiseTailSec);
   ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(choke);
-  ns.start(t); ns.stop(t + spec.noiseTailSec + .05);
+  ns.start(t); ns.stop(t + spec.noiseTailSec + spec.tailReleaseTau * 4);
   // metallic tone mix — only if metal > 0
   if (spec.metalGain > 0.001) {
     const mg = A.createGain();
     mg.gain.setValueAtTime(0, t);
-    mg.gain.linearRampToValueAtTime(clamp(v * spec.metalGain, 0, .34), t + Math.max(.0008, spec.attackSec * .8));
+    mg.gain.linearRampToValueAtTime(clamp(v * spec.metalGain * spec.tailHeadroomTrim, 0, .34), t + Math.max(.0008, spec.attackSec * .8));
+    mg.gain.setTargetAtTime(.001, t + spec.metalTailSec * spec.openTailDamp, spec.tailReleaseTau * .75);
     mg.gain.exponentialRampToValueAtTime(.001, t + spec.metalTailSec);
     const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = spec.metalHighpassHz;
     mg.connect(hp); hp.connect(choke);

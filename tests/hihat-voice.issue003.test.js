@@ -33,7 +33,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'glitchChance', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'glitchChance', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -46,6 +46,9 @@ function assertFiniteBounded(spec, label) {
   assert(spec.noiseTailSec >= 0.006 && spec.noiseTailSec <= 0.70, `${label}: noiseTailSec bounded`);
   assert(spec.metalTailSec >= 0.004 && spec.metalTailSec <= 0.56, `${label}: metalTailSec bounded`);
   assert(spec.metalTailSec <= spec.noiseTailSec, `${label}: metallic tail does not outlive noise tail`);
+  assert(spec.tailReleaseTau >= 0.010 && spec.tailReleaseTau <= 0.16, `${label}: tailReleaseTau bounded/mobile-safe`);
+  assert(spec.openTailDamp >= 0.68 && spec.openTailDamp <= 1, `${label}: openTailDamp bounded for headroom`);
+  assert(spec.tailHeadroomTrim >= 0.70 && spec.tailHeadroomTrim <= 1, `${label}: tailHeadroomTrim bounded for headroom`);
   assert(spec.transientGain >= 0.8 && spec.transientGain <= 1.18, `${label}: transientGain bounded`);
   assert(spec.outputTrim >= 0.62 && spec.outputTrim <= 1, `${label}: output trim is bounded for hihat headroom`);
   assert(spec.airLowpassHz >= 8500 && spec.airLowpassHz <= 18000, `${label}: air lowpass is bright but bounded`);
@@ -108,6 +111,12 @@ assert(tight.attackSec < open.attackSec, 'open hihat has the softest transient a
 assert(tight.noiseTailSec > closed.noiseTailSec, 'tight hihat gets more noise tail than closed');
 assert(open.noiseTailSec > tight.noiseTailSec, 'open hihat gets the longest noise tail');
 assert(tight.metalTailSec > closed.metalTailSec, 'tight hihat gets more metallic tail than closed');
+assert(tight.tailReleaseTau > closed.tailReleaseTau, 'tight hihat smooths the long-tail release more than closed');
+assert(open.tailReleaseTau > tight.tailReleaseTau, 'open hihat gets the smoothest release tau for safer tails');
+assert(tight.openTailDamp < closed.openTailDamp, 'tight hihat damps sustained tail more than closed');
+assert(open.openTailDamp < tight.openTailDamp, 'open hihat damps sustained tail more than tight to avoid harsh buildup');
+assert(tight.tailHeadroomTrim < closed.tailHeadroomTrim, 'tight hihat applies extra tail headroom trim versus closed');
+assert(open.tailHeadroomTrim < tight.tailHeadroomTrim, 'open hihat applies strongest tail headroom trim');
 assert(open.transientGain < closed.transientGain, 'open hihat trims transient gain to leave headroom for longer tail');
 assert(tight.outputTrim < closed.outputTrim, 'tight hihat trims post-choke output more than closed for tail headroom');
 assert(open.outputTrim < tight.outputTrim, 'open hihat has the strongest post-choke trim for long-tail headroom');
@@ -161,5 +170,8 @@ assert(/hatPolish\.gain\.setValueAtTime\(spec\.outputTrim,\s*t\)/.test(main), 'h
 assert(/const\s+hatAir\s*=\s*A\.createBiquadFilter\(\)/.test(main) && /hatAir\.type\s*=\s*'lowpass'/.test(main), 'synthHihat adds a gentle post-choke air lowpass');
 assert(/hatAir\.frequency\.value\s*=\s*spec\.airLowpassHz/.test(main), 'hihat air lowpass uses resolver frequency');
 assert(/choke\.connect\(hatPolish\);\s*hatPolish\.connect\(hatAir\);\s*hatAir\.connect\(dest\);/.test(main), 'all hihat layers pass through choke, polish, and air filter before routeVoice destination');
+assert(/choke\.gain\.setTargetAtTime\(\.0008,\s*t\s*\+\s*spec\.noiseTailSec,\s*spec\.tailReleaseTau\)/.test(main), 'hihat choke release uses resolver tailReleaseTau');
+assert(/ng\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.noiseGain \* spec\.transientGain,\s*0,\s*\.72\),\s*t \+ spec\.attackSec\);\s*ng\.gain\.setTargetAtTime\(\.001,\s*t \+ spec\.noiseTailSec \* spec\.openTailDamp,\s*spec\.tailReleaseTau\)/.test(main), 'hihat noise tail uses resolver damping and release tau');
+assert(/mg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.metalGain \* spec\.tailHeadroomTrim,\s*0,\s*\.34\),\s*t \+ Math\.max\(\.0008,\s*spec\.attackSec \* \.8\)\)/.test(main), 'hihat metallic layer uses resolver tail headroom trim');
 
 console.log('Issue 003 hihat voice resolver checks passed.');
