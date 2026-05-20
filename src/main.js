@@ -887,6 +887,15 @@ function cycleSelectedSynthNoteStepBackward() {
   toast('SYN step harmonic down');
 }
 
+function cycleSelectedSynthNoteStepForward() {
+  SYNTH_NOTES[S.patt] = State.cycleSynthNoteRatio(SYNTH_NOTES[S.patt], LAST_SYNTH_NOTE_STEP);
+  buildSeq();
+  updateSynthNoteStatus();
+  autosave();
+  previewSynth();
+  toast('SYN step harmonic up');
+}
+
 function resetSelectedSynthNoteStepToRoot() {
   SYNTH_NOTES[S.patt] = State.resetSynthNoteStepToRoot(SYNTH_NOTES[S.patt], LAST_SYNTH_NOTE_STEP);
   buildSeq();
@@ -1452,6 +1461,7 @@ function buildVE() {
         <div class="syn-note-controls__row syn-note-controls__row--edit" data-synth-note-controls-row="edit">
           <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--edit${SYNTH_NOTE_EDIT?' on':''}" data-synth-note-edit="1">NOTE EDIT</button>
           <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--harm" data-synth-prev-step="1" title="Previous/down harmonic for selected synth step" aria-label="Previous/down harmonic for selected synth step">HARM ▼</button>
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--harm" data-synth-next-step="1" title="Advance/up-cycle harmonic for selected synth step" aria-label="Advance/up-cycle harmonic for selected synth step">HARM ▲</button>
           <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--random" data-synth-rnd-step="1" title="Random harmonic for selected synth step" aria-label="Random harmonic for selected synth step">RND STEP</button>
           <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--reset" data-synth-root-step="1" title="Reset selected synth step to root" aria-label="Reset selected synth step to root">ROOT STEP</button>
         </div>
@@ -1470,6 +1480,7 @@ function buildVE() {
     });
     syn.querySelector('[data-synth-rnd-step]').addEventListener('click', randomSelectedSynthNoteStep);
     syn.querySelector('[data-synth-prev-step]').addEventListener('click', cycleSelectedSynthNoteStepBackward);
+    syn.querySelector('[data-synth-next-step]').addEventListener('click', cycleSelectedSynthNoteStepForward);
     syn.querySelector('[data-synth-root-step]').addEventListener('click', resetSelectedSynthNoteStepToRoot);
     syn.querySelector('[data-synth-rnd-harm]').addEventListener('click', () => {
       SYNTH_NOTES[S.patt] = State.randomHarmonicSynthNotes(SYNTH_NOTES[S.patt], PATTERNS[S.patt].synth);

@@ -39,6 +39,7 @@ const synthPanel = synthPanelMatch[1];
   'data-synth-note-next',
   'data-synth-note-edit',
   'data-synth-prev-step',
+  'data-synth-next-step',
   'data-synth-rnd-step',
   'data-synth-root-step',
   'data-synth-rnd-harm'
@@ -49,7 +50,7 @@ const synthPanel = synthPanelMatch[1];
 assert(/class="[^"]*syn-note-controls[^"]*"/.test(synthPanel), 'SYN note controls have a scoped wrapper class');
 assert(/data-synth-note-controls="1"/.test(synthPanel), 'SYN note controls expose a stable wrapper data hook');
 assert(/class="[^"]*syn-note-controls__row[^"]*syn-note-controls__row--performance[^"]*"[\s\S]*data-synth-test[\s\S]*data-synth-note-prev[\s\S]*data-synth-note-next/.test(synthPanel), 'performance row groups TEST SYN and step navigation');
-assert(/class="[^"]*syn-note-controls__row[^"]*syn-note-controls__row--edit[^"]*"[\s\S]*data-synth-note-edit[\s\S]*data-synth-prev-step[\s\S]*data-synth-rnd-step[\s\S]*data-synth-root-step/.test(synthPanel), 'edit row groups NOTE EDIT, harmonic decrement, random selected step, and root reset');
+assert(/class="[^"]*syn-note-controls__row[^"]*syn-note-controls__row--edit[^"]*"[\s\S]*data-synth-note-edit[\s\S]*data-synth-prev-step[\s\S]*data-synth-next-step[\s\S]*data-synth-rnd-step[\s\S]*data-synth-root-step/.test(synthPanel), 'edit row groups NOTE EDIT, harmonic decrement/increment, random selected step, and root reset');
 assert(/class="[^"]*syn-note-controls__row[^"]*syn-note-controls__row--tools[^"]*"[\s\S]*data-synth-rnd-harm/.test(synthPanel), 'tool row separates whole-pattern harmonic randomize action');
 assert(/class="[^"]*syn-note-controls__btn[^"]*"[\s\S]*data-synth-test/.test(synthPanel), 'SYN note buttons have a scoped button class');
 assert(/class="[^"]*syn-note-controls__btn[^"]*syn-note-controls__btn--random[^"]*"[\s\S]*data-synth-rnd-step/.test(synthPanel), 'random selected-step action is visually distinguishable');
@@ -57,6 +58,8 @@ assert(/class="[^"]*syn-note-controls__btn[^"]*syn-note-controls__btn--reset[^"]
 assert(/class="[^"]*syn-note-controls__btn[^"]*syn-note-controls__btn--random[^"]*"[\s\S]*data-synth-rnd-harm/.test(synthPanel), 'whole-pattern random harmonic action is visually distinguishable');
 assert(/ROOT(?: STEP)?<\/button>/.test(synthPanel), 'root reset button keeps a clear root label');
 assert(/RND HARM<\/button>/.test(synthPanel), 'whole-pattern random harmonic label remains explicit');
+assert(/HARM ▲<\/button>/.test(synthPanel), 'selected-step next harmonic button keeps the compact harmonic-up label');
+assert(/data-synth-next-step="1"[^>]*title="[^"]*(Advance|advance|Up|up)[^"]*harmonic[^"]*selected synth step[^"]*"[^>]*aria-label="[^"]*(Advance|advance|Up|up)[^"]*harmonic[^"]*selected synth step[^"]*"/.test(synthPanel), 'selected-step next harmonic button has accessible title and aria-label');
 
 const wrapper = cssBlockFor('.syn-note-controls');
 const row = cssBlockFor('.syn-note-controls__row');
