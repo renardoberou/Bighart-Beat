@@ -161,6 +161,11 @@ assert(css.includes('content: attr(data-note)'), 'CSS reads synth harmonic ratio
 assert(mainJs.includes('syn-note-selected'), 'runtime uses a stable selected synth note step marker class');
 assert(/function\s+setSynthNoteMarker\s*\(\s*\)\s*\{[\s\S]*?classList\.remove\('syn-note',\s*'syn-note-selected'\)[\s\S]*?trackId\s*===\s*'synth'[\s\S]*?trackIndex\s*===\s*S\.sel[\s\S]*?SYNTH_NOTE_EDIT[\s\S]*?i\s*===\s*LAST_SYNTH_NOTE_STEP[\s\S]*?classList\.add\('syn-note-selected'\)/.test(mainJs), 'SYN NOTE EDIT grid refresh removes/reapplies selected-step marker from LAST_SYNTH_NOTE_STEP only for selected SYN');
 assert(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*\{[\s\S]*?setLastSynthNoteStep[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)/.test(mainJs), 'STEP navigation rebuilds the sequencer so the selected-step marker moves');
+const moveSelectedSynthNoteStepBody = mainJs.match(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*\{([\s\S]*?)\n\}/);
+assert(moveSelectedSynthNoteStepBody, 'runtime exposes the selected synth-step navigation helper body');
+assert(/buildSeq\(\)[\s\S]*updateSynthNoteStatus\(\)[\s\S]*previewSynth\(\)[\s\S]*toast\(`SYN step \$\{String\(LAST_SYNTH_NOTE_STEP \+ 1\)\.padStart\(2, '0'\)\} selected`\)/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation rebuilds marker/status, previews the newly selected pitch, and toasts the selected step number');
+assert(!/autosave\s*\(/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation does not autosave because selection movement is UI-only');
+assert(!/SYNTH_NOTES\s*\[\s*S\.patt\s*\]\s*=|State\.cycleSynthNoteRatio|State\.randomHarmonicSynthNoteStep|State\.resetSynthNoteStepToRoot/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation does not mutate synth note ratios');
 assert(css.includes('.row[data-id="synth"] .sc.syn-note-selected'), 'CSS defines a selected synth note step marker');
 assert(/\.row\[data-id="synth"\]\s+\.sc\.syn-note-selected\s*\{[\s\S]*?(outline|border|box-shadow)/.test(css), 'selected synth note marker has a visible mobile-readable outline/border/shadow');
 

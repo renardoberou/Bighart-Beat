@@ -858,6 +858,8 @@ function moveSelectedSynthNoteStep(delta) {
   setLastSynthNoteStep((LAST_SYNTH_NOTE_STEP + delta + 16) % 16);
   buildSeq();
   updateSynthNoteStatus();
+  previewSynth();
+  toast(`SYN step ${String(LAST_SYNTH_NOTE_STEP + 1).padStart(2, '0')} selected`);
 }
 
 function randomSelectedSynthNoteStep() {
