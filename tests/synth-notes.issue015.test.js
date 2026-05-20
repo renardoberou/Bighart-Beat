@@ -26,6 +26,19 @@ const cycled = SynthNotes.cycleSynthNoteRatio(Array(16).fill(1), 0);
 assert.strictEqual(cycled[0], 1.25, 'cycling advances from root to the next harmonic interval');
 assert.strictEqual(banks[0][0], originalFirstRatio, 'cycle returns an isolated grid');
 
+const prevFromRoot = SynthNotes.cycleSynthNoteRatioBackward(Array(16).fill(1), 0);
+assert.notStrictEqual(prevFromRoot, banks[0], 'backward cycle returns an isolated grid');
+assert.strictEqual(prevFromRoot[0], 0.75, 'backward cycling moves root down to the prior harmonic interval');
+const prevFromFirst = SynthNotes.cycleSynthNoteRatioBackward(Array(16).fill(0.5), 0);
+assert.strictEqual(prevFromFirst[0], 4, 'backward cycling wraps the first harmonic ratio to the last ratio');
+const prevFromGeneric = SynthNotes.cycleSynthNoteRatioBackward(Array.from({ length: 16 }, (_, i) => i === 3 ? 1.37 : 1), 3);
+assert.strictEqual(prevFromGeneric[3], 4 / 3, 'backward cycling non-listed ratios chooses the nearest approved harmonic below the current value');
+const prevSource = Array.from({ length: 16 }, (_, i) => i === 5 ? 0.6 : 1);
+const prevSourceBefore = prevSource.slice();
+const prevFromBetweenLowRatios = SynthNotes.cycleSynthNoteRatioBackward(prevSource, 5);
+assert.strictEqual(prevFromBetweenLowRatios[5], 0.5, 'backward cycling falls to the nearest lower approved ratio below one');
+assert.deepStrictEqual(prevSource, prevSourceBefore, 'backward cycle does not mutate the source grid');
+
 const selectedGrid = Array.from({ length: 16 }, (_, i) => SynthNotes.SYNTH_HARMONIC_RATIOS[i % SynthNotes.SYNTH_HARMONIC_RATIOS.length]);
 const selectedGridBefore = selectedGrid.slice();
 const otherBank = Array.from({ length: 16 }, (_, i) => SynthNotes.SYNTH_HARMONIC_RATIOS[(SynthNotes.SYNTH_HARMONIC_RATIOS.length - 1 - i + SynthNotes.SYNTH_HARMONIC_RATIOS.length) % SynthNotes.SYNTH_HARMONIC_RATIOS.length]);
@@ -121,8 +134,14 @@ assert(mainJs.includes('pitch: getStepSynthPitch(firingStep)'), 'runtime routes 
 assert(mainJs.includes('data-synth-note-edit'), 'runtime exposes NOTE EDIT control');
 assert(mainJs.includes('data-synth-rnd-harm'), 'runtime exposes random harmonic interval control');
 assert(mainJs.includes('data-synth-rnd-step'), 'runtime exposes selected-step random harmonic control');
+assert(mainJs.includes('data-synth-prev-step'), 'runtime exposes selected-step previous/down harmonic control');
 assert(mainJs.includes('RND STEP'), 'selected-step random harmonic control is clearly labeled');
+assert(mainJs.includes('HARM ▼'), 'selected-step previous/down harmonic control uses the compact harmonic-down label');
+assert(/data-synth-prev-step="1"[^>]*title="[^"]*(Previous|previous|Down|down)[^"]*harmonic[^"]*"[^>]*aria-label="[^"]*(Previous|previous|Down|down)[^"]*harmonic[^"]*"/.test(mainJs), 'selected-step previous/down harmonic control has accessible title and aria-label');
 assert(mainJs.includes('State.randomHarmonicSynthNoteStep(SYNTH_NOTES[S.patt], LAST_SYNTH_NOTE_STEP)'), 'selected-step random harmonic uses the selected synth note step helper only');
+assert(mainJs.includes('State.cycleSynthNoteRatioBackward(SYNTH_NOTES[S.patt], LAST_SYNTH_NOTE_STEP)'), 'selected-step previous/down harmonic uses the backward cycle helper only');
+assert(/querySelector\('\[data-synth-prev-step\]'\)\.addEventListener\('\s*click\s*'\s*,\s*cycleSelectedSynthNoteStepBackward\s*\)/.test(mainJs), 'selected-step previous/down harmonic button triggers the runtime backward-cycle action');
+assert(/function cycleSelectedSynthNoteStepBackward\(\) \{[\s\S]*?State\.cycleSynthNoteRatioBackward\(SYNTH_NOTES\[S\.patt\], LAST_SYNTH_NOTE_STEP\)[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynth\(\)[\s\S]*?toast\('SYN step harmonic down'\)/.test(mainJs), 'selected-step previous/down harmonic action rebuilds status, saves, previews, and toasts');
 assert(mainJs.includes('previewSynth();'), 'selected-step random harmonic previews the selected-step pitch');
 assert(mainJs.includes('data-synth-note-status'), 'voice editor exposes selected synth note status marker');
 assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');

@@ -128,6 +128,18 @@
     return setSynthNoteRatio(grid, stepIndex, SYNTH_HARMONIC_RATIOS[nextIndex]);
   }
 
+  function cycleSynthNoteRatioBackward(grid, stepIndex) {
+    const current = getSynthNoteRatio(grid, stepIndex);
+    const exactIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => Math.abs(r - current) < SYNTH_INTERVAL_RATIO_EPSILON);
+    let prevIndex = exactIndex >= 0 ? exactIndex - 1 : -1;
+    if (exactIndex < 0) {
+      prevIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => r >= current) - 1;
+      if (prevIndex < -1) prevIndex = SYNTH_HARMONIC_RATIOS.length - 1;
+    }
+    const nextIndex = (prevIndex + SYNTH_HARMONIC_RATIOS.length) % SYNTH_HARMONIC_RATIOS.length;
+    return setSynthNoteRatio(grid, stepIndex, SYNTH_HARMONIC_RATIOS[nextIndex]);
+  }
+
   function synthPitchForStep(rootHz, ratio) {
     return clamp(finiteOr(rootHz, 220) * normalizeSynthNoteRatio(ratio == null ? 1 : ratio), SYNTH_MIN_HZ, SYNTH_MAX_HZ);
   }
@@ -164,6 +176,7 @@
     setSynthNoteRatio,
     resetSynthNoteStepToRoot,
     cycleSynthNoteRatio,
+    cycleSynthNoteRatioBackward,
     synthPitchForStep,
     randomHarmonicSynthNoteStep,
     randomHarmonicSynthNotes,
