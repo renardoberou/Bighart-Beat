@@ -1026,7 +1026,7 @@ function buildSeq() {
         if (trackId !== 'synth' || !PATTERNS[S.patt][trackId][i]) return;
         const ratio = getStepSynthRatio(i);
         c.classList.add('syn-note');
-        c.dataset.note = State.formatSynthNoteRatioLabel(ratio);
+        c.dataset.note = State.formatSynthNoteMarkerLabel(ratio);
       };
       const setHihatCellMarker = () => {
         c.classList.remove('hht-tight', 'hht-open');

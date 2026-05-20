@@ -34,14 +34,34 @@ assert.strictEqual(SynthNotes.normalizeSynthNoteRatio(999), 16, 'ratios are boun
 assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(1), '×1', 'ratio helper preserves root marker style');
 assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(1.25), '×1.25', 'ratio helper preserves above-root marker style');
 assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(0.5), '0.50×', 'ratio helper preserves below-root marker style');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(0.5), 'oct↓', 'interval helper labels octave down ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(0.75), '5th↓', 'interval helper labels fifth down ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1), 'root', 'interval helper labels the root ratio compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1.25), '3rd-ish', 'interval helper labels the 1.25 harmonic as a copyright-safe approximate third');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(4 / 3), '4th', 'interval helper labels fourth ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1.5), '5th', 'interval helper labels fifth ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(5 / 3), '6th', 'interval helper labels sixth ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(2), 'oct', 'interval helper labels octave ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(2.5), 'oct+3rd', 'interval helper labels octave plus third ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(3), 'oct+5th', 'interval helper labels octave plus fifth ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(4), '2 oct', 'interval helper labels two-octave ratios compactly');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1.5004), '5th', 'interval helper snaps near known harmonic ratios');
+assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1.37), '×1.37', 'interval helper falls back to a safe generic ratio label');
+assert.strictEqual(SynthNotes.formatSynthNoteMarkerLabel(2.5), 'oct+3rd', 'marker helper keeps known harmonic cell badges compact');
+assert.strictEqual(SynthNotes.formatSynthNoteMarkerLabel(1.37), '×1.37', 'marker helper keeps generic ratio cell badges safe and readable');
 assert.strictEqual(
   SynthNotes.formatSynthNoteStatusLabel({ stepIndex: 5, ratio: 1.5, rootHz: 220, pitchHz: 330 }),
-  'STEP 06 · ×1.50 · ROOT 220 Hz → 330 Hz',
-  'status helper describes selected synth step, ratio, root Hz, and pitch Hz'
+  'STEP 06 · 5th · ×1.50 · ROOT 220 Hz → 330 Hz',
+  'status helper describes selected synth step, interval, ratio, root Hz, and pitch Hz'
+);
+assert.strictEqual(
+  SynthNotes.formatSynthNoteStatusLabel({ stepIndex: 5, ratio: 1.37 }),
+  'STEP 06 · ×1.37',
+  'status helper does not duplicate generic ratio fallback labels'
 );
 assert.strictEqual(
   SynthNotes.formatSynthNoteStatusLabel({ stepIndex: 99, ratio: 0.5 }),
-  'STEP 16 · 0.50×',
+  'STEP 16 · oct↓ · 0.50×',
   'status helper bounds selected synth step labels to the 16-step grid'
 );
 
@@ -90,7 +110,7 @@ assert(mainJs.includes('data-synth-rnd-harm'), 'runtime exposes random harmonic 
 assert(mainJs.includes('data-synth-note-status'), 'voice editor exposes selected synth note status marker');
 assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');
 assert(mainJs.includes('formatSynthNoteStatusLabel'), 'voice editor uses synth note status label helper');
-assert(mainJs.includes('State.formatSynthNoteRatioLabel(ratio)'), 'runtime uses synth ratio marker helper for step badges');
+assert(mainJs.includes('State.formatSynthNoteMarkerLabel(ratio)'), 'runtime uses compact marker helper for step badges');
 assert(!mainJs.includes("'×' + ratio.toFixed"), 'runtime does not duplicate inline synth ratio marker formatting');
 assert(mainJs.includes('synthNotes: SYNTH_NOTES'), 'runtime saves/exports synth note banks');
 assert(html.includes('src/state/synth-notes.js'), 'page loads synth note state helper before runtime');

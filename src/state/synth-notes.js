@@ -6,6 +6,20 @@
   const SYNTH_MIN_HZ = 40;
   const SYNTH_MAX_HZ = 10000;
   const SYNTH_HARMONIC_RATIOS = [0.5, 0.75, 1, 1.25, 4 / 3, 1.5, 5 / 3, 2, 2.5, 3, 4];
+  const SYNTH_HARMONIC_INTERVAL_LABELS = [
+    [0.5, 'oct↓'],
+    [0.75, '5th↓'],
+    [1, 'root'],
+    [1.25, '3rd-ish'],
+    [4 / 3, '4th'],
+    [1.5, '5th'],
+    [5 / 3, '6th'],
+    [2, 'oct'],
+    [2.5, 'oct+3rd'],
+    [3, 'oct+5th'],
+    [4, '2 oct'],
+  ];
+  const SYNTH_INTERVAL_RATIO_EPSILON = 0.001;
 
   function finiteOr(value, fallback) {
     return Number.isFinite(value) ? value : fallback;
@@ -33,14 +47,24 @@
     return value >= 1 ? '×' + value.toFixed(value % 1 ? 2 : 0) : value.toFixed(2) + '×';
   }
 
+  function formatSynthNoteIntervalLabel(ratio) {
+    const value = normalizeSynthNoteRatio(ratio == null ? 1 : ratio);
+    const match = SYNTH_HARMONIC_INTERVAL_LABELS.find(([knownRatio]) => Math.abs(knownRatio - value) < SYNTH_INTERVAL_RATIO_EPSILON);
+    return match ? match[1] : formatSynthNoteRatioLabel(value);
+  }
+
+  function formatSynthNoteMarkerLabel(ratio) {
+    return formatSynthNoteIntervalLabel(ratio);
+  }
+
   function formatSynthNoteStatusLabel(options) {
     const opts = options || {};
     const rawStep = Number.isInteger(opts.stepIndex) ? opts.stepIndex : 0;
     const step = clamp(rawStep, 0, STEP_COUNT - 1);
-    const parts = [
-      'STEP ' + String(step + 1).padStart(2, '0'),
-      formatSynthNoteRatioLabel(opts.ratio),
-    ];
+    const interval = formatSynthNoteIntervalLabel(opts.ratio);
+    const ratio = formatSynthNoteRatioLabel(opts.ratio);
+    const parts = ['STEP ' + String(step + 1).padStart(2, '0'), interval];
+    if (interval !== ratio) parts.push(ratio);
     const root = formatHz(opts.rootHz);
     const pitch = formatHz(opts.pitchHz);
     if (root && pitch) parts.push('ROOT ' + root + ' → ' + pitch);
@@ -119,6 +143,8 @@
     SYNTH_HARMONIC_RATIOS,
     normalizeSynthNoteRatio,
     formatSynthNoteRatioLabel,
+    formatSynthNoteIntervalLabel,
+    formatSynthNoteMarkerLabel,
     formatSynthNoteStatusLabel,
     createDefaultSynthNotesGrid,
     createSynthNotesBanks,
