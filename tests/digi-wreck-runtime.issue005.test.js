@@ -25,6 +25,7 @@ const buildGraph = extractFunction('buildGraph');
 assert(/N\.wreckIn\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master graph creates DIGI WRECK input stage');
 assert(!/N\.wreckDry\s*=\s*A\.createGain\(\)/.test(buildGraph), 'per-track DIGI WRECK send no longer creates an audible dry duplication path');
 assert(/N\.wreckWet\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master graph creates DIGI WRECK wet return blend');
+assert(/N\.wreckWet\.gain\.value\s*=\s*FX\.wreck\.on\s*\?\s*FX\.wreck\.mix\s*:\s*0/.test(buildGraph), 'buildGraph initializes WRECK wet return from persisted on/mix state before smoothing');
 assert(/N\.wreckDownsample\s*=\s*A\.createScriptProcessor\(/.test(buildGraph), 'master graph creates a real sample-hold/downsample processing stage');
 assert(/N\.wreckCrusher\s*=\s*A\.createWaveShaper\(\)/.test(buildGraph), 'master graph creates bounded bit/curve shaper');
 assert(/N\.wreckTone\s*=\s*A\.createBiquadFilter\(\)/.test(buildGraph), 'master graph creates DIGI WRECK tone contour filter');
@@ -34,8 +35,10 @@ assert(!/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(buildGraph), 'bypassed 
 assert(/updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)/.test(buildGraph), 'initial DIGI WRECK processor feed follows audible wet-feed state');
 assert(/N\.wreckDownsample\.connect\(N\.wreckCrusher\)/.test(buildGraph), 'sample-hold/downsample stage feeds the crusher instead of only shaping a curve');
 assert(/N\.wreckOut\.connect\(N\.wreckPreCompGain\)/.test(buildGraph), 'DIGI WRECK return can enter before compressor');
+assert(/N\.wreckPreCompGain\.gain\.value\s*=\s*FX\.wreck\.order\s*===\s*'wreck-comp'\s*\?\s*1\s*:\s*0/.test(buildGraph), 'buildGraph initializes pre-compressor WRECK return branch from persisted order');
 assert(/N\.wreckPreCompGain\.connect\(N\.mstSum\)/.test(buildGraph), 'wreck-comp order feeds Wreck return into compressed master sum');
 assert(/N\.wreckOut\.connect\(N\.wreckPostCompGain\)/.test(buildGraph), 'DIGI WRECK return can enter after compressor');
+assert(/N\.wreckPostCompGain\.gain\.value\s*=\s*FX\.wreck\.order\s*===\s*'comp-wreck'\s*\?\s*1\s*:\s*0/.test(buildGraph), 'buildGraph initializes post-compressor WRECK return branch from persisted order');
 assert(/N\.wreckPostCompGain\.connect\(N\.mstSat\)/.test(buildGraph), 'comp-wreck order feeds Wreck return before safe saturation/limiter');
 assert(/N\.compMakeup\.connect\(N\.mstSat\)/.test(buildGraph), 'dry master path still reaches safe saturation/limiter when Wreck is a send');
 

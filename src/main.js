@@ -173,10 +173,10 @@ function buildGraph() {
   N.wreckTone = A.createBiquadFilter(); N.wreckTone.type = 'lowpass';
   N.wreckTone.frequency.value = wreckToneHz(FX.wreck.tone);
   N.wreckTone.Q.value = .35;
-  N.wreckWet = A.createGain();
+  N.wreckWet = A.createGain(); N.wreckWet.gain.value = FX.wreck.on ? FX.wreck.mix : 0;
   N.wreckOut = A.createGain(); N.wreckOut.gain.value = FX.wreck.on ? FX.wreck.out : 0;
-  N.wreckPreCompGain = A.createGain();
-  N.wreckPostCompGain = A.createGain();
+  N.wreckPreCompGain = A.createGain(); N.wreckPreCompGain.gain.value = FX.wreck.order === 'wreck-comp' ? 1 : 0;
+  N.wreckPostCompGain = A.createGain(); N.wreckPostCompGain.gain.value = FX.wreck.order === 'comp-wreck' ? 1 : 0;
   N.wreckWetFeedConnected = false;
   N.wreckDownsample.connect(N.wreckCrusher); N.wreckCrusher.connect(N.wreckTone); N.wreckTone.connect(N.wreckWet); N.wreckWet.connect(N.wreckOut);
   // Order toggle meaning for send-style Wreck:
