@@ -41,11 +41,11 @@
     const profile = SYNTH_ENGINE_PROFILES[requestedEngine] || SYNTH_ENGINE_PROFILES.aphex;
     const engine = SYNTH_ENGINE_PROFILES[requestedEngine] ? requestedEngine : 'aphex';
     const p = params || {};
-    const requestedPitch = clamp(finiteOr(p.pitch, 220), 40, 10000);
+    const requestedPitch = clamp(finiteOr(p.pitch, 220), 40, 3000);
     const requestedDecay = clamp(finiteOr(p.decay, 0.35), 0.04, 2.2);
     const tone = clamp(finiteOr(p.tone, 0.5), 0, 1);
     const shape = clamp(finiteOr(p.shape, 0.5), 0, 1);
-    const pitchHz = clamp(requestedPitch * profile.pitch, 40, 10000);
+    const pitchHz = clamp(requestedPitch * profile.pitch, 40, 3000);
     const decaySec = clamp(requestedDecay * profile.decay * (0.75 + shape * 0.55), 0.04, 2.5);
     const filterBase = 160 + pitchHz * (1.8 + tone * 12.5) * profile.tone;
     const filterHz = clamp(filterBase, 120, 12000);

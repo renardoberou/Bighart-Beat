@@ -17,7 +17,7 @@
     clap:  { spread:[2,30], decay:[0.04,0.40], tone:[900,3000] },
     input: { pitch:[0.25,3], decay:[0.10,1] },
     ether: { freq:[20,400], harmonics:[0,1], texture:[0,1], grit:[0,1], decay:[0.05,0.80] },
-    synth: { pitch:[40,10000], decay:[0.05,2], tone:[0,1], shape:[0,1] },
+    synth: { pitch:[40,3000], decay:[0.05,2], tone:[0,1], shape:[0,1] },
   };
   const FX_RANGES = {
     dly: { mult:[0.25,1.5], fb:[0,0.8], tone:[0,1], wet:[0,1] },
@@ -539,6 +539,7 @@
 
     data = hydrateLegacySixTrackProject(data);
     data = hydrateMissingWreckS(data);
+    data = normalizeLegacySynthPitchMax(data);
     const validation = validateProjectData(data);
     if (!validation.ok) return validation;
     const value = cloneValue(data);
@@ -570,6 +571,18 @@
     const hydrated = { ...data, tracks: data.tracks.map(track => cloneValue(track)) };
     hydrated.tracks.forEach(track => { if (track && track.wreckS === undefined) track.wreckS = false; });
     return hydrated;
+  }
+
+  function normalizeLegacySynthPitchMax(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data) || !Array.isArray(data.tracks)) return data;
+    const synthIndex = data.tracks.findIndex(track => track && track.id === 'synth');
+    if (synthIndex < 0) return data;
+    const synth = data.tracks[synthIndex];
+    if (!synth || !synth.p || typeof synth.p !== 'object' || Array.isArray(synth.p)) return data;
+    if (typeof synth.p.pitch !== 'number' || !Number.isFinite(synth.p.pitch) || synth.p.pitch <= 3000) return data;
+    const normalized = { ...data, tracks: data.tracks.map(track => cloneValue(track)) };
+    normalized.tracks[synthIndex].p.pitch = 3000;
+    return normalized;
   }
 
   function isLegacySixTrackProject(data) {

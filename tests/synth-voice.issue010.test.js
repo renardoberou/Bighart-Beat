@@ -22,7 +22,7 @@ function assertFiniteBounded(spec, label) {
     'filterEnvAmount', 'filterEndRatio', 'filterAttackSec', 'filterQ', 'driveAmount',
     'bodyGain', 'subGain', 'noiseGain', 'glideSec', 'stopSec', 'chokeTau', 'shape', 'tone'
   ].forEach(k => assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`));
-  assert(spec.pitchHz >= 40 && spec.pitchHz <= 10000, `${label}: pitchHz bounded`);
+  assert(spec.pitchHz >= 40 && spec.pitchHz <= 3000, `${label}: pitchHz bounded`);
   assert(spec.decaySec >= 0.04 && spec.decaySec <= 2.5, `${label}: decaySec bounded`);
   assert(spec.attackSec >= 0.001 && spec.attackSec <= 0.03, `${label}: attackSec bounded`);
   assert(spec.releaseTau >= 0.003 && spec.releaseTau <= 0.20, `${label}: releaseTau bounded`);
