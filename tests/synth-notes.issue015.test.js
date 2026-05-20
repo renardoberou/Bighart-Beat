@@ -158,5 +158,10 @@ assert(mainJs.includes('synthNotes: SYNTH_NOTES'), 'runtime saves/exports synth 
 assert(html.includes('src/state/synth-notes.js'), 'page loads synth note state helper before runtime');
 assert(css.includes('.row[data-id="synth"] .sc.syn-note::before'), 'CSS displays per-step synth harmonic ratio markers');
 assert(css.includes('content: attr(data-note)'), 'CSS reads synth harmonic ratio marker text from data-note');
+assert(mainJs.includes('syn-note-selected'), 'runtime uses a stable selected synth note step marker class');
+assert(/function\s+setSynthNoteMarker\s*\(\s*\)\s*\{[\s\S]*?classList\.remove\('syn-note',\s*'syn-note-selected'\)[\s\S]*?trackId\s*===\s*'synth'[\s\S]*?trackIndex\s*===\s*S\.sel[\s\S]*?SYNTH_NOTE_EDIT[\s\S]*?i\s*===\s*LAST_SYNTH_NOTE_STEP[\s\S]*?classList\.add\('syn-note-selected'\)/.test(mainJs), 'SYN NOTE EDIT grid refresh removes/reapplies selected-step marker from LAST_SYNTH_NOTE_STEP only for selected SYN');
+assert(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*\{[\s\S]*?setLastSynthNoteStep[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)/.test(mainJs), 'STEP navigation rebuilds the sequencer so the selected-step marker moves');
+assert(css.includes('.row[data-id="synth"] .sc.syn-note-selected'), 'CSS defines a selected synth note step marker');
+assert(/\.row\[data-id="synth"\]\s+\.sc\.syn-note-selected\s*\{[\s\S]*?(outline|border|box-shadow)/.test(css), 'selected synth note marker has a visible mobile-readable outline/border/shadow');
 
 console.log('Issue 015 synth note harmonic-step checks passed.');

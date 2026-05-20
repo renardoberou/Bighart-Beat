@@ -721,6 +721,15 @@ body.running #ss  { display: none; }
 .row[data-id="input"] .sc.on { background: var(--t-inp); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 6px rgba(74,184,112,.35); }
 .row[data-id="ether"] .sc.on { background: var(--t-eth); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 6px rgba(200,200,248,.4); }
 .row[data-id="synth"] .sc.on { background: var(--t-syn); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 7px rgba(214,156,255,.40); }
+.row[data-id="synth"] .sc.syn-note-selected {
+  border-color: #fff4c5;
+  outline: 2px solid #fff4c5;
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 1px rgba(9,7,5,.78), 0 0 10px rgba(255,244,197,.72), 0 0 16px rgba(214,156,255,.50);
+}
+.row[data-id="synth"] .sc.syn-note-selected.on {
+  box-shadow: inset 0 0 0 1px rgba(9,7,5,.78), inset 0 0 4px rgba(0,0,0,.4), 0 0 10px rgba(255,244,197,.78), 0 0 16px rgba(214,156,255,.55);
+}
 .row[data-id="synth"] .sc.syn-note::before {
   content: attr(data-note);
   position: absolute;

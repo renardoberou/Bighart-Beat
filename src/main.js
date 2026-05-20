@@ -856,6 +856,7 @@ function updateSynthNoteStatus() {
 
 function moveSelectedSynthNoteStep(delta) {
   setLastSynthNoteStep((LAST_SYNTH_NOTE_STEP + delta + 16) % 16);
+  buildSeq();
   updateSynthNoteStatus();
 }
 
@@ -1061,14 +1062,17 @@ function buildSeq() {
       if (i % 8 === 0)  c.classList.add('db4');
       const isOpenHihatStep = () => PATTERNS[S.patt][trackId][i] && State.getHihatOpenness(HHT_OPENNESS[S.patt], i) === 1;
       const isCellOn = () => isOpenHihatRow ? isOpenHihatStep() : !!PATTERNS[S.patt][trackId][i] && (trackId !== 'hihat' || !isOpenHihatStep());
-      const setSynthNoteMarker = () => {
-        c.classList.remove('syn-note');
+      function setSynthNoteMarker() {
+        c.classList.remove('syn-note', 'syn-note-selected');
         delete c.dataset.note;
+        if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT && i === LAST_SYNTH_NOTE_STEP) {
+          c.classList.add('syn-note-selected');
+        }
         if (trackId !== 'synth' || !PATTERNS[S.patt][trackId][i]) return;
         const ratio = getStepSynthRatio(i);
         c.classList.add('syn-note');
         c.dataset.note = State.formatSynthNoteMarkerLabel(ratio);
-      };
+      }
       const setHihatCellMarker = () => {
         c.classList.remove('hht-tight', 'hht-open');
         delete c.dataset.hat;
