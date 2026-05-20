@@ -6,26 +6,26 @@
       kick: { pitch: 0.92, decay: 1.18, click: 0.62, clickHp: 0.85, drive: 0.62 },
       snare: { tone: 0.88, noise: 0.82, body: 1.15, snap: 0.75 },
       clap: { tone: 0.86, decay: 1.18, spread: 1.12, body: 0.88, tail: 0.82, snap: 0.95, highpass: 0.88, q: 0.92, jitter: 0.45 },
-      hihat: { noise: 0.78, tone: 0.12, bright: 0.82, decay: 1.05, ratios: [2.00, 2.74, 3.00, 4.17, 4.36, 6.42], osc: 'square', instability: 0, glitch: 0, chokeClosed: 0.018, chokeOpen: 0.060 },
+      hihat: { noise: 0.78, tone: 0.12, bright: 0.82, decay: 1.05, transient: 0.98, tailDamp: 1.06, airDamp: 0.95, trim: 0.99, ratios: [2.00, 2.74, 3.00, 4.17, 4.36, 6.42], osc: 'square', instability: 0, glitch: 0, chokeClosed: 0.018, chokeOpen: 0.060 },
     },
     '909': {
       kick: { pitch: 1.06, decay: 0.86, click: 1.18, clickHp: 1.45, drive: 0.88 },
       snare: { tone: 1.12, noise: 1.12, body: 0.92, snap: 1.18 },
       clap: { tone: 1.22, decay: 0.86, spread: 0.88, body: 1.0, tail: 0.92, snap: 1.12, highpass: 1.08, q: 1.08, jitter: 0.55 },
-      hihat: { noise: 1.08, tone: 0.20, bright: 1.24, decay: 0.86, ratios: [2.00, 2.33, 3.01, 3.88, 4.61, 5.97], osc: 'square', instability: 0.01, glitch: 0, chokeClosed: 0.014, chokeOpen: 0.050 },
+      hihat: { noise: 1.08, tone: 0.20, bright: 1.24, decay: 0.86, transient: 1.04, tailDamp: 0.94, airDamp: 1.06, trim: 1.00, ratios: [2.00, 2.33, 3.01, 3.88, 4.61, 5.97], osc: 'square', instability: 0.01, glitch: 0, chokeClosed: 0.014, chokeOpen: 0.050 },
     },
     reznor: {
       kick: { pitch: 0.82, decay: 0.95, click: 1.05, clickHp: 0.92, drive: 1.55 },
       snare: { tone: 0.72, noise: 1.28, body: 0.70, snap: 1.25 },
       clap: { tone: 0.74, decay: 1.05, spread: 1.05, body: 1.14, tail: 1.18, snap: 1.0, highpass: 0.72, q: 1.28, jitter: 1.0 },
-      hihat: { noise: 1.18, tone: 0.30, bright: 0.72, decay: 1.18, ratios: [1.41, 1.93, 2.79, 3.76, 5.11, 7.23], osc: 'sawtooth', instability: 0.025, glitch: 0.10, chokeClosed: 0.012, chokeOpen: 0.070 },
+      hihat: { noise: 1.18, tone: 0.30, bright: 0.72, decay: 1.18, transient: 0.96, tailDamp: 0.90, airDamp: 0.90, trim: 0.90, ratios: [1.41, 1.93, 2.79, 3.76, 5.11, 7.23], osc: 'sawtooth', instability: 0.025, glitch: 0.10, chokeClosed: 0.012, chokeOpen: 0.070 },
     },
     aphex: {
       // Inharmonic metallic hihat ratios + bounded instability + optional tiny glitch tick.
       kick: { pitch: 1.18, decay: 0.78, click: 1.35, clickHp: 2.35, drive: 1.10 },
       snare: { tone: 1.28, noise: 1.05, body: 0.62, snap: 1.45 },
       clap: { tone: 1.34, decay: 0.78, spread: 0.62, body: 0.92, tail: 0.95, snap: 1.22, highpass: 1.18, q: 1.18, jitter: 1.55 },
-      hihat: { noise: 0.96, tone: 0.44, bright: 1.34, decay: 0.92, ratios: [1.00, 1.618, 2.414, 3.732, 5.387, 8.09], osc: 'triangle', instability: 0.045, glitch: 0.22, chokeClosed: 0.010, chokeOpen: 0.085 },
+      hihat: { noise: 0.96, tone: 0.44, bright: 1.34, decay: 0.92, transient: 1.02, tailDamp: 0.88, airDamp: 1.02, trim: 0.88, ratios: [1.00, 1.618, 2.414, 3.732, 5.387, 8.09], osc: 'triangle', instability: 0.045, glitch: 0.22, chokeClosed: 0.010, chokeOpen: 0.085 },
     },
   };
 
@@ -36,6 +36,10 @@
       tone: hihat.tone,
       bright: hihat.bright,
       decay: hihat.decay,
+      transient: hihat.transient,
+      tailDamp: hihat.tailDamp,
+      airDamp: hihat.airDamp,
+      trim: hihat.trim,
       ratios: hihat.ratios.slice(),
       oscType: hihat.osc,
       instability: hihat.instability,

@@ -15,6 +15,17 @@ assert(HIHAT_ENGINE_PROFILES && HIHAT_ENGINE_PROFILES.aphex, 'engine hihat profi
 
 const baseParams = { freq: 9000, decay: 0.04, open: 0, metal: 0.7 };
 
+function assertFiniteProfileCharacter(profile, label) {
+  assert(profile && typeof profile === 'object', `${label}: hihat profile object exported`);
+  ['transient', 'tailDamp', 'airDamp', 'trim'].forEach(k => {
+    assert(Number.isFinite(profile[k]), `${label}: profile ${k} is finite`);
+  });
+  assert(profile.transient >= 0.88 && profile.transient <= 1.12, `${label}: profile transient is bounded`);
+  assert(profile.tailDamp >= 0.82 && profile.tailDamp <= 1.16, `${label}: profile tailDamp is bounded`);
+  assert(profile.airDamp >= 0.84 && profile.airDamp <= 1.18, `${label}: profile airDamp is bounded`);
+  assert(profile.trim >= 0.82 && profile.trim <= 1, `${label}: profile trim is bounded for headroom`);
+}
+
 function seqRand(values) {
   let i = 0;
   return () => values[i++ % values.length];
@@ -51,6 +62,14 @@ function assertFiniteBounded(spec, label) {
 for (const engine of ['808', '909', 'reznor', 'aphex', 'mystery']) {
   assertFiniteBounded(resolveHihatVoiceSpec(engine, baseParams, () => 0.5), engine);
 }
+for (const engine of ['808', '909', 'reznor', 'aphex']) {
+  assertFiniteProfileCharacter(HIHAT_ENGINE_PROFILES[engine], `${engine} hihat character profile`);
+}
+assert(HIHAT_ENGINE_PROFILES['909'].transient > HIHAT_ENGINE_PROFILES['808'].transient, '909 profile explicitly has more closed-hat transient punch than 808');
+assert(HIHAT_ENGINE_PROFILES['909'].airDamp > HIHAT_ENGINE_PROFILES['808'].airDamp, '909 profile explicitly has brighter/less-damped air than 808');
+assert(HIHAT_ENGINE_PROFILES.reznor.airDamp < HIHAT_ENGINE_PROFILES['909'].airDamp, 'reznor profile explicitly damps air more than 909');
+assert(HIHAT_ENGINE_PROFILES.reznor.trim < HIHAT_ENGINE_PROFILES['909'].trim, 'reznor profile explicitly trims more output than 909');
+assert(HIHAT_ENGINE_PROFILES.aphex.trim < HIHAT_ENGINE_PROFILES['909'].trim, 'aphex profile explicitly has extra headroom trim versus 909');
 
 const lowVelocity = resolveHihatVoiceSpec('909', baseParams, () => 0.5, 0.25);
 const normalVelocity = resolveHihatVoiceSpec('909', baseParams, () => 0.5, 0.75);
@@ -114,6 +133,11 @@ assert.notStrictEqual(reznor.oscType, hat808.oscType, 'reznor uses non-808 oscil
 assert.notDeepStrictEqual(reznor.ratios, hat808.ratios, 'reznor uses non-808 ratios');
 assert(aphex.glitchChance > 0, 'aphex has nonzero glitchChance');
 assert.notDeepStrictEqual(aphex.ratios, hat808.ratios, 'aphex uses inharmonic/non-808 ratios');
+assert(hat909.transientGain > hat808.transientGain, '909 closed hihat resolves with more transient punch than 808');
+assert(hat909.airLowpassHz > hat808.airLowpassHz, '909 closed hihat resolves brighter than 808');
+assert(reznor.airLowpassHz < hat909.airLowpassHz, 'reznor closed hihat resolves darker than 909');
+assert(reznor.outputTrim < hat909.outputTrim, 'reznor closed hihat resolves with more headroom trim than 909');
+assert(aphex.outputTrim < hat909.outputTrim, 'aphex closed hihat resolves with extra trim/headroom protection versus 909');
 assert.strictEqual(hat808.glitchChance, 0, '808 has no glitch chance');
 assert.strictEqual(hat909.glitchChance, 0, '909 has no glitch chance');
 assert.strictEqual(fallback.engine, 'aphex', 'unknown engine safely falls back to aphex/default');

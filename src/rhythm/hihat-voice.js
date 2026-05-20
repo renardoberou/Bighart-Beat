@@ -53,6 +53,10 @@
     const softHit = clamp((0.75 - velocity) / 0.75, 0, 1);
     const accentedHit = clamp((velocity - 0.75) / 0.25, 0, 1);
     const instability = clamp(profile.instability || 0, 0, 0.08);
+    const characterTransient = clamp(finiteOr(profile.transient, 1), 0.88, 1.12);
+    const characterTailDamp = clamp(finiteOr(profile.tailDamp, 1), 0.82, 1.16);
+    const characterAirDamp = clamp(finiteOr(profile.airDamp, 1), 0.84, 1.18);
+    const characterTrim = clamp(finiteOr(profile.trim, 1), 0.82, 1);
     const opennessTail = open > 0 ? open * 0.10 + open * open * 0.37 : 0;
     const openBoost = requestedDecay + opennessTail;
     const decaySec = clamp(openBoost * profile.decay * jitter(rand, instability), 0.006, 0.70);
@@ -68,11 +72,11 @@
     const glitchBandpassHz = clamp(7000 * jitter(rand, 0.4), 3500, 14000);
     const attackSec = clamp(0.0009 + open * 0.0024 + instability * 0.004, 0.0008, 0.004);
     const velocityTail = 1 - softHit * 0.12;
-    const noiseTailSec = clamp(decaySec * (1 + open * 0.08) * velocityTail, 0.006, 0.70);
-    const metalTailSec = clamp(decaySec * (0.72 + open * 0.08) * velocityTail, 0.004, 0.56);
-    const transientGain = clamp((1.12 - open * 0.18 + profile.tone * 0.025) * (1 - softHit * 0.08 + accentedHit * 0.05), 0.8, 1.18);
-    const outputTrim = clamp(1 - open * 0.10 - open * open * 0.16 - instability * 0.20 - accentedHit * 0.08, 0.62, 1);
-    const airLowpassHz = clamp(freq * profile.bright * (1.35 - open * 0.22) * (1 - softHit * 0.08 + accentedHit * 0.04), 8500, 18000);
+    const noiseTailSec = clamp(decaySec * characterTailDamp * (1 + open * 0.08) * velocityTail, 0.006, 0.70);
+    const metalTailSec = clamp(decaySec * characterTailDamp * (0.72 + open * 0.08) * velocityTail, 0.004, 0.56);
+    const transientGain = clamp((1.12 - open * 0.18 + profile.tone * 0.025) * characterTransient * (1 - softHit * 0.08 + accentedHit * 0.05), 0.8, 1.18);
+    const outputTrim = clamp((1 - open * 0.10 - open * open * 0.16 - instability * 0.20 - accentedHit * 0.08) * characterTrim, 0.62, 1);
+    const airLowpassHz = clamp(freq * profile.bright * characterAirDamp * (1.35 - open * 0.22) * (1 - softHit * 0.08 + accentedHit * 0.04), 8500, 18000);
     const airLowpassQ = clamp(0.45 + instability * 2, 0.2, 0.9);
 
     return {
