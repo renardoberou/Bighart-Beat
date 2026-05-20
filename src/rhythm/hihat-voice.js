@@ -24,6 +24,22 @@
     return 1 + (rand01(rand) * 2 - 1) * safeAmount;
   }
 
+  function smoothstep01(value) {
+    const x = clamp(value, 0, 1);
+    return x * x * (3 - 2 * x);
+  }
+
+  function calculateHihatChokeTau(openAmount, previousOpenAmount, spec) {
+    const s = spec || {};
+    const closedTau = clamp(finiteOr(s.chokeClosedTau, 0.014), 0.001, 0.099);
+    const openTau = clamp(Math.max(finiteOr(s.chokeOpenTau, 0.050), closedTau + 0.001), 0.002, 0.10);
+    const openness = smoothstep01(openAmount);
+    const previousOpenness = smoothstep01(previousOpenAmount);
+    const interpolatedTau = closedTau + (openTau - closedTau) * openness;
+    const openTransitionSoftness = 0.75 + previousOpenness * 0.25;
+    return clamp(closedTau + (interpolatedTau - closedTau) * openTransitionSoftness, closedTau, openTau);
+  }
+
   function resolveHihatVoiceSpec(engineId, params, rand, velocityOrAccent) {
     const requestedEngine = typeof engineId === 'string' ? engineId : '';
     const profile = HIHAT_ENGINE_PROFILES[requestedEngine] || HIHAT_ENGINE_PROFILES.aphex;
@@ -92,7 +108,7 @@
     };
   }
 
-  const api = { resolveHihatVoiceSpec, HIHAT_ENGINE_PROFILES };
+  const api = { resolveHihatVoiceSpec, calculateHihatChokeTau, HIHAT_ENGINE_PROFILES };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.BighartBeatHihat = Object.assign(root.BighartBeatHihat || {}, api);

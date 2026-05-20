@@ -47,7 +47,7 @@ const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
 const CHAIN_SLOT_BAR_CHOICES = [1, 2, 4, 8, 16];
 const OPEN_HIHAT_ROW_ID = 'open-hihat';
 const OPEN_HIHAT_ROW_LABEL = 'OHH';
-const hihatChokeState = { gain: null, open: false };
+const hihatChokeState = { gain: null, open: 0 };
 const synthVoiceState = { gain: null, pitchHz: null, triggerTime: null };
 
 function setHihatPlacement(value) {
@@ -516,8 +516,8 @@ function synthSnare(t, v, p) {
 
 function triggerHihatChoke(t, openAmount, choke, spec) {
   const previous = hihatChokeState.gain;
-  const wasOpen = hihatChokeState.open;
-  const isOpen = openAmount > .5;
+  const previousOpen = hihatChokeState.open;
+  const currentOpen = clamp(openAmount, 0, 1);
   if (previous && previous.gain) {
     const g = previous.gain;
     if (g.cancelAndHoldAtTime) {
@@ -526,11 +526,11 @@ function triggerHihatChoke(t, openAmount, choke, spec) {
       g.cancelScheduledValues(t);
       g.setValueAtTime(Math.max(.001, g.value || .001), t);
     }
-    const tau = !isOpen ? spec.chokeClosedTau : (wasOpen ? spec.chokeOpenTau : spec.chokeOpenTau * .75);
+    const tau = HihatVoice.calculateHihatChokeTau(currentOpen, previousOpen, spec);
     g.setTargetAtTime(.0008, t, tau);
   }
   hihatChokeState.gain = choke;
-  hihatChokeState.open = isOpen;
+  hihatChokeState.open = currentOpen;
 }
 
 // ── HIHAT ── highpass noise + engine-aware metallic ratios on existing HHT open control
