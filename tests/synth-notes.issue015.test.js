@@ -128,6 +128,12 @@ assert(mainJs.includes('data-synth-note-status'), 'voice editor exposes selected
 assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');
 assert(mainJs.includes('formatSynthNoteStatusLabel'), 'voice editor uses synth note status label helper');
 assert(mainJs.includes('State.formatSynthNoteMarkerLabel(ratio)'), 'runtime uses compact marker helper for step badges');
+const noteEditCellTapBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && SYNTH_NOTE_EDIT\) \{[\s\S]*?\n        \}/);
+assert(noteEditCellTapBranch, 'runtime handles selected SYN NOTE EDIT cell taps');
+assert(
+  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?setLastSynthNoteStep\(i\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynth\(\)/.test(noteEditCellTapBranch[0]),
+  'SYN NOTE EDIT cell taps preview the cycled harmonic after state, editor rebuild, rhythm render, and autosave updates'
+);
 assert(!mainJs.includes("'×' + ratio.toFixed"), 'runtime does not duplicate inline synth ratio marker formatting');
 assert(mainJs.includes('synthNotes: SYNTH_NOTES'), 'runtime saves/exports synth note banks');
 assert(html.includes('src/state/synth-notes.js'), 'page loads synth note state helper before runtime');

@@ -1134,6 +1134,7 @@ function buildSeq() {
           buildVE();
           renderRhythmIntelligence();
           autosave();
+          previewSynth();
           return;
         }
         if (trackId === 'hihat' && PATTERNS[S.patt][trackId][i] && trackIndex === S.sel) {
