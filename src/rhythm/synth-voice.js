@@ -21,10 +21,10 @@
       filterEnv: 2.20, filterEnd: 0.28, filterSnap: 0.0035,
     },
     aphex: {
-      personality: 'vintage-sh',
-      oscType: 'triangle', filterType: 'lowpass', pitch: 0.86, decay: 0.98, tone: 1.02, q: 1.05,
-      drive: 0.22, body: 0.38, sub: 0.14, noise: 0.026, attack: 0.006, release: 0.040, glide: 0.020,
-      filterEnv: 0.70, filterEnd: 0.42, filterSnap: 0.0025,
+      personality: 'idm-digital-alien',
+      oscType: 'sine', filterType: 'bandpass', pitch: 1.18, decay: 1.08, tone: 1.34, q: 1.36,
+      drive: 0.28, body: 0.32, sub: 0.05, noise: 0.048, attack: 0.0035, release: 0.045, glide: 0.035,
+      filterEnv: 1.35, filterEnd: 0.32, filterSnap: 0.0012,
     },
   };
 
@@ -63,8 +63,10 @@
     const releaseTau = clamp(profile.release * (0.7 + decaySec * 0.35), 0.003, 0.20);
     const glideSec = clamp(profile.glide * (0.5 + shape), 0, 0.08);
     const chokeTau = clamp(Math.min(0.06, releaseTau * 0.55), 0.003, 0.08);
-    const modRatio = profile.personality === 'mono-fm-glass' ? 2 + shape * 3 : 1 + shape;
-    const modIndex = profile.personality === 'mono-fm-glass' ? 35 + tone * 220 : 0;
+    const is808Glass = profile.personality === 'mono-fm-glass';
+    const isAphexDigital = profile.personality === 'idm-digital-alien';
+    const modRatio = is808Glass ? 2 + shape * 3 : (isAphexDigital ? 2.7 + shape * 3.1 + tone * 0.3 : 1 + shape);
+    const modIndex = is808Glass ? 35 + tone * 220 : (isAphexDigital ? 48 + tone * 72 + shape * 28 : 0);
 
     return {
       engine,
@@ -95,7 +97,7 @@
       tone,
       modRatio,
       modIndex,
-      detuneCents: profile.personality === 'vintage-sh' ? (shape - 0.5) * 11 : 0,
+      detuneCents: profile.personality === 'vintage-sh' ? (shape - 0.5) * 11 : (isAphexDigital ? -3 + (shape - 0.5) * 16 : 0),
     };
   }
 
