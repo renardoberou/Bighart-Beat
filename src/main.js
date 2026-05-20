@@ -865,6 +865,15 @@ function randomSelectedSynthNoteStep() {
   toast('SYN step harmonic randomized');
 }
 
+function resetSelectedSynthNoteStepToRoot() {
+  SYNTH_NOTES[S.patt] = State.resetSynthNoteStepToRoot(SYNTH_NOTES[S.patt], LAST_SYNTH_NOTE_STEP);
+  buildSeq();
+  updateSynthNoteStatus();
+  autosave();
+  previewSynth();
+  toast('SYN step reset to root');
+}
+
 function fire(ti, t) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
@@ -1410,6 +1419,7 @@ function buildVE() {
       <button class="mstr-btn" data-synth-note-next="1" title="Next synth note step" aria-label="Next synth note step">STEP ▶</button>
       <button class="mstr-btn${SYNTH_NOTE_EDIT?' on':''}" data-synth-note-edit="1">NOTE EDIT</button>
       <button class="mstr-btn" data-synth-rnd-step="1" title="Random harmonic for selected synth step" aria-label="Random harmonic for selected synth step">RND STEP</button>
+      <button class="mstr-btn" data-synth-root-step="1" title="Reset selected synth step to root" aria-label="Reset selected synth step to root">ROOT STEP</button>
       <button class="mstr-btn" data-synth-rnd-harm="1">RND HARM</button>`;
     pn.appendChild(syn);
     syn.querySelector('[data-synth-test]').addEventListener('click', previewSynth);
@@ -1421,6 +1431,7 @@ function buildVE() {
       buildSeq();
     });
     syn.querySelector('[data-synth-rnd-step]').addEventListener('click', randomSelectedSynthNoteStep);
+    syn.querySelector('[data-synth-root-step]').addEventListener('click', resetSelectedSynthNoteStepToRoot);
     syn.querySelector('[data-synth-rnd-harm]').addEventListener('click', () => {
       SYNTH_NOTES[S.patt] = State.randomHarmonicSynthNotes(SYNTH_NOTES[S.patt], PATTERNS[S.patt].synth);
       buildSeq();

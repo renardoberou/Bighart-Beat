@@ -20,6 +20,12 @@ assert.deepStrictEqual(cloned.slice(0, 6), [0.25, 0.5, 2, 16, 1, 1], 'cloneSynth
 assert.strictEqual(SynthNotes.getSynthNoteRatio([undefined], 0), 1, 'missing synth note ratio reads as root');
 assert.throws(() => SynthNotes.getSynthNoteRatio([], 16), /0 to 15/, 'getSynthNoteRatio rejects invalid step indexes');
 assert.deepStrictEqual(SynthNotes.setSynthNoteRatio(Array(16).fill(1), 2, 99).slice(0, 4), [1, 1, 16, 1], 'setSynthNoteRatio returns a cloned bounded grid');
+const resetSource = Array.from({ length: 16 }, (_, i) => i + 1);
+const resetGrid = SynthNotes.resetSynthNoteStepToRoot(resetSource, 5);
+assert.notStrictEqual(resetGrid, resetSource, 'resetSynthNoteStepToRoot returns an isolated grid');
+assert.strictEqual(resetGrid[5], 1, 'resetSynthNoteStepToRoot resets selected step ratio to root');
+assert.strictEqual(resetGrid[4], resetSource[4], 'resetSynthNoteStepToRoot leaves other steps unchanged');
+assert.strictEqual(resetSource[5], 6, 'resetSynthNoteStepToRoot does not mutate the source grid');
 
 let grid = Array(16).fill(1);
 grid = SynthNotes.cycleSynthNoteRatio(grid, 0);
@@ -40,12 +46,19 @@ assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(activeOnly[3]), 'randomHarmonic
 const mainJs = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 assert(mainJs.includes('data-synth-note-prev'), 'voice editor exposes a stable previous synth-step control marker');
 assert(mainJs.includes('data-synth-note-next'), 'voice editor exposes a stable next synth-step control marker');
+assert(mainJs.includes('data-synth-root-step'), 'voice editor exposes a stable root selected-step control marker');
+assert(mainJs.includes('ROOT STEP'), 'root selected-step control is clearly labeled');
+assert(/data-synth-root-step="1"[^>]*title="[^"]*root[^"]*"[^>]*aria-label="[^"]*root[^"]*"/i.test(mainJs), 'root selected-step control has accessible root title and aria-label');
 assert(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)/.test(mainJs), 'runtime has a focused selected synth-step navigation helper');
+assert(/function\s+resetSelectedSynthNoteStepToRoot\s*\(\s*\)/.test(mainJs), 'runtime has a focused selected synth-step root reset helper');
 assert(/\(\s*LAST_SYNTH_NOTE_STEP\s*\+\s*delta\s*\+\s*16\s*\)\s*%\s*16/.test(mainJs), 'selected synth-step navigation wraps across the 16-step grid');
 assert(/setLastSynthNoteStep\s*\(\s*\(\s*LAST_SYNTH_NOTE_STEP\s*\+\s*delta\s*\+\s*16\s*\)\s*%\s*16\s*\)/.test(mainJs), 'navigation updates LAST_SYNTH_NOTE_STEP through the existing setter');
 assert(/moveSelectedSynthNoteStep[\s\S]{0,220}updateSynthNoteStatus\s*\(/.test(mainJs), 'navigation refreshes the selected-step status label');
+assert(/resetSelectedSynthNoteStepToRoot[\s\S]{0,260}State\.resetSynthNoteStepToRoot\s*\(\s*SYNTH_NOTES\[S\.patt\]\s*,\s*LAST_SYNTH_NOTE_STEP\s*\)/.test(mainJs), 'root reset applies the state helper to the selected synth note step only');
+assert(/resetSelectedSynthNoteStepToRoot[\s\S]{0,420}buildSeq\s*\([\s\S]*updateSynthNoteStatus\s*\([\s\S]*autosave\s*\([\s\S]*previewSynth\s*\(/.test(mainJs), 'root reset rebuilds steps, refreshes status, autosaves, and previews the synth');
 assert(/querySelector\('\[data-synth-note-prev\]'\)[\s\S]{0,120}moveSelectedSynthNoteStep\s*\(\s*-1\s*\)/.test(mainJs), 'previous control moves the selected synth step backward');
 assert(/querySelector\('\[data-synth-note-next\]'\)[\s\S]{0,120}moveSelectedSynthNoteStep\s*\(\s*1\s*\)/.test(mainJs), 'next control moves the selected synth step forward');
+assert(/querySelector\('\[data-synth-root-step\]'\)\.addEventListener\('\s*click\s*'\s*,\s*resetSelectedSynthNoteStepToRoot\s*\)/.test(mainJs), 'root selected-step control triggers the root reset helper');
 
 const helperMatch = mainJs.match(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*{([\s\S]*?)\n}/);
 assert(helperMatch, 'selected synth-step navigation helper body is discoverable');

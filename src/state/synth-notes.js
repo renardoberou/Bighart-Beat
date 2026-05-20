@@ -116,6 +116,10 @@
     return next;
   }
 
+  function resetSynthNoteStepToRoot(grid, stepIndex) {
+    return setSynthNoteRatio(grid, stepIndex, 1);
+  }
+
   function cycleSynthNoteRatio(grid, stepIndex) {
     const current = getSynthNoteRatio(grid, stepIndex);
     let currentIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => Math.abs(r - current) < 0.001);
@@ -158,6 +162,7 @@
     cloneSynthNotesBanks,
     getSynthNoteRatio,
     setSynthNoteRatio,
+    resetSynthNoteStepToRoot,
     cycleSynthNoteRatio,
     synthPitchForStep,
     randomHarmonicSynthNoteStep,
