@@ -1012,6 +1012,19 @@ body.running #ss  { display: none; }
   border-radius: 2px;
   cursor: pointer;
 }
+@media (max-width: 900px), (pointer: coarse) {
+  .fdr {
+    height: 44px;
+    touch-action: pan-y;
+  }
+  .fdr::-webkit-slider-thumb {
+    width: 24px; height: 32px;
+    margin-top: -14px;
+  }
+  .fdr::-moz-range-thumb {
+    width: 24px; height: 32px;
+  }
+}
 .fdr.r  { --fc: var(--redLt); }
 .fdr.o  { --fc: var(--copperLt); }
 .fdr.a  { --fc: var(--amberLt); }
