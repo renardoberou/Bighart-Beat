@@ -809,7 +809,7 @@ function previewSynth() {
   const tr = TRACKS[6];
   const t = A.currentTime + .015;
   triggerCompGate(t, tr.id);
-  synthSynth(t, tr.vol, tr.p);
+  synthSynth(t, tr.vol, { ...tr.p, pitch: getStepSynthPitch(LAST_SYNTH_NOTE_STEP) });
 }
 
 function getStepHihatOpen(step) {

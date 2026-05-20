@@ -19,7 +19,7 @@ assert(/createBiquadFilter\(\)[\s\S]*\.type\s*=\s*spec\.filterType[\s\S]*frequen
 assert(/const\s+SYNTH_NOTES\s*=\s*State\.createSynthNotesBanks\(\)/.test(main), 'runtime initializes per-pattern synth note banks');
 assert(/function\s+getStepSynthPitch\s*\(\s*step\s*\)[\s\S]*State\.synthPitchForStep\(TRACKS\[6\]\.p\.pitch,\s*getStepSynthRatio\(step\)\)/.test(main), 'runtime derives synth playback pitch from root pitch and per-step ratio');
 assert(/case\s+'synth':\s*synthSynth\(t,\s*v,\s*\{\s*\.\.\.tr\.p,\s*pitch:\s*getStepSynthPitch\(firingStep\)\s*\}\);\s*break;/.test(main), 'fire() dispatches synth track with per-step harmonic pitch');
-assert(/function\s+previewSynth\s*\(\s*\)\s*\{[\s\S]*initAudio\(\)[\s\S]*triggerCompGate\(t,\s*tr\.id\)[\s\S]*synthSynth\(t,\s*tr\.vol,\s*tr\.p\)/.test(main), 'TEST SYN audition uses same runtime synth path');
+assert(/function\s+previewSynth\s*\(\s*\)\s*\{[\s\S]*initAudio\(\)[\s\S]*triggerCompGate\(t,\s*tr\.id\)[\s\S]*synthSynth\(t,\s*tr\.vol,\s*\{\s*\.\.\.tr\.p,\s*pitch:\s*getStepSynthPitch\(LAST_SYNTH_NOTE_STEP\)\s*\}\)/.test(main), 'TEST SYN audition uses selected/last-edited harmonic step pitch and preserves compressor gate');
 assert(/tr\.n\s*===\s*'SYN'\s*\?\s*'SYNTH'/.test(main), 'voice editor names SYN as SYNTH');
 assert(/tr\.id\s*===\s*'synth'[\s\S]*SYNTH ENGINE:\s*\$\{S\.engine\.toUpperCase\(\)\}[\s\S]*TEST SYN[\s\S]*mkRow\('PITCH'[\s\S]*mkRow\('DECAY'[\s\S]*mkRow\('TONE'[\s\S]*mkRow\('SHAPE'/.test(main), 'voice editor exposes SYN engine info, TEST SYN, pitch, decay, tone, and shape controls');
 assert(/data-synth-test/.test(main), 'TEST SYN button has a stable data hook');
