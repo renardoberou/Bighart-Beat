@@ -1044,6 +1044,26 @@ body.running #ss  { display: none; }
 }
 .fx-nm.dly { color: var(--skyLt); }
 .fx-nm.rev { color: var(--etherLt); }
+.wreck-send-status {
+  margin: -2px 0 8px;
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  color: var(--textDm);
+  font-size: 8px;
+  letter-spacing: 1.4px;
+  text-align: center;
+}
+.wreck-send-status--warn {
+  color: var(--amberLt);
+  border-color: var(--amberDim);
+  background: rgba(106,74,18,.18);
+}
+.wreck-send-status--active {
+  color: var(--greenLt);
+  border-color: var(--green);
+  background: rgba(42,122,74,.14);
+}
 .fx-tog {
   width: 28px; height: 14px;
   background: var(--textDm3);

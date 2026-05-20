@@ -239,13 +239,29 @@ function shouldFeedWreckProcessor() {
   return !!(FX.wreck.on && FX.wreck.mix > 0 && FX.wreck.out > 0);
 }
 
+function wreckSendStatusText() {
+  const hasWreckSend = TRACKS.some(tr => tr.wreckS);
+  if (!hasWreckSend) return 'W SENDS OFF';
+  if (!shouldFeedWreckProcessor()) return 'WRECK RETURN OFF';
+  return 'WRECK SEND READY';
+}
+
+function updateWreckSendStatus() {
+  const el = $('wreckSendStatus');
+  if (!el) return;
+  const text = wreckSendStatusText();
+  el.textContent = text;
+  el.classList.toggle('wreck-send-status--warn', text === 'WRECK RETURN OFF');
+  el.classList.toggle('wreck-send-status--active', text === 'WRECK SEND READY');
+}
+
 function updateWreckProcessorFeed(active) {
   if (!N || !N.wreckIn || !N.wreckDownsample) return;
-  const shouldFeed = !!active;
-  if (shouldFeed && !N.wreckWetFeedConnected) {
+  const shouldConnect = !!active;
+  if (shouldConnect && !N.wreckWetFeedConnected) {
     N.wreckIn.connect(N.wreckDownsample);
     N.wreckWetFeedConnected = true;
-  } else if (!shouldFeed && N.wreckWetFeedConnected) {
+  } else if (!shouldConnect && N.wreckWetFeedConnected) {
     try { N.wreckIn.disconnect(N.wreckDownsample); } catch (_) {}
     N.wreckWetFeedConnected = false;
   }
@@ -1223,6 +1239,7 @@ function buildMix() {
         const k = b.dataset.k;
         tr[k] = !tr[k];
         b.classList.toggle('on');
+        if (k === 'wreckS') updateWreckSendStatus();
         if (k === 'mute') buildSeq();
         autosave();
       });
@@ -1397,6 +1414,7 @@ function buildVE() {
 ═══════════════════════════════════════════════ */
 function applyFXState() {
   renderRhythmIntelligence();
+  updateWreckSendStatus();
   if (!A) return;
   // delay
   N.dlyLine.delayTime.setTargetAtTime(dlyTimeSec(), A.currentTime, .02);
@@ -1734,6 +1752,7 @@ function syncFxControls() {
   setFdr('wreckMix', Math.round(FX.wreck.mix * 100), v => v + '%');
   setFdr('wreckOut', Math.round(FX.wreck.out * 100), v => v + '%');
   if ($('wreckOrderToggle')) $('wreckOrderToggle').textContent = FX.wreck.order === 'wreck-comp' ? 'ORDER: WRK→COMP' : 'ORDER: COMP→WRK';
+  updateWreckSendStatus();
 }
 
 const SWING_OPTIONS = [0, 0.25, 0.5, 0.75];
