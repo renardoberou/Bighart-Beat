@@ -645,14 +645,22 @@ function synthInput(t, v, p) {
   const dest = routeVoice(t, 4);
   const src = A.createBufferSource(); src.buffer = tr.smp;
   src.playbackRate.value = p.pitch;
+  const rate = Math.max(.01, Math.abs(p.pitch || 1));
+  const sampleDur = tr.smp.duration / rate;
+  const dur = p.decay < 1.0 ? sampleDur * p.decay : sampleDur;
+  const stopAt = t + Math.min(dur + .05, sampleDur + .05);
   const g = A.createGain();
   g.gain.setValueAtTime(v, t);
   if (p.decay < 1.0) {
-    const dur = tr.smp.duration * p.decay;
     g.gain.exponentialRampToValueAtTime(.001, t + dur);
   }
   src.connect(g); g.connect(dest);
+  src.onended = () => {
+    try { src.disconnect(); } catch (_) {}
+    try { g.disconnect(); } catch (_) {}
+  };
   src.start(t);
+  src.stop(stopAt);
 }
 
 // ── ETHER ── EM-field interference (preserved from v3)
