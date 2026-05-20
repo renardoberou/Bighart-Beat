@@ -10,11 +10,14 @@ const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
 
 assert(/const\s+SynthVoice\s*=\s*(?:globalThis|window)\.BighartBeatSynth/.test(main), 'main.js imports BighartBeatSynth helper');
-assert(/const\s+synthVoiceState\s*=\s*\{\s*gain:\s*null\s*\}/.test(main), 'runtime keeps shared mono synth state');
+assert(/const\s+synthVoiceState\s*=\s*\{\s*gain:\s*null,\s*pitchHz:\s*null,\s*triggerTime:\s*null\s*\}/.test(main), 'runtime keeps shared mono synth state with previous pitch/time for glide');
 assert(/function\s+triggerSynthChoke\s*\(\s*t,\s*voiceGain,\s*spec\s*\)\s*\{[\s\S]*const\s+previous\s*=\s*synthVoiceState\.gain[\s\S]*previous\.gain[\s\S]*setTargetAtTime\(\.0008,\s*t,\s*spec\.chokeTau\)/.test(main), 'synth retrigger chokes/release-ramps previous mono voice');
 assert(/synthVoiceState\.gain\s*=\s*voiceGain/.test(main), 'synth choke stores current voice for next retrigger');
 assert(/function\s+synthSynth\s*\(\s*t,\s*v,\s*p\s*\)\s*\{[\s\S]*routeVoice\(t,\s*6\)[\s\S]*SynthVoice\.resolveSynthVoiceSpec\(S\.engine,\s*p\)[\s\S]*triggerSynthChoke\(t,\s*voiceGain,\s*spec\)/.test(main), 'synthSynth uses routeVoice, selected engine resolver, and mono choke');
-assert(/createOscillator\(\)[\s\S]*\.type\s*=\s*spec\.oscType[\s\S]*frequency\.setValueAtTime\(spec\.pitchHz,\s*t\)/.test(main), 'synthSynth creates oscillator from resolver pitch/type');
+assert(/const\s+previousPitchHz\s*=\s*synthVoiceState\.pitchHz[\s\S]*const\s+shouldGlide\s*=\s*spec\.glideSec\s*>\s*0[\s\S]*previousPitchHz\s*!==\s*spec\.pitchHz/.test(main), 'synthSynth glides only from a distinct previous mono pitch');
+assert(/frequency\.setValueAtTime\(shouldGlide\s*\?\s*previousPitchHz\s*:\s*spec\.pitchHz,\s*t\)[\s\S]*if\s*\(shouldGlide\)\s*osc\.frequency\.setTargetAtTime\(spec\.pitchHz,\s*t,\s*spec\.glideSec\)/.test(main), 'synthSynth starts from previous pitch then targets current pitch for true mono glide');
+assert(!/spec\.pitchHz\s*\*\s*\.995/.test(main), 'synthSynth does not use fake same-pitch sag glide');
+assert(/synthVoiceState\.pitchHz\s*=\s*spec\.pitchHz[\s\S]*synthVoiceState\.triggerTime\s*=\s*t/.test(main), 'synthSynth stores current pitch and trigger time for next glide');
 assert(/createBiquadFilter\(\)[\s\S]*\.type\s*=\s*spec\.filterType[\s\S]*frequency\.setValueAtTime\(spec\.filterRestHz,\s*t\)[\s\S]*frequency\.exponentialRampToValueAtTime\(Math\.max\(80,\s*spec\.filterTriggerHz\),\s*t\s*\+\s*spec\.filterAttackSec\)/.test(main), 'synthSynth shapes tone through resolver trigger filter envelope');
 assert(/const\s+SYNTH_NOTES\s*=\s*State\.createSynthNotesBanks\(\)/.test(main), 'runtime initializes per-pattern synth note banks');
 assert(/function\s+getStepSynthPitch\s*\(\s*step\s*\)[\s\S]*State\.synthPitchForStep\(TRACKS\[6\]\.p\.pitch,\s*getStepSynthRatio\(step\)\)/.test(main), 'runtime derives synth playback pitch from root pitch and per-step ratio');

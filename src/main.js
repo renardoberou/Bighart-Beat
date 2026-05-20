@@ -48,7 +48,7 @@ const CHAIN_SLOT_BAR_CHOICES = [1, 2, 4, 8, 16];
 const OPEN_HIHAT_ROW_ID = 'open-hihat';
 const OPEN_HIHAT_ROW_LABEL = 'OHH';
 const hihatChokeState = { gain: null, open: false };
-const synthVoiceState = { gain: null };
+const synthVoiceState = { gain: null, pitchHz: null, triggerTime: null };
 
 function setHihatPlacement(value) {
   const next = parseFloat(value);
@@ -759,9 +759,15 @@ function synthSynth(t, v, p) {
 
   const osc = A.createOscillator();
   osc.type = spec.oscType;
-  osc.frequency.setValueAtTime(spec.pitchHz, t);
-  if (spec.glideSec > 0) osc.frequency.setTargetAtTime(spec.pitchHz * .995, t + .002, spec.glideSec);
+  const previousPitchHz = synthVoiceState.pitchHz;
+  const previousTriggerTime = synthVoiceState.triggerTime;
+  const recentlyTriggered = Number.isFinite(previousTriggerTime) && t >= previousTriggerTime && (t - previousTriggerTime) <= Math.max(spec.stopSec, spec.glideSec);
+  const shouldGlide = spec.glideSec > 0 && recentlyTriggered && Number.isFinite(previousPitchHz) && previousPitchHz !== spec.pitchHz;
+  osc.frequency.setValueAtTime(shouldGlide ? previousPitchHz : spec.pitchHz, t);
+  if (shouldGlide) osc.frequency.setTargetAtTime(spec.pitchHz, t, spec.glideSec);
   if (Number.isFinite(spec.detuneCents)) osc.detune.setValueAtTime(spec.detuneCents, t);
+  synthVoiceState.pitchHz = spec.pitchHz;
+  synthVoiceState.triggerTime = t;
 
   const filter = A.createBiquadFilter();
   filter.type = spec.filterType;
