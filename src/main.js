@@ -1461,6 +1461,7 @@ function buildVE() {
       buildSeq();
       updateSynthNoteStatus();
       autosave();
+      previewSynth();
       toast('SYN harmonic steps randomized');
     });
     mkRow('PITCH', 40, 3000, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>{ tr.p.pitch=v; updateSynthNoteStatus(); }, c);
