@@ -865,10 +865,10 @@ body.running #ss  { display: none; }
 }
 .mt {
   display: grid;
-  grid-template-columns: 30px 114px minmax(48px, 1fr) 34px;
+  grid-template-columns: 28px 153px minmax(44px, 1fr) 30px;
   align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
+  gap: 4px;
+  padding: 4px 5px;
   background: var(--bg2);
   border: 1px solid var(--border);
 }
@@ -879,7 +879,7 @@ body.running #ss  { display: none; }
 }
 .mt-toggles {
   display: grid;
-  grid-template-columns: repeat(3, 36px);
+  grid-template-columns: repeat(4, 36px);
   gap: 3px;
 }
 .mt-btn {
