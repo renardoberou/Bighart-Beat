@@ -536,7 +536,7 @@ function triggerHihatChoke(t, openAmount, choke, spec) {
 // ── HIHAT ── highpass noise + engine-aware metallic ratios on existing HHT open control
 function synthHihat(t, v, p) {
   const dest = routeVoice(t, 2);
-  const spec = HihatVoice.resolveHihatVoiceSpec(S.engine, p, Math.random);
+  const spec = HihatVoice.resolveHihatVoiceSpec(S.engine, p, Math.random, v);
   const dec = spec.decaySec;
   const choke = A.createGain();
   choke.gain.setValueAtTime(0, t);

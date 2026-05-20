@@ -52,6 +52,31 @@ for (const engine of ['808', '909', 'reznor', 'aphex', 'mystery']) {
   assertFiniteBounded(resolveHihatVoiceSpec(engine, baseParams, () => 0.5), engine);
 }
 
+const lowVelocity = resolveHihatVoiceSpec('909', baseParams, () => 0.5, 0.25);
+const normalVelocity = resolveHihatVoiceSpec('909', baseParams, () => 0.5, 0.75);
+const accentedVelocity = resolveHihatVoiceSpec('909', baseParams, () => 0.5, 1.35);
+assert(lowVelocity.noiseTailSec < normalVelocity.noiseTailSec, 'soft hihat hit has a shorter noise tail than normal velocity');
+assert(lowVelocity.metalTailSec < normalVelocity.metalTailSec, 'soft hihat hit has a shorter metallic tail than normal velocity');
+assert(lowVelocity.airLowpassHz < normalVelocity.airLowpassHz, 'soft hihat hit is darker than normal velocity');
+assert(lowVelocity.transientGain < normalVelocity.transientGain, 'soft hihat hit has less transient than normal velocity');
+assert(accentedVelocity.airLowpassHz > normalVelocity.airLowpassHz, 'accented hihat hit is brighter than normal velocity');
+assert(accentedVelocity.transientGain > normalVelocity.transientGain, 'accented hihat hit has more transient than normal velocity');
+assert(accentedVelocity.outputTrim < normalVelocity.outputTrim, 'accented hihat trims output for headroom');
+assert(accentedVelocity.noiseGain <= normalVelocity.noiseGain, 'accented hihat does not increase raw noise gain before trim');
+assertFiniteBounded(lowVelocity, 'low velocity hihat');
+assertFiniteBounded(normalVelocity, 'normal velocity hihat');
+assertFiniteBounded(accentedVelocity, 'accented velocity hihat');
+assert.deepStrictEqual(
+  resolveHihatVoiceSpec('909', baseParams, () => 0.5, -9),
+  resolveHihatVoiceSpec('909', baseParams, () => 0.5, 0),
+  'hihat velocity/accent input is clamped at the low bound'
+);
+assert.deepStrictEqual(
+  resolveHihatVoiceSpec('909', baseParams, () => 0.5, 99),
+  resolveHihatVoiceSpec('909', baseParams, () => 0.5, 1),
+  'hihat velocity/accent input is clamped at the high bound'
+);
+
 const closed = resolveHihatVoiceSpec('909', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5);
 const tight = resolveHihatVoiceSpec('909', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5);
 const open = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5);
@@ -106,6 +131,7 @@ assertFiniteBounded(broken, 'invalid input sanitized');
 assert(html.indexOf('src/rhythm/hihat-voice.js') > -1, 'index.html loads hihat voice helper');
 assert(html.indexOf('src/rhythm/hihat-voice.js') < html.indexOf('src/main.js'), 'hihat helper loads before main.js for GitHub Pages');
 assert(/BighartBeatHihat/.test(main) && /resolveHihatVoiceSpec/.test(main), 'main.js wires synthHihat to pure resolver');
+assert(/function\s+synthHihat\s*\(\s*t,\s*v,\s*p\s*\)\s*\{[\s\S]*resolveHihatVoiceSpec\(S\.engine,\s*p,\s*Math\.random,\s*v\)/.test(main), 'synthHihat passes current hihat velocity/accent into resolver');
 assert(/const\s+hatPolish\s*=\s*A\.createGain\(\)/.test(main), 'synthHihat adds a bounded post-choke polish gain');
 assert(/hatPolish\.gain\.setValueAtTime\(spec\.outputTrim,\s*t\)/.test(main), 'hihat polish gain uses resolver outputTrim');
 assert(/const\s+hatAir\s*=\s*A\.createBiquadFilter\(\)/.test(main) && /hatAir\.type\s*=\s*'lowpass'/.test(main), 'synthHihat adds a gentle post-choke air lowpass');
