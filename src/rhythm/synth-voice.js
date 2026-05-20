@@ -6,25 +6,25 @@
       personality: 'mono-fm-glass',
       oscType: 'sine', filterType: 'lowpass', pitch: 1.00, decay: 1.06, tone: 1.30, q: 0.55,
       drive: 0.16, body: 0.46, sub: 0.12, noise: 0.018, attack: 0.006, release: 0.030, glide: 0.010,
-      filterEnv: 0.65, filterEnd: 0.40, filterSnap: 0.0025,
+      filterEnv: 0.65, filterEnd: 0.40, filterSnap: 0.0025, filterDecay: 0.72,
     },
     '909': {
       personality: 'acid-bass',
       oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 3.60,
       drive: 0.70, body: 0.50, sub: 0.22, noise: 0.025, attack: 0.004, release: 0.040, glide: 0.060,
-      filterEnv: 3.30, filterEnd: 0.18, filterSnap: 0.0008,
+      filterEnv: 3.30, filterEnd: 0.18, filterSnap: 0.0008, filterDecay: 0.34,
     },
     reznor: {
       personality: 'industrial-mono',
       oscType: 'square', filterType: 'bandpass', pitch: 0.74, decay: 0.90, tone: 0.58, q: 2.00,
       drive: 0.72, body: 0.42, sub: 0.10, noise: 0.12, attack: 0.003, release: 0.026, glide: 0.010,
-      filterEnv: 2.20, filterEnd: 0.28, filterSnap: 0.0035,
+      filterEnv: 2.20, filterEnd: 0.28, filterSnap: 0.0035, filterDecay: 0.38,
     },
     aphex: {
       personality: 'idm-digital-alien',
       oscType: 'sine', filterType: 'bandpass', pitch: 1.18, decay: 1.08, tone: 1.34, q: 1.36,
       drive: 0.28, body: 0.32, sub: 0.05, noise: 0.048, attack: 0.0035, release: 0.045, glide: 0.035,
-      filterEnv: 1.35, filterEnd: 0.32, filterSnap: 0.0012,
+      filterEnv: 1.35, filterEnd: 0.32, filterSnap: 0.0012, filterDecay: 0.64,
     },
   };
 
@@ -53,6 +53,7 @@
     const filterEnvAmount = clamp(profile.filterEnv * (0.75 + shape * 0.75) * (0.85 + tone * 0.30), 0, 4.5);
     const filterEndRatio = clamp(profile.filterEnd * (1.08 - shape * 0.28), 0.12, 0.62);
     const filterAttackSec = clamp(profile.filterSnap * (1.15 - shape * 0.30), 0.0005, 0.012);
+    const filterDecaySec = clamp(decaySec * profile.filterDecay * (1.06 - shape * 0.18), filterAttackSec + 0.0005, decaySec);
     const filterTriggerHz = clamp(filterHz * (1 + filterEnvAmount), 120, 12000);
     const filterRestHz = clamp(filterHz * filterEndRatio, 80, 12000);
     const driveAmount = clamp(profile.drive * (0.70 + shape * 0.70), 0, 0.75);
@@ -85,6 +86,7 @@
       filterEnvAmount,
       filterEndRatio,
       filterAttackSec,
+      filterDecaySec,
       filterQ,
       driveAmount,
       bodyGain,

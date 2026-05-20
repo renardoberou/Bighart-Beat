@@ -19,7 +19,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
   [
     'pitchHz', 'decaySec', 'attackSec', 'releaseTau', 'filterHz', 'filterTriggerHz', 'filterRestHz',
-    'filterEnvAmount', 'filterEndRatio', 'filterAttackSec', 'filterQ', 'driveAmount',
+    'filterEnvAmount', 'filterEndRatio', 'filterAttackSec', 'filterDecaySec', 'filterQ', 'driveAmount',
     'bodyGain', 'subGain', 'noiseGain', 'glideSec', 'stopSec', 'chokeTau', 'shape', 'tone',
     'modRatio', 'modIndex', 'detuneCents'
   ].forEach(k => assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`));
@@ -34,6 +34,8 @@ function assertFiniteBounded(spec, label) {
   assert(spec.filterEnvAmount >= 0 && spec.filterEnvAmount <= 4.5, `${label}: filterEnvAmount bounded`);
   assert(spec.filterEndRatio >= 0.12 && spec.filterEndRatio <= 0.62, `${label}: filterEndRatio bounded`);
   assert(spec.filterAttackSec >= 0.0005 && spec.filterAttackSec <= 0.012, `${label}: filterAttackSec bounded`);
+  assert(spec.filterDecaySec > spec.filterAttackSec, `${label}: filterDecaySec closes after filter attack`);
+  assert(spec.filterDecaySec <= spec.decaySec, `${label}: filterDecaySec closes no later than voice decay`);
   assert(spec.filterQ >= 0.2 && spec.filterQ <= 18, `${label}: filterQ bounded`);
   assert(spec.driveAmount >= 0 && spec.driveAmount <= 0.75, `${label}: driveAmount bounded`);
   assert(spec.bodyGain >= 0 && spec.bodyGain <= 0.7, `${label}: bodyGain bounded`);
@@ -110,6 +112,10 @@ assert.notStrictEqual(glass808.pitchHz, acid909.pitchHz, '808 and 909 synth pitc
 assert.notStrictEqual(glass808.filterType, industrial.filterType, '808 remains distinct from reznor bandpass industrial voice');
 assert(glass808.modIndex > aphexIdm.modIndex, '808 FM motion remains stronger than aphex IDM shimmer');
 assert(aphexIdm.filterHz !== acid909.filterHz, 'aphex digital tone differs from 909 acid');
+assert(acid909.filterDecaySec < glass808.filterDecaySec, '909 acid filter closes faster than sustained 808 glass pluck');
+assert(acid909.filterDecaySec < aphexIdm.filterDecaySec, '909 acid filter closes faster than sustained aphex IDM color');
+assert(industrial.filterDecaySec < glass808.filterDecaySec, 'reznor industrial filter closes faster than sustained 808 glass pluck');
+assert(industrial.filterDecaySec < aphexIdm.filterDecaySec, 'reznor industrial filter closes faster than sustained aphex IDM color');
 
 const aphexInvalid = resolveSynthVoiceSpec('aphex', { pitch: NaN, decay: -Infinity, tone: Infinity, shape: -99 });
 assertFiniteBounded(aphexInvalid, 'invalid aphex input sanitized');
@@ -128,6 +134,6 @@ assert(html.indexOf('src/rhythm/synth-voice.js') < html.indexOf('src/main.js'), 
 assert(/BighartBeatSynth/.test(main) && /resolveSynthVoiceSpec/.test(main), 'main.js wires synth voice to pure resolver');
 assert(/filter\.frequency\.setValueAtTime\(spec\.filterRestHz, t\)/.test(main), 'main.js starts synth filter at explicit trigger-envelope rest cutoff');
 assert(/filter\.frequency\.exponentialRampToValueAtTime\(Math\.max\(80, spec\.filterTriggerHz\), t \+ spec\.filterAttackSec\)/.test(main), 'main.js opens synth filter with explicit trigger cutoff and snap time');
-assert(/filter\.frequency\.exponentialRampToValueAtTime\(Math\.max\(80, spec\.filterRestHz\), t \+ spec\.decaySec\)/.test(main), 'main.js decays synth filter envelope back to rest cutoff per trigger');
+assert(/filter\.frequency\.exponentialRampToValueAtTime\(Math\.max\(80, spec\.filterRestHz\), t \+ spec\.filterDecaySec\)/.test(main), 'main.js decays synth filter envelope back to rest cutoff using explicit filter decay articulation');
 
 console.log('Issue 010 synth voice resolver checks passed.');
