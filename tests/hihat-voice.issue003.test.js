@@ -85,6 +85,16 @@ assert(accentedVelocity.airLowpassHz > normalVelocity.airLowpassHz, 'accented hi
 assert(accentedVelocity.transientGain > normalVelocity.transientGain, 'accented hihat hit has more transient than normal velocity');
 assert(accentedVelocity.outputTrim < normalVelocity.outputTrim, 'accented hihat trims output for headroom');
 assert(accentedVelocity.noiseGain <= normalVelocity.noiseGain, 'accented hihat does not increase raw noise gain before trim');
+
+const normalOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
+const accentedOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 1.0);
+assert(accentedOpen909.noiseTailSec < normalOpen909.noiseTailSec, 'accented open 909 hihat has a tighter noise tail than normal velocity');
+assert(accentedOpen909.metalTailSec < normalOpen909.metalTailSec, 'accented open 909 hihat has a tighter metallic tail than normal velocity');
+assert(accentedOpen909.tailReleaseTau < normalOpen909.tailReleaseTau, 'accented open 909 hihat has a tighter release tau than normal velocity');
+assert(accentedOpen909.airLowpassHz > normalOpen909.airLowpassHz, 'accented open 909 hihat stays brighter than normal velocity');
+assert(accentedOpen909.transientGain > normalOpen909.transientGain, 'accented open 909 hihat stays punchier than normal velocity');
+assertFiniteBounded(accentedOpen909, 'accented open 909 hihat');
+
 assertFiniteBounded(lowVelocity, 'low velocity hihat');
 assertFiniteBounded(normalVelocity, 'normal velocity hihat');
 assertFiniteBounded(accentedVelocity, 'accented velocity hihat');
