@@ -600,6 +600,15 @@ function previewHihat(openAmount) {
   synthHihat(t, tr.vol, p);
 }
 
+function previewVoice(trackIndex, synthFn) {
+  if (S.playing) return;
+  initAudio();
+  const tr = TRACKS[trackIndex];
+  const t = A.currentTime + .018;
+  triggerCompGate(t, tr.id);
+  synthFn(t, tr.vol, tr.p);
+}
+
 function previewEngineKit() {
   if (S.playing) return;
   initAudio();
@@ -1369,12 +1378,22 @@ function buildVE() {
 
   const c = tr.col;
   if (tr.id === 'kick') {
+    const kckTest = document.createElement('div');
+    kckTest.className = 'voice-test';
+    kckTest.innerHTML = `<button class="mstr-btn voice-test__btn" data-voice-test="kick">TEST KCK</button>`;
+    pn.appendChild(kckTest);
+    kckTest.querySelector('[data-voice-test="kick"]').addEventListener('click', () => previewVoice(0, synthKick));
     mkRow('PITCH', 60, 240, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>tr.p.pitch=v, c);
     mkRow('BODY',  20, 80, 1, tr.p.end, x=>`${x|0} Hz`, v=>tr.p.end=v, c);
     mkRow('DECAY', 10, 120, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
     mkRow('CLICK', 0, 100, 1, Math.round(tr.p.click*100), x=>`${x}%`, v=>tr.p.click=v/100, c);
     mkRow('DRIVE', 0, 100, 1, Math.round(tr.p.drive*100), x=>`${x}%`, v=>tr.p.drive=v/100, c);
   } else if (tr.id === 'snare') {
+    const snrTest = document.createElement('div');
+    snrTest.className = 'voice-test';
+    snrTest.innerHTML = `<button class="mstr-btn voice-test__btn" data-voice-test="snare">TEST SNR</button>`;
+    pn.appendChild(snrTest);
+    snrTest.querySelector('[data-voice-test="snare"]').addEventListener('click', () => previewVoice(1, synthSnare));
     mkRow('TONE',  80, 600, 1, tr.p.tone, x=>`${x|0} Hz`, v=>tr.p.tone=v, c);
     mkRow('BODY',  0, 100, 1, Math.round(tr.p.body*100), x=>`${x}%`, v=>tr.p.body=v/100, c);
     mkRow('SNAP',  0, 100, 1, Math.round(tr.p.snap*100), x=>`${x}%`, v=>tr.p.snap=v/100, c);
@@ -1413,6 +1432,11 @@ function buildVE() {
     mkRow('OPEN',  0, 100, 1, Math.round(tr.p.open*100), x=>`${x}%`, v=>tr.p.open=v/100, c);
     mkRow('METAL', 0, 100, 1, Math.round(tr.p.metal*100), x=>`${x}%`, v=>tr.p.metal=v/100, c);
   } else if (tr.id === 'clap') {
+    const clpTest = document.createElement('div');
+    clpTest.className = 'voice-test';
+    clpTest.innerHTML = `<button class="mstr-btn voice-test__btn" data-voice-test="clap">TEST CLP</button>`;
+    pn.appendChild(clpTest);
+    clpTest.querySelector('[data-voice-test="clap"]').addEventListener('click', () => previewVoice(3, synthClap));
     mkRow('SPREAD',2, 30, 1, tr.p.spread, x=>`${x} ms`, v=>tr.p.spread=v, c);
     mkRow('DECAY', 4, 40, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
     mkRow('TONE',  900, 3000, 10, tr.p.tone, x=>`${x|0} Hz`, v=>tr.p.tone=v, c);
