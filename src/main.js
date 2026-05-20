@@ -1436,14 +1436,22 @@ function buildVE() {
         <div data-synth-note-status="1">${synthNoteStatusText(LAST_SYNTH_NOTE_STEP)}</div>
         <div>${SYNTH_NOTE_EDIT ? 'NOTE EDIT ON: TAP SYN STEPS TO CYCLE RATIOS' : 'ENABLE NOTE EDIT TO CHANGE SYN STEPS'}</div>
       </div>
-      <button class="mstr-btn" data-synth-test="1">TEST SYN</button>
-      <button class="mstr-btn" data-synth-note-prev="1" title="Previous synth note step" aria-label="Previous synth note step">◀ STEP</button>
-      <button class="mstr-btn" data-synth-note-next="1" title="Next synth note step" aria-label="Next synth note step">STEP ▶</button>
-      <button class="mstr-btn${SYNTH_NOTE_EDIT?' on':''}" data-synth-note-edit="1">NOTE EDIT</button>
-      <button class="mstr-btn" data-synth-prev-step="1" title="Previous/down harmonic for selected synth step" aria-label="Previous/down harmonic for selected synth step">HARM ▼</button>
-      <button class="mstr-btn" data-synth-rnd-step="1" title="Random harmonic for selected synth step" aria-label="Random harmonic for selected synth step">RND STEP</button>
-      <button class="mstr-btn" data-synth-root-step="1" title="Reset selected synth step to root" aria-label="Reset selected synth step to root">ROOT STEP</button>
-      <button class="mstr-btn" data-synth-rnd-harm="1">RND HARM</button>`;
+      <div class="syn-note-controls" data-synth-note-controls="1">
+        <div class="syn-note-controls__row syn-note-controls__row--performance" data-synth-note-controls-row="performance">
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--test" data-synth-test="1">TEST SYN</button>
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--step" data-synth-note-prev="1" title="Previous synth note step" aria-label="Previous synth note step">◀ STEP</button>
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--step" data-synth-note-next="1" title="Next synth note step" aria-label="Next synth note step">STEP ▶</button>
+        </div>
+        <div class="syn-note-controls__row syn-note-controls__row--edit" data-synth-note-controls-row="edit">
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--edit${SYNTH_NOTE_EDIT?' on':''}" data-synth-note-edit="1">NOTE EDIT</button>
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--harm" data-synth-prev-step="1" title="Previous/down harmonic for selected synth step" aria-label="Previous/down harmonic for selected synth step">HARM ▼</button>
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--random" data-synth-rnd-step="1" title="Random harmonic for selected synth step" aria-label="Random harmonic for selected synth step">RND STEP</button>
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--reset" data-synth-root-step="1" title="Reset selected synth step to root" aria-label="Reset selected synth step to root">ROOT STEP</button>
+        </div>
+        <div class="syn-note-controls__row syn-note-controls__row--tools" data-synth-note-controls-row="tools">
+          <button class="mstr-btn syn-note-controls__btn syn-note-controls__btn--random syn-note-controls__btn--wide" data-synth-rnd-harm="1" title="Randomize all active synth step harmonics" aria-label="Randomize all active synth step harmonics">RND HARM</button>
+        </div>
+      </div>`;
     pn.appendChild(syn);
     syn.querySelector('[data-synth-test]').addEventListener('click', previewSynth);
     syn.querySelector('[data-synth-note-prev]').addEventListener('click', () => moveSelectedSynthNoteStep(-1));

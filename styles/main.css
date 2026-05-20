@@ -836,6 +836,12 @@ body.running #ss  { display: none; }
     overflow: visible;
     padding-bottom: calc(48px + env(safe-area-inset-bottom));
   }
+
+  .syn-note-controls .syn-note-controls__btn {
+    min-height: 44px;
+    padding: 11px 12px;
+    touch-action: manipulation;
+  }
 }
 
 .panel {
@@ -1147,6 +1153,40 @@ body.running #ss  { display: none; }
   cursor: pointer;
 }
 .mstr-btn:active { background: var(--amber); color: var(--bg); }
+
+.syn-note-controls {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 2px;
+}
+.syn-note-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: stretch;
+}
+.syn-note-controls__btn {
+  min-width: 0;
+  flex: 1 1 78px;
+  text-align: center;
+}
+.syn-note-controls__row--performance .syn-note-controls__btn { flex-basis: 88px; }
+.syn-note-controls__row--tools .syn-note-controls__btn { flex: 1 1 100%; }
+.syn-note-controls__btn--random {
+  border-color: var(--amberDim);
+  color: var(--amberLt);
+  background: rgba(106,74,18,.14);
+}
+.syn-note-controls__btn--reset {
+  border-color: var(--green);
+  color: var(--greenLt);
+  background: rgba(42,122,74,.12);
+}
+.syn-note-controls__btn--edit.on {
+  border-color: var(--t-syn);
+  color: var(--bg);
+  background: var(--t-syn);
+}
 
 /* output VU */
 .ovu {
