@@ -750,6 +750,11 @@ function triggerSynthChoke(t, voiceGain, spec) {
   synthVoiceState.gain = voiceGain;
 }
 
+function applySynthGlideFrequency(frequencyParam, targetHz, t, spec, shouldGlide, previousTargetHz) {
+  frequencyParam.setValueAtTime(shouldGlide ? previousTargetHz : targetHz, t);
+  if (shouldGlide) frequencyParam.setTargetAtTime(targetHz, t, spec.glideSec);
+}
+
 // ── SYNTH ── playable monophonic row with engine-selected personalities
 function synthSynth(t, v, p) {
   const dest = routeVoice(t, 6);
@@ -767,8 +772,7 @@ function synthSynth(t, v, p) {
   const previousTriggerTime = synthVoiceState.triggerTime;
   const recentlyTriggered = Number.isFinite(previousTriggerTime) && t >= previousTriggerTime && (t - previousTriggerTime) <= Math.max(spec.stopSec, spec.glideSec);
   const shouldGlide = spec.glideSec > 0 && recentlyTriggered && Number.isFinite(previousPitchHz) && previousPitchHz !== spec.pitchHz;
-  osc.frequency.setValueAtTime(shouldGlide ? previousPitchHz : spec.pitchHz, t);
-  if (shouldGlide) osc.frequency.setTargetAtTime(spec.pitchHz, t, spec.glideSec);
+  applySynthGlideFrequency(osc.frequency, spec.pitchHz, t, spec, shouldGlide, previousPitchHz);
   if (Number.isFinite(spec.detuneCents)) osc.detune.setValueAtTime(spec.detuneCents, t);
   synthVoiceState.pitchHz = spec.pitchHz;
   synthVoiceState.triggerTime = t;
@@ -785,7 +789,8 @@ function synthSynth(t, v, p) {
   osc.start(t); osc.stop(t + spec.stopSec);
 
   if (spec.modIndex > 0) {
-    const mod = A.createOscillator(); mod.type = 'sine'; mod.frequency.value = spec.pitchHz * spec.modRatio;
+    const mod = A.createOscillator(); mod.type = 'sine';
+    applySynthGlideFrequency(mod.frequency, spec.pitchHz * spec.modRatio, t, spec, shouldGlide, previousPitchHz * spec.modRatio);
     const modGain = A.createGain();
     modGain.gain.setValueAtTime(spec.modIndex, t);
     modGain.gain.exponentialRampToValueAtTime(.001, t + Math.min(spec.decaySec, .65));
@@ -794,7 +799,8 @@ function synthSynth(t, v, p) {
   }
 
   if (spec.subGain > 0.001) {
-    const sub = A.createOscillator(); sub.type = 'sine'; sub.frequency.value = spec.pitchHz * .5;
+    const sub = A.createOscillator(); sub.type = 'sine';
+    applySynthGlideFrequency(sub.frequency, spec.pitchHz * .5, t, spec, shouldGlide, previousPitchHz * .5);
     const sg = A.createGain();
     sg.gain.setValueAtTime(0, t);
     sg.gain.linearRampToValueAtTime(clamp(v * spec.subGain, 0, .35), t + spec.attackSec * 1.3);
