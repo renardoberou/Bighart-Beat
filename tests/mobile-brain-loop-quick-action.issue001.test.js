@@ -11,7 +11,7 @@ const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
 
 assert(
-  /styles\/main\.css\?v=issue001-brainloop-status/.test(html),
+  /styles\/main\.css\?v=[^"]+/.test(html),
   'index busts the stylesheet cache for the Brain Loop quick-action/status button styles'
 );
 assert(

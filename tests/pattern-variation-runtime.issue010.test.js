@@ -11,7 +11,7 @@ const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
 
 assert(
-  html.includes('src="src/state/pattern-variation.js"'),
+  /src="src\/state\/pattern-variation\.js(?:\?v=[^"]+)?"/.test(html),
   'index.html loads the controlled pattern variation state module before main.js'
 );
 assert(

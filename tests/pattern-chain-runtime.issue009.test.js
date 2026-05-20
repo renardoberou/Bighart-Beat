@@ -10,7 +10,7 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 
-assert(html.includes('src="src/state/pattern-chain.js"'), 'index.html loads the pattern-chain state module before main.js');
+assert(/src="src\/state\/pattern-chain\.js(?:\?v=[^"]+)?"/.test(html), 'index.html loads the pattern-chain state module before main.js');
 assert(html.includes('id="chainToggle"'), 'UI exposes a chain on/off toggle');
 assert(html.includes('id="songQueue"'), 'UI exposes a song queue strip');
 assert(html.includes('data-chain-pattern="0"') && html.includes('data-chain-pattern="3"'), 'UI exposes chain slots that can cycle A-D patterns');

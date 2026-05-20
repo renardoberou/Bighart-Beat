@@ -10,7 +10,8 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 
 function scriptIndex(src) {
-  const index = html.indexOf(`src="${src}"`);
+  const escapedSrc = src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const index = html.search(new RegExp(`src="${escapedSrc}(?:\\?v=[^"]+)?"`));
   assert(index !== -1, `${src} is loaded by static page`);
   return index;
 }

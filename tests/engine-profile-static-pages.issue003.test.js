@@ -10,13 +10,14 @@ const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const hihatVoice = fs.readFileSync(path.join(root, 'src', 'rhythm', 'hihat-voice.js'), 'utf8');
 
-const engineProfilesTag = '<script src="src/rhythm/engine-profiles.js" defer></script>';
-const hihatVoiceTag = '<script src="src/rhythm/hihat-voice.js" defer></script>';
-const mainTag = '<script src="src/main.js" defer></script>';
+function scriptIndex(src) {
+  const escapedSrc = src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return index.search(new RegExp(`<script src="${escapedSrc}(?:\\?v=[^"]+)?" defer><\\/script>`));
+}
 
-const engineProfilesIdx = index.indexOf(engineProfilesTag);
-const hihatVoiceIdx = index.indexOf(hihatVoiceTag);
-const mainIdx = index.indexOf(mainTag);
+const engineProfilesIdx = scriptIndex('src/rhythm/engine-profiles.js');
+const hihatVoiceIdx = scriptIndex('src/rhythm/hihat-voice.js');
+const mainIdx = scriptIndex('src/main.js');
 
 assert(engineProfilesIdx !== -1, 'index.html loads shared engine-profiles helper');
 assert(hihatVoiceIdx !== -1, 'index.html loads hihat voice helper');

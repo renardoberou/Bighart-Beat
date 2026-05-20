@@ -10,8 +10,8 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
 
-assert(html.includes('src="src/rhythm/groove-timing.js"'), 'HTML loads the groove timing helper before main.js');
-assert(html.includes('src="src/rhythm/swing-knob.js"'), 'HTML loads the swing knob pointer helper before main.js');
+assert(/src="src\/rhythm\/groove-timing\.js(?:\?v=[^"]+)?"/.test(html), 'HTML loads the groove timing helper before main.js');
+assert(/src="src\/rhythm\/swing-knob\.js(?:\?v=[^"]+)?"/.test(html), 'HTML loads the swing knob pointer helper before main.js');
 assert(/id="vSwing"/.test(html), 'transport UI exposes a swing value readout with id="vSwing"');
 assert(!/<input[^>]+id="swing"[^>]+type="range"|<input[^>]+type="range"[^>]+id="swing"/.test(html), 'swing is no longer exposed as a hard-to-hit range slider');
 

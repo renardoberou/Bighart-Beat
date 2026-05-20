@@ -73,7 +73,7 @@ if (hasCanonicalSource) {
   console.warn('WARN: canonical source snapshot unavailable; skipping exact v4 parity comparisons.');
 }
 
-assert(/<link rel="stylesheet" href="styles\/main\.css(?:\?v=[^"]+)?">/.test(index), 'index links styles/main.css with optional cache-busting query');
+assert(/<link rel="stylesheet" href="styles\/main\.css\?v=[^"]+">/.test(index), 'index links styles/main.css with cache-busting query');
 const requiredScripts = [
   'src/state/tracks.js',
   'src/state/patterns.js',
@@ -85,8 +85,8 @@ const requiredScripts = [
 ];
 let previousScriptIdx = -1;
 for (const scriptSrc of requiredScripts) {
-  const tag = `<script src="${scriptSrc}" defer></script>`;
-  const scriptIdx = index.indexOf(tag);
+  const scriptTagPattern = new RegExp(`<script src="${scriptSrc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\?v=[^"]+)?" defer><\\/script>`);
+  const scriptIdx = index.search(scriptTagPattern);
   assert(scriptIdx !== -1, `index loads ${scriptSrc} with defer`);
   assert(scriptIdx > previousScriptIdx, `index loads ${scriptSrc} after prior app script`);
   previousScriptIdx = scriptIdx;
