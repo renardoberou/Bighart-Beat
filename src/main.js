@@ -845,6 +845,11 @@ function updateSynthNoteStatus() {
   if (status) status.textContent = synthNoteStatusText(LAST_SYNTH_NOTE_STEP);
 }
 
+function moveSelectedSynthNoteStep(delta) {
+  setLastSynthNoteStep((LAST_SYNTH_NOTE_STEP + delta + 16) % 16);
+  updateSynthNoteStatus();
+}
+
 function fire(ti, t) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
@@ -1386,10 +1391,14 @@ function buildVE() {
         <div>${SYNTH_NOTE_EDIT ? 'NOTE EDIT ON: TAP SYN STEPS TO CYCLE RATIOS' : 'ENABLE NOTE EDIT TO CHANGE SYN STEPS'}</div>
       </div>
       <button class="mstr-btn" data-synth-test="1">TEST SYN</button>
+      <button class="mstr-btn" data-synth-note-prev="1" title="Previous synth note step" aria-label="Previous synth note step">◀ STEP</button>
+      <button class="mstr-btn" data-synth-note-next="1" title="Next synth note step" aria-label="Next synth note step">STEP ▶</button>
       <button class="mstr-btn${SYNTH_NOTE_EDIT?' on':''}" data-synth-note-edit="1">NOTE EDIT</button>
       <button class="mstr-btn" data-synth-rnd-harm="1">RND HARM</button>`;
     pn.appendChild(syn);
     syn.querySelector('[data-synth-test]').addEventListener('click', previewSynth);
+    syn.querySelector('[data-synth-note-prev]').addEventListener('click', () => moveSelectedSynthNoteStep(-1));
+    syn.querySelector('[data-synth-note-next]').addEventListener('click', () => moveSelectedSynthNoteStep(1));
     syn.querySelector('[data-synth-note-edit]').addEventListener('click', () => {
       SYNTH_NOTE_EDIT = !SYNTH_NOTE_EDIT;
       buildVE();

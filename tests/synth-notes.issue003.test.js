@@ -2,6 +2,7 @@
 'use strict';
 
 const assert = require('assert');
+const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
@@ -36,4 +37,18 @@ assert.strictEqual(activeOnly[0], 1, 'randomHarmonicSynthNotes leaves inactive s
 assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(activeOnly[1]), 'randomHarmonicSynthNotes assigns harmonic ratios to active steps');
 assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(activeOnly[3]), 'randomHarmonicSynthNotes assigns harmonic ratios to every active step');
 
-console.log('Issue 003 synth note state checks passed.');
+const mainJs = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
+assert(mainJs.includes('data-synth-note-prev'), 'voice editor exposes a stable previous synth-step control marker');
+assert(mainJs.includes('data-synth-note-next'), 'voice editor exposes a stable next synth-step control marker');
+assert(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)/.test(mainJs), 'runtime has a focused selected synth-step navigation helper');
+assert(/\(\s*LAST_SYNTH_NOTE_STEP\s*\+\s*delta\s*\+\s*16\s*\)\s*%\s*16/.test(mainJs), 'selected synth-step navigation wraps across the 16-step grid');
+assert(/setLastSynthNoteStep\s*\(\s*\(\s*LAST_SYNTH_NOTE_STEP\s*\+\s*delta\s*\+\s*16\s*\)\s*%\s*16\s*\)/.test(mainJs), 'navigation updates LAST_SYNTH_NOTE_STEP through the existing setter');
+assert(/moveSelectedSynthNoteStep[\s\S]{0,220}updateSynthNoteStatus\s*\(/.test(mainJs), 'navigation refreshes the selected-step status label');
+assert(/querySelector\('\[data-synth-note-prev\]'\)[\s\S]{0,120}moveSelectedSynthNoteStep\s*\(\s*-1\s*\)/.test(mainJs), 'previous control moves the selected synth step backward');
+assert(/querySelector\('\[data-synth-note-next\]'\)[\s\S]{0,120}moveSelectedSynthNoteStep\s*\(\s*1\s*\)/.test(mainJs), 'next control moves the selected synth step forward');
+
+const helperMatch = mainJs.match(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*{([\s\S]*?)\n}/);
+assert(helperMatch, 'selected synth-step navigation helper body is discoverable');
+assert(!/PATTERNS|SYNTH_NOTES|cycleSynthNoteRatio|randomHarmonicSynthNotes/.test(helperMatch[1]), 'navigation does not mutate pattern steps or synth note ratios');
+
+console.log('Issue 003 synth note state and selected-step navigation checks passed.');
