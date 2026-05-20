@@ -33,8 +33,10 @@
     return clamp(value, 0.25, 16);
   }
 
-  function randomHarmonicRatio() {
-    return SYNTH_HARMONIC_RATIOS[Math.floor(Math.random() * SYNTH_HARMONIC_RATIOS.length)];
+  function randomHarmonicRatio(rng) {
+    const random = typeof rng === 'function' ? rng : Math.random;
+    const index = clamp(Math.floor(random() * SYNTH_HARMONIC_RATIOS.length), 0, SYNTH_HARMONIC_RATIOS.length - 1);
+    return SYNTH_HARMONIC_RATIOS[index];
   }
 
   function formatHz(value) {
@@ -132,9 +134,13 @@
       ? activeSteps.map((active, i) => active ? i : -1).filter(i => i >= 0 && i < STEP_COUNT)
       : Array.from({ length: STEP_COUNT }, (_, i) => i);
     steps.forEach(step => {
-      next[step] = SYNTH_HARMONIC_RATIOS[Math.floor(Math.random() * SYNTH_HARMONIC_RATIOS.length)];
+      next[step] = randomHarmonicRatio();
     });
     return next;
+  }
+
+  function randomHarmonicSynthNoteStep(grid, stepIndex, rng) {
+    return setSynthNoteRatio(grid, stepIndex, randomHarmonicRatio(rng));
   }
 
   const api = {
@@ -154,6 +160,7 @@
     setSynthNoteRatio,
     cycleSynthNoteRatio,
     synthPitchForStep,
+    randomHarmonicSynthNoteStep,
     randomHarmonicSynthNotes,
   };
 

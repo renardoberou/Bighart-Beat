@@ -21,11 +21,24 @@ assert.strictEqual(banks.length, 4, 'synth note memory has four pattern banks');
 assert.strictEqual(banks[0].length, 16, 'default synth notes contain one harmonic ratio per step');
 assert(banks[0].every(value => SynthNotes.SYNTH_HARMONIC_RATIOS.includes(value)), 'default synth notes start as random harmonic intervals');
 
-const rootGrid = Array(16).fill(1);
 const originalFirstRatio = banks[0][0];
 const cycled = SynthNotes.cycleSynthNoteRatio(Array(16).fill(1), 0);
 assert.strictEqual(cycled[0], 1.25, 'cycling advances from root to the next harmonic interval');
 assert.strictEqual(banks[0][0], originalFirstRatio, 'cycle returns an isolated grid');
+
+const selectedGrid = Array.from({ length: 16 }, (_, i) => SynthNotes.SYNTH_HARMONIC_RATIOS[i % SynthNotes.SYNTH_HARMONIC_RATIOS.length]);
+const selectedGridBefore = selectedGrid.slice();
+const otherBank = Array.from({ length: 16 }, (_, i) => SynthNotes.SYNTH_HARMONIC_RATIOS[(SynthNotes.SYNTH_HARMONIC_RATIOS.length - 1 - i + SynthNotes.SYNTH_HARMONIC_RATIOS.length) % SynthNotes.SYNTH_HARMONIC_RATIOS.length]);
+const otherBankBefore = otherBank.slice();
+const selectedStep = 6;
+const selectedRandomized = SynthNotes.randomHarmonicSynthNoteStep(selectedGrid, selectedStep, () => 0.99);
+assert.notStrictEqual(selectedRandomized, selectedGrid, 'selected-step random harmonic returns a new grid');
+assert.strictEqual(selectedRandomized[selectedStep], 4, 'selected-step random harmonic uses deterministic rng against approved ratios');
+for (let i = 0; i < 16; i++) {
+  if (i !== selectedStep) assert.strictEqual(selectedRandomized[i], selectedGridBefore[i], 'selected-step random harmonic leaves non-selected steps unchanged');
+}
+assert.deepStrictEqual(selectedGrid, selectedGridBefore, 'selected-step random harmonic does not mutate the source grid');
+assert.deepStrictEqual(otherBank, otherBankBefore, 'selected-step random harmonic leaves other pattern banks unchanged when only current grid is replaced');
 
 assert.strictEqual(SynthNotes.synthPitchForStep(220, 2), 440, 'step pitch multiplies root by harmonic ratio');
 assert.strictEqual(SynthNotes.synthPitchForStep(17, 1), 40, 'step pitch clamps below 40 Hz');
@@ -107,6 +120,10 @@ assert(mainJs.includes('const SYNTH_NOTES = State.createSynthNotesBanks()'), 'ru
 assert(mainJs.includes('pitch: getStepSynthPitch(firingStep)'), 'runtime routes step-specific synth pitch into mono synth');
 assert(mainJs.includes('data-synth-note-edit'), 'runtime exposes NOTE EDIT control');
 assert(mainJs.includes('data-synth-rnd-harm'), 'runtime exposes random harmonic interval control');
+assert(mainJs.includes('data-synth-rnd-step'), 'runtime exposes selected-step random harmonic control');
+assert(mainJs.includes('RND STEP'), 'selected-step random harmonic control is clearly labeled');
+assert(mainJs.includes('State.randomHarmonicSynthNoteStep(SYNTH_NOTES[S.patt], LAST_SYNTH_NOTE_STEP)'), 'selected-step random harmonic uses the selected synth note step helper only');
+assert(mainJs.includes('previewSynth();'), 'selected-step random harmonic previews the selected-step pitch');
 assert(mainJs.includes('data-synth-note-status'), 'voice editor exposes selected synth note status marker');
 assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');
 assert(mainJs.includes('formatSynthNoteStatusLabel'), 'voice editor uses synth note status label helper');
