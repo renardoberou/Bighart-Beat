@@ -1381,7 +1381,7 @@ function buildVE() {
     syn.innerHTML = `<div class="hat-help">
         <div class="hat-help-engine">SYNTH ENGINE: ${S.engine.toUpperCase()}</div>
         <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.toUpperCase()}</div>
-        <div>ROOT 40 Hz–10 kHz · STEP NOTES ARE HARMONIC RATIOS</div>
+        <div>ROOT 40 Hz–3000 Hz · STEP NOTES ARE HARMONIC RATIOS</div>
         <div data-synth-note-status="1">${synthNoteStatusText(LAST_SYNTH_NOTE_STEP)}</div>
         <div>${SYNTH_NOTE_EDIT ? 'NOTE EDIT ON: TAP SYN STEPS TO CYCLE RATIOS' : 'ENABLE NOTE EDIT TO CHANGE SYN STEPS'}</div>
       </div>
@@ -1402,7 +1402,7 @@ function buildVE() {
       autosave();
       toast('SYN harmonic steps randomized');
     });
-    mkRow('PITCH', 40, 10000, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>{ tr.p.pitch=v; updateSynthNoteStatus(); }, c);
+    mkRow('PITCH', 40, 3000, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>{ tr.p.pitch=v; updateSynthNoteStatus(); }, c);
     mkRow('DECAY', 4, 220, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
     mkRow('TONE', 0, 100, 1, Math.round(tr.p.tone*100), x=>`${x}%`, v=>tr.p.tone=v/100, c);
     mkRow('SHAPE', 0, 100, 1, Math.round(tr.p.shape*100), x=>`${x}%`, v=>tr.p.shape=v/100, c);
