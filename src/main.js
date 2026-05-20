@@ -236,12 +236,15 @@ function wreckToneHz(v) { // 0..1 → 900 Hz..18 kHz exp; dark settings tame ali
 }
 
 function shouldFeedWreckProcessor() {
-  return !!(FX.wreck.on && FX.wreck.mix > 0 && FX.wreck.out > 0);
+  return !!(FX.wreck.on && FX.wreck.mix > 0 && FX.wreck.out > 0 && hasWreckSend());
+}
+
+function hasWreckSend() {
+  return TRACKS.some(tr => tr.wreckS);
 }
 
 function wreckSendStatusText() {
-  const hasWreckSend = TRACKS.some(tr => tr.wreckS);
-  if (!hasWreckSend) return 'W SENDS OFF';
+  if (!hasWreckSend()) return 'W SENDS OFF';
   if (!shouldFeedWreckProcessor()) return 'WRECK RETURN OFF';
   return 'WRECK SEND READY';
 }
@@ -1278,7 +1281,10 @@ function buildMix() {
         const k = b.dataset.k;
         tr[k] = !tr[k];
         b.classList.toggle('on');
-        if (k === 'wreckS') updateWreckSendStatus();
+        if (k === 'wreckS') {
+          updateWreckSendStatus();
+          updateWreckProcessorFeed(shouldFeedWreckProcessor());
+        }
         if (k === 'mute') buildSeq();
         autosave();
       });

@@ -40,7 +40,9 @@ assert(/N\.wreckPostCompGain\.connect\(N\.mstSat\)/.test(buildGraph), 'comp-wrec
 assert(/N\.compMakeup\.connect\(N\.mstSat\)/.test(buildGraph), 'dry master path still reaches safe saturation/limiter when Wreck is a send');
 
 assert(/function\s+shouldFeedWreckProcessor\s*\(\)\s*\{/.test(js), 'runtime defines a DIGI WRECK wet-feed predicate');
-assert(/return\s+!!\(FX\.wreck\.on\s*&&\s*FX\.wreck\.mix\s*>\s*0\s*&&\s*FX\.wreck\.out\s*>\s*0\)/.test(js), 'DIGI WRECK only feeds processor when enabled with audible wet mix/output');
+assert(/function\s+hasWreckSend\s*\(\)\s*\{/.test(js), 'runtime defines a shared active W-send predicate');
+assert(/return\s+TRACKS\.some\([^)]*wreckS/.test(extractFunction('hasWreckSend')), 'active W-send predicate detects at least one enabled W send');
+assert(/return\s+!!\(FX\.wreck\.on\s*&&\s*FX\.wreck\.mix\s*>\s*0\s*&&\s*FX\.wreck\.out\s*>\s*0\s*&&\s*hasWreckSend\(\)\)/.test(js), 'DIGI WRECK only feeds processor when enabled with audible wet mix/output and at least one W send');
 assert(/function\s+updateWreckProcessorFeed\s*\(active\)\s*\{/.test(js), 'runtime defines a gated DIGI WRECK processor-feed helper');
 assert(/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper reconnects wet input only when DIGI WRECK wet path is audible');
 assert(/N\.wreckIn\.disconnect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper disconnects wet input when DIGI WRECK is bypassed or zero-wet');
@@ -65,6 +67,9 @@ assert(/N\.wreckWet\.gain\.setTargetAtTime\(FX\.wreck\.on\s*\?\s*FX\.wreck\.mix\
 assert(/N\.wreckOut\.gain\.setTargetAtTime\(FX\.wreck\.on\s*\?\s*FX\.wreck\.out\s*:\s*0/.test(applyFXState), 'applyFXState mutes bypassed DIGI WRECK send output');
 assert(/N\.wreckPreCompGain\.gain\.setTargetAtTime\(FX\.wreck\.order\s*===\s*'wreck-comp'\s*\?\s*1\s*:\s*0/.test(applyFXState), 'applyFXState opens pre-compressor Wreck return only for wreck-comp order');
 assert(/N\.wreckPostCompGain\.gain\.setTargetAtTime\(FX\.wreck\.order\s*===\s*'comp-wreck'\s*\?\s*1\s*:\s*0/.test(applyFXState), 'applyFXState opens post-compressor Wreck return only for comp-wreck order');
+
+const buildMix = extractFunction('buildMix');
+assert(/if\s*\(k\s*===\s*'wreckS'\)\s*\{[\s\S]*updateWreckSendStatus\(\)[\s\S]*updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)[\s\S]*\}/.test(buildMix), 'W button toggles immediately refresh the mobile-costly Wreck processor feed');
 
 const syncFxControls = extractFunction('syncFxControls');
 ['togWreck','wreckMode','wreckOrderToggle'].forEach(id => assert(syncFxControls.includes(`$('${id}')`), `runtime syncs ${id}`));

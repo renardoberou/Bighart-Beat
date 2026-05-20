@@ -25,7 +25,9 @@ assert(html.includes('id="wreckSendStatus"'), 'DIGI WRECK panel exposes a visibl
 assert(/W SENDS OFF/.test(html), 'DIGI WRECK send status has neutral default copy');
 
 const status = extractFunction('wreckSendStatusText');
-assert(/TRACKS\.some\([^)]*wreckS/.test(status), 'status helper detects when any track has W enabled');
+assert(/function\s+hasWreckSend\s*\(\)\s*\{/.test(js), 'runtime defines a shared active W-send predicate');
+assert(/TRACKS\.some\([^)]*wreckS/.test(extractFunction('hasWreckSend')), 'shared active W-send predicate detects when any track has W enabled');
+assert(/hasWreckSend\(\)/.test(status), 'status helper reuses the shared active W-send predicate');
 assert(/shouldFeedWreckProcessor\(\)/.test(status), 'status helper uses the same audible return predicate as routing');
 assert(/WRECK RETURN OFF/.test(status), 'status helper warns when W sends are enabled but return is inaudible');
 assert(/WRECK SEND (READY|ACTIVE)/.test(status), 'status helper reports an active/ready state when return is audible');
@@ -37,7 +39,7 @@ assert(/wreck-send-status--warn/.test(update), 'runtime applies an obvious warni
 assert(/wreck-send-status--active/.test(update), 'runtime applies an obvious active state class');
 
 const buildMix = extractFunction('buildMix');
-assert(/if\s*\(k\s*===\s*'wreckS'\)\s*updateWreckSendStatus\(\)/.test(buildMix), 'W button toggles refresh the W send status immediately');
+assert(/if\s*\(k\s*===\s*'wreckS'\)\s*\{[\s\S]*updateWreckSendStatus\(\)[\s\S]*updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)[\s\S]*\}/.test(buildMix), 'W button toggles refresh W send status and processor feed immediately');
 
 const syncFxControls = extractFunction('syncFxControls');
 assert(/updateWreckSendStatus\(\)/.test(syncFxControls), 'global FX sync refreshes W send status');
