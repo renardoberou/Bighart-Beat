@@ -86,6 +86,11 @@
     const outputTrim = clamp((1 - open * 0.10 - open * open * 0.16 - instability * 0.20 - accentedHit * 0.08) * characterTrim, 0.62, 1);
     const airLowpassHz = clamp(freq * profile.bright * characterAirDamp * (1.35 - open * 0.22) * (1 - softHit * 0.08 + accentedHit * 0.04), 8500, 18000);
     const airLowpassQ = clamp(0.45 + instability * 2, 0.2, 0.9);
+    const openShape = smoothstep01(open);
+    const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25), 0, 0.085);
+    const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + accentedHit * 0.08), 0.006, 0.72);
+    const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
+    const openShimmerQ = clamp(1.6 + open * 1.2 + instability * 10, 1.2, 4.2);
 
     return {
       engine,
@@ -109,6 +114,10 @@
       outputTrim,
       airLowpassHz,
       airLowpassQ,
+      openShimmerGain,
+      openShimmerTailSec,
+      openShimmerHz,
+      openShimmerQ,
       oscType: profile.oscType,
       ratios,
       oscillatorFrequencies,

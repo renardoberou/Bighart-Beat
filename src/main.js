@@ -595,6 +595,7 @@ function synthHihat(t, v, p) {
   const spec = HihatVoice.resolveHihatVoiceSpec(S.engine, p, Math.random, v);
   const hihatTailSec = Math.max(
     spec.noiseTailSec + spec.tailReleaseTau * 4,
+    spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
     spec.metalGain > 0.001 ? spec.metalTailSec + .025 : 0,
     spec.glitchWillFire ? .010 : 0
   );
@@ -621,6 +622,17 @@ function synthHihat(t, v, p) {
   ng.gain.exponentialRampToValueAtTime(.001, t + spec.noiseTailSec);
   ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(choke);
   ns.start(t); ns.stop(t + spec.noiseTailSec + spec.tailReleaseTau * 4);
+  if (spec.openShimmerGain > 0.001) {
+    const shimmer = A.createBufferSource(); shimmer.buffer = nz; shimmer.loop = true;
+    const sf = A.createBiquadFilter(); sf.type = 'bandpass'; sf.frequency.value = spec.openShimmerHz; sf.Q.value = spec.openShimmerQ;
+    const sg = A.createGain();
+    sg.gain.setValueAtTime(0, t);
+    sg.gain.linearRampToValueAtTime(clamp(v * spec.openShimmerGain, 0, .085), t + spec.attackSec);
+    sg.gain.setTargetAtTime(.001, t + spec.openShimmerTailSec * spec.openTailDamp, spec.tailReleaseTau);
+    sg.gain.exponentialRampToValueAtTime(.001, t + spec.openShimmerTailSec);
+    shimmer.connect(sf); sf.connect(sg); sg.connect(choke);
+    shimmer.start(t); shimmer.stop(t + spec.openShimmerTailSec + spec.tailReleaseTau * 4);
+  }
   // metallic tone mix — only if metal > 0
   if (spec.metalGain > 0.001) {
     const mg = A.createGain();

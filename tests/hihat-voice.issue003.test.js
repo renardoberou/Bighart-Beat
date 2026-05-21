@@ -33,7 +33,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -53,6 +53,10 @@ function assertFiniteBounded(spec, label) {
   assert(spec.outputTrim >= 0.62 && spec.outputTrim <= 1, `${label}: output trim is bounded for hihat headroom`);
   assert(spec.airLowpassHz >= 8500 && spec.airLowpassHz <= 18000, `${label}: air lowpass is bright but bounded`);
   assert(spec.airLowpassQ >= 0.2 && spec.airLowpassQ <= 0.9, `${label}: air lowpass Q is gentle and mobile-safe`);
+  assert(spec.openShimmerGain >= 0 && spec.openShimmerGain <= 0.085, `${label}: open shimmer gain remains headroom-safe`);
+  assert(spec.openShimmerTailSec >= 0.006 && spec.openShimmerTailSec <= 0.72, `${label}: open shimmer tail is bounded/mobile-safe`);
+  assert(spec.openShimmerHz >= 6500 && spec.openShimmerHz <= 18000, `${label}: open shimmer frequency is bright but bounded`);
+  assert(spec.openShimmerQ >= 1.2 && spec.openShimmerQ <= 4.2, `${label}: open shimmer Q is focused but bounded`);
   assert(spec.glitchChance >= 0 && spec.glitchChance <= 0.30, `${label}: glitch chance remains bounded`);
   assert(spec.glitchGain >= 0 && spec.glitchGain <= 0.06, `${label}: glitch gain remains bounded/headroom-safe`);
   assert(spec.idmEdge >= 0 && spec.idmEdge <= 1, `${label}: IDM edge normalized and bounded`);
@@ -149,6 +153,12 @@ assert(open.transientGain < closed.transientGain, 'open hihat trims transient ga
 assert(tight.outputTrim < closed.outputTrim, 'tight hihat trims post-choke output more than closed for tail headroom');
 assert(open.outputTrim < tight.outputTrim, 'open hihat has the strongest post-choke trim for long-tail headroom');
 assert(open.airLowpassHz < closed.airLowpassHz, 'open hihat gently darkens the longest tail to avoid harsh buildup');
+assert(closed.openShimmerGain <= 0.001, 'closed hihat keeps the added open shimmer effectively silent');
+assert(tight.openShimmerGain > closed.openShimmerGain, 'tight hihat introduces a little open shimmer presence');
+assert(open.openShimmerGain > tight.openShimmerGain, 'open hihat has the clearest shimmer presence');
+assert(open.openShimmerTailSec > tight.openShimmerTailSec, 'open hihat shimmer tail blooms longer than tight hihat');
+assert(accentedOpen909.openShimmerGain > normalOpen909.openShimmerGain, 'accented open 909 hihat has stronger shimmer presence than normal open hit');
+assert(accentedOpen909.openShimmerHz > normalOpen909.openShimmerHz, 'accented open 909 hihat pushes shimmer brighter than normal open hit');
 
 for (const engine of ['808', '909', 'reznor', 'aphex']) {
   const highClosed = resolveHihatVoiceSpec(engine, { ...baseParams, open: 0, decay: 0.40 }, () => 0.5);
@@ -201,5 +211,9 @@ assert(/choke\.connect\(hatPolish\);\s*hatPolish\.connect\(hatAir\);\s*hatAir\.c
 assert(/choke\.gain\.setTargetAtTime\(\.0008,\s*t\s*\+\s*spec\.noiseTailSec,\s*spec\.tailReleaseTau\)/.test(main), 'hihat choke release uses resolver tailReleaseTau');
 assert(/ng\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.noiseGain \* spec\.transientGain,\s*0,\s*\.72\),\s*t \+ spec\.attackSec\);\s*ng\.gain\.setTargetAtTime\(\.001,\s*t \+ spec\.noiseTailSec \* spec\.openTailDamp,\s*spec\.tailReleaseTau\)/.test(main), 'hihat noise tail uses resolver damping and release tau');
 assert(/mg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.metalGain \* spec\.tailHeadroomTrim,\s*0,\s*\.34\),\s*t \+ Math\.max\(\.0008,\s*spec\.attackSec \* \.8\)\)/.test(main), 'hihat metallic layer uses resolver tail headroom trim');
+assert(/if \(spec\.openShimmerGain > 0\.001\)/.test(main), 'synthHihat adds open-hat shimmer only when resolver enables it');
+assert(/sf\.frequency\.value\s*=\s*spec\.openShimmerHz/.test(main), 'hihat shimmer filter uses resolver frequency');
+assert(/sg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openShimmerGain,\s*0,\s*\.085\),\s*t \+ spec\.attackSec\)/.test(main), 'hihat shimmer gain uses resolver gain and headroom cap');
+assert(/shimmer\.connect\(sf\);\s*sf\.connect\(sg\);\s*sg\.connect\(choke\);/.test(main), 'open hihat shimmer routes through hihat choke');
 
 console.log('Issue 003 hihat voice resolver checks passed.');
