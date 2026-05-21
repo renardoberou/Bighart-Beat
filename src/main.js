@@ -41,6 +41,7 @@ const NON_KICK_PUMP_WEIGHT = 0.35;
 const DLY_SEND_TRIM = 0.55;
 const REV_SEND_TRIM = 0.5;
 const WRECK_SEND_TRIM = 0.7;
+const ROUTE_VOICE_DEFAULT_CLEANUP_TAIL_SEC = 3;
 const GATE_ANALOG_JITTER_MS = 6;
 const GATE_ANALOG_CLOSED_DB = 3;
 const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
@@ -383,28 +384,43 @@ function genRevIR() {
 /* ═══════════════════════════════════════════════
    VOICE SYNTHESIS — made to sound superb
 ═══════════════════════════════════════════════ */
-function routeVoice(t, ti) {
+function scheduleRouteVoiceCleanup(nodes, t, cleanupTailSec) {
+  const boundedTailSec = Number.isFinite(cleanupTailSec) ? Math.max(0, cleanupTailSec) : ROUTE_VOICE_DEFAULT_CLEANUP_TAIL_SEC;
+  const delaySec = Math.max(0, t - A.currentTime) + boundedTailSec;
+  setTimeout(() => {
+    nodes.forEach(node => {
+      try { node.disconnect(); } catch (err) {}
+    });
+  }, delaySec * 1000);
+}
+
+function routeVoice(t, ti, cleanupTailSec) {
   // create a per-hit gain so we can split to bus, delaySend, revSend at track-level
   const tr = TRACKS[ti];
   const out = A.createGain();
+  const routeNodes = [out];
   out.gain.value = tr.vol;
   out.connect(N.bus);
   const delaySendActive = tr.dlyS && FX.dly.on && FX.dly.wet > 0;
   if (delaySendActive) {
     const ds = A.createGain(); ds.gain.value = DLY_SEND_TRIM;
     out.connect(ds); ds.connect(N.dlyLine);
+    routeNodes.push(ds);
   }
   const reverbSendActive = tr.revS && FX.rev.on && FX.rev.wet > 0;
   if (reverbSendActive) {
     const rs = A.createGain(); rs.gain.value = REV_SEND_TRIM;
     out.connect(rs); rs.connect(N.revSend);
+    routeNodes.push(rs);
     triggerGate(t);
   }
   const wreckSendActive = tr.wreckS && shouldFeedWreckProcessor();
   if (wreckSendActive) {
     const ws = A.createGain(); ws.gain.value = WRECK_SEND_TRIM;
     out.connect(ws); ws.connect(N.wreckIn);
+    routeNodes.push(ws);
   }
+  if (typeof scheduleRouteVoiceCleanup === 'function') scheduleRouteVoiceCleanup(routeNodes, t, cleanupTailSec);
   return out;
 }
 
@@ -449,8 +465,8 @@ function triggerCompGate(t, trackId) {
 
 // ── KICK ── deep thump with click and saturation
 function synthKick(t, v, p) {
-  const dest = routeVoice(t, 0);
   const spec = KickVoice.resolveKickVoiceSpec(S.engine, p, v);
+  const dest = routeVoice(t, 0, Math.max(spec.oscStopSec, spec.subStopSec, .025));
   // body oscillator (sine with pitch drop)
   const o = A.createOscillator(); o.type = 'sine';
   o.frequency.setValueAtTime(spec.attackHz, t);                 // attack spike
@@ -485,8 +501,8 @@ function synthKick(t, v, p) {
 
 // ── SNARE ── noise + pitched shell + crack
 function synthSnare(t, v, p) {
-  const dest = routeVoice(t, 1);
   const spec = SnareVoice.resolveSnareVoiceSpec(S.engine, p, v);
+  const dest = routeVoice(t, 1, Math.max(spec.noiseStopSec, spec.shellStopSec, spec.crackStopSec));
   // noise body (bandpass 1.5–4kHz)
   const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
   const nf = A.createBiquadFilter();  nf.type = 'bandpass'; nf.frequency.value = spec.noiseBandpassHz; nf.Q.value = .5;
@@ -538,8 +554,13 @@ function triggerHihatChoke(t, openAmount, choke, spec) {
 
 // ── HIHAT ── highpass noise + engine-aware metallic ratios on existing HHT open control
 function synthHihat(t, v, p) {
-  const dest = routeVoice(t, 2);
   const spec = HihatVoice.resolveHihatVoiceSpec(S.engine, p, Math.random, v);
+  const hihatTailSec = Math.max(
+    spec.noiseTailSec + spec.tailReleaseTau * 4,
+    spec.metalGain > 0.001 ? spec.metalTailSec + .025 : 0,
+    spec.glitchWillFire ? .010 : 0
+  );
+  const dest = routeVoice(t, 2, hihatTailSec);
   const choke = A.createGain();
   choke.gain.setValueAtTime(0, t);
   choke.gain.linearRampToValueAtTime(1, t + spec.attackSec);
@@ -629,8 +650,9 @@ function previewEngineKit() {
 
 // ── CLAP ── 3 short bursts + tail
 function synthClap(t, v, p) {
-  const dest = routeVoice(t, 3);
   const spec = ClapVoice.resolveClapVoiceSpec(S.engine, p, v);
+  const clapTailSec = spec.bursts.reduce((tailSec, b) => Math.max(tailSec, b.offsetSec + b.durationSec + spec.stopPaddingSec), 0);
+  const dest = routeVoice(t, 3, clapTailSec);
   for (const b of spec.bursts) {
     const bt = t + b.offsetSec;
     const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
@@ -651,13 +673,13 @@ function synthClap(t, v, p) {
 function synthInput(t, v, p) {
   const tr = TRACKS[4];
   if (!tr.smp) return;
-  const dest = routeVoice(t, 4);
-  const src = A.createBufferSource(); src.buffer = tr.smp;
-  src.playbackRate.value = p.pitch;
   const rate = Math.max(.01, Math.abs(p.pitch || 1));
   const sampleDur = tr.smp.duration / rate;
   const dur = p.decay < 1.0 ? sampleDur * p.decay : sampleDur;
   const stopAt = t + Math.min(dur + .05, sampleDur + .05);
+  const dest = routeVoice(t, 4, stopAt - t);
+  const src = A.createBufferSource(); src.buffer = tr.smp;
+  src.playbackRate.value = p.pitch;
   const g = A.createGain();
   g.gain.setValueAtTime(v, t);
   if (p.decay < 1.0) {
@@ -674,7 +696,8 @@ function synthInput(t, v, p) {
 
 // ── ETHER ── EM-field interference (preserved from v3)
 function synthEther(t, v, p) {
-  const dest = routeVoice(t, 5);
+  const etherTailSec = Math.max(0, p.decay + .06);
+  const dest = routeVoice(t, 5, etherTailSec);
   const doHum   = p.mode === 'hum'   || p.mode === 'ether';
   const doClock = p.mode === 'clock' || p.mode === 'ether';
   const doWifi  = p.mode === 'wifi'  || p.mode === 'ether';
@@ -774,8 +797,8 @@ function applySynthGlideFrequency(frequencyParam, targetHz, t, spec, shouldGlide
 
 // ── SYNTH ── playable monophonic row with engine-selected personalities
 function synthSynth(t, v, p) {
-  const dest = routeVoice(t, 6);
   const spec = SynthVoice.resolveSynthVoiceSpec(S.engine, p);
+  const dest = routeVoice(t, 6, spec.stopSec);
   const voiceGain = A.createGain();
   voiceGain.gain.setValueAtTime(0, t);
   voiceGain.gain.linearRampToValueAtTime(clamp(v * spec.bodyGain, 0, .7), t + spec.attackSec);

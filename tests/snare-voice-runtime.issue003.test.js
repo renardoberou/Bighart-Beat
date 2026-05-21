@@ -94,8 +94,8 @@ assert(
   'synthSnare uses resolved crack stop time',
 );
 assert(
-  /const\s+dest\s*=\s*routeVoice\(t,\s*1\)/.test(main),
-  'snare remains routed through the track send router',
+  /const\s+dest\s*=\s*routeVoice\(t,\s*1,\s*Math\.max\(spec\.noiseStopSec,\s*spec\.shellStopSec,\s*spec\.crackStopSec\)\)/.test(main),
+  'snare remains routed through the track send router with its resolved tail',
 );
 
 console.log('Issue 003 snare voice runtime wiring checks passed.');

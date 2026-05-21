@@ -34,8 +34,8 @@ assert(
   'synthClap resolves bounded engine-aware clap spec from selected engine, params, and velocity',
 );
 assert(
-  /const\s+dest\s*=\s*routeVoice\(t,\s*3\)/.test(main),
-  'clap remains routed through the track send router',
+  /const\s+dest\s*=\s*routeVoice\(t,\s*3,\s*clapTailSec\)/.test(main),
+  'clap remains routed through the track send router with its resolved tail',
 );
 assert(
   /for\s*\(const\s+b\s+of\s+spec\.bursts\)/.test(main),
