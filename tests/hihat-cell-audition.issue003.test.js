@@ -23,8 +23,12 @@ assert(
   'OHH branch sets the step to open before previewing'
 );
 assert(
-  /buildSeq\(\)[\s\S]*renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*\)\s*previewHihat\(\s*1\s*\)[\s\S]*return;/.test(openBranch),
+  /buildSeq\(\)[\s\S]*renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*(?:&&\s*!wasOn\s*)?\)\s*previewHihat\(\s*1\s*\)[\s\S]*return;/.test(openBranch),
   'OHH click previews open hihat only while stopped, after build/render/autosave and before return'
+);
+assert(
+  /buildSeq\(\)[\s\S]*renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*&&\s*!wasOn\s*\)\s*previewHihat\(\s*1\s*\)[\s\S]*return;/.test(openBranch),
+  'OHH click audition is result-aware: only OFF→ON open-hihat placement previews, ON→OFF removal stays silent'
 );
 
 const placementBranchStart = clickBlock.indexOf("if (trackId === 'hihat' && PATTERNS[S.patt][trackId][i] && trackIndex === S.sel) {");
@@ -49,8 +53,12 @@ assert(
   'normal HHT toggle preserves clear/set openness semantics'
 );
 assert(
-  /renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*trackId\s*===\s*['"]hihat['"]\s*&&\s*!S\.playing\s*\)\s*previewHihat\(\s*State\.getHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)\s*\)/.test(normalBranch),
+  /renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*trackId\s*===\s*['"]hihat['"]\s*&&\s*!S\.playing\s*(?:&&\s*!wasOn\s*)?\)\s*previewHihat\(\s*State\.getHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)\s*\)/.test(normalBranch),
   'normal HHT toggle previews the current stored openness only while stopped, after mutation/build/autosave'
+);
+assert(
+  /renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*trackId\s*===\s*['"]hihat['"]\s*&&\s*!S\.playing\s*&&\s*!wasOn\s*\)\s*previewHihat\(\s*State\.getHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)\s*\)/.test(normalBranch),
+  'normal HHT toggle audition is result-aware: only OFF→ON hihat placement previews, ON→OFF deletion stays silent'
 );
 
 assert(

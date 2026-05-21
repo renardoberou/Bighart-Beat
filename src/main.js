@@ -1232,7 +1232,7 @@ function buildSeq() {
           buildSeq();
           renderRhythmIntelligence();
           autosave();
-          if (!S.playing) previewHihat(1);
+          if (!S.playing && !wasOn) previewHihat(1);
           return;
         }
         if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT) {
@@ -1269,8 +1269,8 @@ function buildSeq() {
         else refreshCell();
         renderRhythmIntelligence();
         autosave();
-        if (trackId === 'hihat' && !S.playing) previewHihat(State.getHihatOpenness(HHT_OPENNESS[S.patt], i));
-        if (!S.playing) {
+        if (trackId === 'hihat' && !S.playing && !wasOn) previewHihat(State.getHihatOpenness(HHT_OPENNESS[S.patt], i));
+        if (!S.playing && !wasOn) {
           if (trackId === 'kick') previewVoice(0, synthKick);
           if (trackId === 'snare') previewVoice(1, synthSnare);
           if (trackId === 'clap') previewVoice(3, synthClap);

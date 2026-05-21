@@ -19,8 +19,13 @@ assert(normalBranchStart >= 0, 'click handler has a normal toggle branch');
 const normalBranch = clickBlock.slice(normalBranchStart);
 
 assert(
-  /renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*\)\s*\{[\s\S]*previewVoice\s*\(\s*0\s*,\s*synthKick\s*\)[\s\S]*previewVoice\s*\(\s*1\s*,\s*synthSnare\s*\)[\s\S]*previewVoice\s*\(\s*3\s*,\s*synthClap\s*\)[\s\S]*previewInput\s*\(\s*\)[\s\S]*previewVoice\s*\(\s*5\s*,\s*synthEther\s*\)[\s\S]*\}/.test(normalBranch),
+  /renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*(?:&&\s*!wasOn\s*)?\)\s*\{[\s\S]*previewVoice\s*\(\s*0\s*,\s*synthKick\s*\)[\s\S]*previewVoice\s*\(\s*1\s*,\s*synthSnare\s*\)[\s\S]*previewVoice\s*\(\s*3\s*,\s*synthClap\s*\)[\s\S]*previewInput\s*\(\s*\)[\s\S]*previewVoice\s*\(\s*5\s*,\s*synthEther\s*\)[\s\S]*\}/.test(normalBranch),
   'normal stopped cell toggles preview KCK/SNR/CLP/INP/ETH after render/autosave behind a !S.playing gate'
+);
+
+assert(
+  /renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*&&\s*!wasOn\s*\)\s*\{[\s\S]*previewVoice\s*\(\s*0\s*,\s*synthKick\s*\)[\s\S]*previewVoice\s*\(\s*1\s*,\s*synthSnare\s*\)[\s\S]*previewVoice\s*\(\s*3\s*,\s*synthClap\s*\)[\s\S]*previewInput\s*\(\s*\)[\s\S]*previewVoice\s*\(\s*5\s*,\s*synthEther\s*\)[\s\S]*\}/.test(normalBranch),
+  'normal stopped KCK/SNR/CLP/INP/ETH auditions are result-aware: only OFF→ON toggles preview, ON→OFF deletion stays silent'
 );
 
 assert(
