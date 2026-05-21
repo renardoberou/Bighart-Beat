@@ -1889,9 +1889,17 @@ function syncEngineSelector() {
   $('engineSel').querySelectorAll('[data-engine]').forEach(b => b.classList.toggle('on', b.dataset.engine === S.engine));
 }
 
+function syncToggleButton(buttonOrId, active) {
+  const button = typeof buttonOrId === 'string' ? $(buttonOrId) : buttonOrId;
+  if (!button) return;
+  const isActive = !!active;
+  button.classList.toggle('on', isActive);
+  button.setAttribute('aria-pressed', String(isActive));
+}
+
 function syncFxControls() {
-  $('togDly').classList.toggle('on', FX.dly.on);
-  $('togRev').classList.toggle('on', FX.rev.on);
+  syncToggleButton($('togDly'), FX.dly.on);
+  syncToggleButton($('togRev'), FX.rev.on);
   $('dlyDiv').querySelectorAll('.div-b').forEach(b =>
     b.classList.toggle('on', Math.abs(parseFloat(b.dataset.d) - FX.dly.mult) < .001)
   );
@@ -1902,8 +1910,8 @@ function syncFxControls() {
   setFdr('revDamp', Math.round(FX.rev.damp * 100), v => v + '%');
   setFdr('revGate', FX.rev.gate, v => v + ' ms');
   setFdr('revWet',  Math.round(FX.rev.wet * 100),  v => v + '%');
-  $('togComp').classList.toggle('on', FX.comp.on);
-  $('togCompGate').classList.toggle('on', FX.comp.gateOn);
+  syncToggleButton($('togComp'), FX.comp.on);
+  syncToggleButton($('togCompGate'), FX.comp.gateOn);
   $('compDetector').querySelectorAll('.div-b').forEach(b =>
     b.classList.toggle('on', b.dataset.det === FX.comp.detector)
   );
@@ -1913,7 +1921,7 @@ function syncFxControls() {
   setFdr('compRelease', FX.comp.release, v => v + ' ms');
   setFdr('compGateThresh', FX.comp.gateThreshold, v => v + ' dB');
   setFdr('compGateRate', FX.comp.gateRate, v => v + ' ms');
-  $('togWreck').classList.toggle('on', FX.wreck.on);
+  syncToggleButton($('togWreck'), FX.wreck.on);
   $('wreckMode').querySelectorAll('.div-b').forEach(b =>
     b.classList.toggle('on', b.dataset.curve === FX.wreck.curve)
   );
@@ -2106,7 +2114,7 @@ function wire() {
   // delay
   $('togDly').addEventListener('click', () => {
     FX.dly.on = !FX.dly.on;
-    $('togDly').classList.toggle('on', FX.dly.on);
+    syncToggleButton('togDly', FX.dly.on);
     applyFXState();
     autosave();
   });
@@ -2126,7 +2134,7 @@ function wire() {
   // reverb
   $('togRev').addEventListener('click', () => {
     FX.rev.on = !FX.rev.on;
-    $('togRev').classList.toggle('on', FX.rev.on);
+    syncToggleButton('togRev', FX.rev.on);
     applyFXState();
     autosave();
   });
@@ -2138,13 +2146,13 @@ function wire() {
   // pump compressor / gate
   $('togComp').addEventListener('click', () => {
     FX.comp.on = !FX.comp.on;
-    $('togComp').classList.toggle('on', FX.comp.on);
+    syncToggleButton('togComp', FX.comp.on);
     applyFXState();
     autosave();
   });
   $('togCompGate').addEventListener('click', () => {
     FX.comp.gateOn = !FX.comp.gateOn;
-    $('togCompGate').classList.toggle('on', FX.comp.gateOn);
+    syncToggleButton('togCompGate', FX.comp.gateOn);
     applyFXState();
     autosave();
   });
@@ -2169,7 +2177,7 @@ function wire() {
   // DIGI WRECK compact digital destruction
   $('togWreck').addEventListener('click', () => {
     FX.wreck.on = !FX.wreck.on;
-    $('togWreck').classList.toggle('on', FX.wreck.on);
+    syncToggleButton('togWreck', FX.wreck.on);
     applyFXState();
     autosave();
   });

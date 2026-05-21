@@ -1119,6 +1119,20 @@ body.running #ss  { display: none; }
 .fx-tog.on { background: var(--amber); }
 .fx-tog.on::after { transform: translateX(14px); }
 
+@media (pointer: coarse), (max-width: 640px) {
+  .fx-tog {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 15px 8px;
+    background-clip: content-box;
+    touch-action: manipulation;
+  }
+  .fx-tog::after {
+    top: 16px;
+    left: 9px;
+  }
+}
+
 /* division selector for delay */
 .div-row {
   display: flex; gap: 3px;
