@@ -717,6 +717,20 @@ body.running #ss  { display: none; }
   pointer-events: none;
 }
 .sc.hht-open::after { font-weight: 800; }
+.sc.hht-accent { outline: 2px solid #fff4c5; outline-offset: -3px; }
+.sc.hht-accent::before {
+  content: attr(data-acc);
+  position: absolute;
+  right: 2px;
+  top: 1px;
+  z-index: 2;
+  font-size: 7px;
+  line-height: 1;
+  color: #090705;
+  font-weight: 800;
+  pointer-events: none;
+}
+.sc.hht-accent:not(.on)::before { color: var(--amberLt); }
 .row[data-id="clap"]  .sc.on { background: var(--t-clp); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 6px rgba(82,168,216,.35); }
 .row[data-id="input"] .sc.on { background: var(--t-inp); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 6px rgba(74,184,112,.35); }
 .row[data-id="ether"] .sc.on { background: var(--t-eth); box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 6px rgba(200,200,248,.4); }

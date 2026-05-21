@@ -64,7 +64,7 @@ assert(
   'synthHihat uses resolver-provided metalTailSec for metallic hihat tail shaping'
 );
 assert(
-  /function\s+previewHihat\s*\(\s*openAmount\s*\)\s*\{[\s\S]*const\s+p\s*=\s*\{\s*\.\.\.tr\.p,\s*open:\s*openAmount\s*\}[\s\S]*synthHihat\(t,\s*tr\.vol,\s*p\)/.test(main),
+  /function\s+previewHihat\s*\(\s*openAmount\s*\)\s*\{[\s\S]*const\s+p\s*=\s*\{\s*\.\.\.tr\.p,\s*open:\s*openAmount\s*\}[\s\S]*synthHihat\(t,\s*HIHAT_NORMAL_VELOCITY,\s*p\)/.test(main),
   'hihat audition/previews exercise the same open/closed choke path as sequenced playback'
 );
 

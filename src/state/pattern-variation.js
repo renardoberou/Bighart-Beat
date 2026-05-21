@@ -87,6 +87,17 @@
     return clone;
   }
 
+  function cloneHihatAccentGrid(grid) {
+    const ops = getOps();
+    if (ops && typeof ops.cloneHihatAccentGrid === 'function') return ops.cloneHihatAccentGrid(grid);
+    const clone = Array(STEP_COUNT).fill(0);
+    if (!Array.isArray(grid)) return clone;
+    for (let i = 0; i < Math.min(STEP_COUNT, grid.length); i++) {
+      clone[i] = grid[i] === 1 || grid[i] === true || grid[i] === '1' || grid[i] === 'ACC' || grid[i] === 'acc' ? 1 : 0;
+    }
+    return clone;
+  }
+
   function cloneBanks(banks, cloneGrid, fallbackGrid) {
     const next = Array.isArray(banks) ? banks.slice(0, BANK_COUNT) : [];
     while (next.length < BANK_COUNT) next.push(fallbackGrid());
@@ -108,6 +119,19 @@
 
   function emptyHihatOpennessGrid() {
     return Array(STEP_COUNT).fill(0);
+  }
+
+  function emptyHihatAccentGrid() {
+    return Array(STEP_COUNT).fill(0);
+  }
+
+  function clearInactiveHihatAccents(accentGrid, patternGrid) {
+    const next = cloneHihatAccentGrid(accentGrid);
+    const hihatSteps = patternGrid && Array.isArray(patternGrid.hihat) ? patternGrid.hihat : [];
+    for (let i = 0; i < STEP_COUNT; i++) {
+      if (!hihatSteps[i]) next[i] = 0;
+    }
+    return next;
   }
 
   function validateEdit(edit) {
@@ -226,9 +250,11 @@
     const nextPatterns = cloneBanks(opts.patterns, clonePatternGrid, emptyPatternGrid);
     const nextRatchets = cloneBanks(opts.ratchets, cloneRatchetGrid, emptyRatchetGrid);
     const nextHihatOpenness = cloneBanks(opts.hihatOpenness, cloneHihatOpennessGrid, emptyHihatOpennessGrid);
+    const nextHihatAccent = cloneBanks(opts.hihatAccent, cloneHihatAccentGrid, emptyHihatAccentGrid);
     const targetPattern = clonePatternGrid(nextPatterns[opts.sourceIndex]);
     const targetRatchets = cloneRatchetGrid(nextRatchets[opts.sourceIndex]);
     const targetHihatOpen = cloneHihatOpennessGrid(nextHihatOpenness[opts.sourceIndex]);
+    let targetHihatAccent = clearInactiveHihatAccents(nextHihatAccent[opts.sourceIndex], targetPattern);
     const edit = opts.edit;
     const active = edit.active === true || edit.active === 1 ? 1 : 0;
 
@@ -236,16 +262,21 @@
     targetRatchets[edit.trackId][edit.stepIndex] = active ? (edit.ratchet || 1) : 1;
     if (edit.trackId === 'hihat') {
       targetHihatOpen[edit.stepIndex] = active ? (edit.hihatOpen || 0) : 0;
+      targetHihatAccent[edit.stepIndex] = active ? targetHihatAccent[edit.stepIndex] : 0;
     }
+
+    targetHihatAccent = clearInactiveHihatAccents(targetHihatAccent, targetPattern);
 
     nextPatterns[opts.targetIndex] = targetPattern;
     nextRatchets[opts.targetIndex] = targetRatchets;
     nextHihatOpenness[opts.targetIndex] = targetHihatOpen;
+    nextHihatAccent[opts.targetIndex] = targetHihatAccent;
 
     return {
       patterns: nextPatterns,
       ratchets: nextRatchets,
       hihatOpenness: nextHihatOpenness,
+      hihatAccent: nextHihatAccent,
       targetIndex: opts.targetIndex,
     };
   }

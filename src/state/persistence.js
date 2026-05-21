@@ -141,6 +141,28 @@
     return hihatOpenness.map(bank => bank.slice());
   }
 
+  function createDefaultHihatAccentGrid() {
+    return Array(STEP_COUNT).fill(0);
+  }
+
+  function createHihatAccentBanks() {
+    return Array.from({ length: BANK_COUNT }, createDefaultHihatAccentGrid);
+  }
+
+  function normalizeHihatAccentGrid(grid) {
+    const out = createDefaultHihatAccentGrid();
+    if (!Array.isArray(grid)) return out;
+    for (let i = 0; i < Math.min(STEP_COUNT, grid.length); i++) {
+      const value = grid[i];
+      out[i] = value === 1 || value === true || value === '1' || value === 'ACC' || value === 'acc' ? 1 : 0;
+    }
+    return out;
+  }
+
+  function cloneHihatAccentBanks(hihatAccent) {
+    return Array.from({ length: BANK_COUNT }, (_, i) => normalizeHihatAccentGrid(Array.isArray(hihatAccent) ? hihatAccent[i] : undefined));
+  }
+
   function clonePatternFxScenes(patternFxScenes) {
     const scenes = Array(BANK_COUNT).fill(null);
     if (!Array.isArray(patternFxScenes)) return scenes;
@@ -181,6 +203,7 @@
     };
     if (input.ratchets !== undefined) project.ratchets = cloneRatchets(input.ratchets);
     if (input.hihatOpenness !== undefined) project.hihatOpenness = cloneHihatOpennessBanks(input.hihatOpenness);
+    if (input.hihatAccent !== undefined) project.hihatAccent = cloneHihatAccentBanks(input.hihatAccent);
     if (input.synthNotes !== undefined) project.synthNotes = cloneSynthNotesBanks(input.synthNotes);
     if (input.patternFxScenes !== undefined) project.patternFxScenes = clonePatternFxScenes(input.patternFxScenes);
     project.patternChain = normalizePatternChain(input.patternChain || appState.patternChain || createDefaultPatternChain());
@@ -212,6 +235,7 @@
     validatePatterns(data.patterns, errors);
     validateRatchets(data.ratchets, errors);
     validateHihatOpenness(data.hihatOpenness, errors);
+    validateHihatAccent(data.hihatAccent, errors);
     validateSynthNotes(data.synthNotes, errors);
     validatePatternFxScenes(data.patternFxScenes, errors);
     validatePatternChain(data.patternChain, errors);
@@ -310,6 +334,17 @@
           errors.push('hihatOpenness[' + bankIndex + '][' + stepIndex + '] must be 0, 0.45, or 1');
         }
       });
+    });
+  }
+
+  function validateHihatAccent(hihatAccent, errors) {
+    if (hihatAccent === undefined) return;
+    if (!Array.isArray(hihatAccent) || hihatAccent.length !== BANK_COUNT) {
+      errors.push('hihatAccent must contain exactly 4 banks');
+      return;
+    }
+    hihatAccent.forEach((bank, bankIndex) => {
+      if (!Array.isArray(bank)) errors.push('hihatAccent[' + bankIndex + '] must be an array');
     });
   }
 
@@ -547,6 +582,7 @@
     if (value.swing === undefined) value.swing = 0;
     if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
     if (value.hihatOpenness === undefined) value.hihatOpenness = createHihatOpennessBanks();
+    value.hihatAccent = value.hihatAccent === undefined ? createHihatAccentBanks() : cloneHihatAccentBanks(value.hihatAccent);
     if (value.synthNotes === undefined) value.synthNotes = createSynthNotesBanks();
     if (value.patternFxScenes === undefined) value.patternFxScenes = Array(BANK_COUNT).fill(null);
     value.patternChain = value.patternChain === undefined ? createDefaultPatternChain() : normalizePatternChain(value.patternChain);

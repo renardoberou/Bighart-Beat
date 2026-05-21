@@ -81,7 +81,7 @@ assert(/HHT_PLACE/.test(main) && /PLACE CLOSED/.test(main) && /PLACE TIGHT/.test
 assert(/setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)/.test(main), 'turning HHT step on stores selected placement openness');
 assert(/clearHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)/.test(main), 'turning HHT step off clears/ignores openness');
 assert(/dataset\.hat/.test(main) && /hht-tight/.test(main) && /hht-open/.test(main), 'active HHT cells render visible tight/open markers');
-assert(/synthHihat\(t,\s*v,\s*\{\s*\.\.\.tr\.p,\s*open:\s*getStepHihatOpen\(firingStep\)/.test(main), 'playback passes per-step openness into synthHihat');
+assert(/synthHihat\(t,\s*getStepHihatVelocity\(firingStep\),\s*\{\s*\.\.\.tr\.p,\s*open:\s*getStepHihatOpen\(firingStep\)/.test(main), 'playback passes per-step openness into synthHihat');
 assert(/hihatOpenness:\s*HHT_OPENNESS/.test(main), 'autosave/export includes hihatOpenness');
 assert(/State\.cloneHihatOpennessGrid\(d\.hihatOpenness\[i\]\)/.test(main), 'import applies hihatOpenness banks');
 assert(/\.sc\.hht-tight/.test(css) && /\.sc\.hht-open/.test(css), 'CSS renders tight/open markers for mobile visibility');

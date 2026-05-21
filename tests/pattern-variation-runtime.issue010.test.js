@@ -31,8 +31,8 @@ assert(
   'runtime writes the controlled variation to the next pattern bank'
 );
 assert(
-  /State\.applyControlledPatternVariation\(\{[\s\S]*patterns:\s*PATTERNS[\s\S]*ratchets:\s*RATCHETS[\s\S]*hihatOpenness:\s*HHT_OPENNESS/.test(main),
-  'runtime delegates mutation to pure State.applyControlledPatternVariation helper'
+  /State\.applyControlledPatternVariation\(\{[\s\S]*patterns:\s*PATTERNS[\s\S]*ratchets:\s*RATCHETS[\s\S]*hihatOpenness:\s*HHT_OPENNESS[\s\S]*hihatAccent:\s*HHT_ACCENT/.test(main),
+  'runtime delegates mutation to pure State.applyControlledPatternVariation helper with hihat accent banks'
 );
 assert(
   /PATTERNS\[result\.targetIndex\]\s*=\s*result\.patterns\[result\.targetIndex\]/.test(main),
@@ -45,6 +45,10 @@ assert(
 assert(
   /HHT_OPENNESS\[result\.targetIndex\]\s*=\s*result\.hihatOpenness\[result\.targetIndex\]/.test(main),
   'runtime applies returned target hihat openness bank'
+);
+assert(
+  /HHT_ACCENT\[result\.targetIndex\]\s*=\s*result\.hihatAccent\[result\.targetIndex\]/.test(main),
+  'runtime applies returned target hihat accent bank'
 );
 assert(
   /selectPattern\(result\.targetIndex,\s*\{\s*source:\s*'manual'/.test(main),

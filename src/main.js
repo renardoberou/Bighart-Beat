@@ -21,6 +21,7 @@ const FX = State.createDefaultFxState();
 const PATTERNS = State.createPatternBanks();
 const RATCHETS = State.createRatchetBanks();
 const HHT_OPENNESS = State.createHihatOpennessBanks();
+const HHT_ACCENT = State.createHihatAccentBanks();
 const SYNTH_NOTES = State.createSynthNotesBanks();
 const PATTERN_FX_SCENES = State.createPatternFxScenes();
 const S = State.createAppState();
@@ -48,6 +49,8 @@ const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
 const CHAIN_SLOT_BAR_CHOICES = [1, 2, 4, 8, 16];
 const OPEN_HIHAT_ROW_ID = 'open-hihat';
 const OPEN_HIHAT_ROW_LABEL = 'OHH';
+const HIHAT_NORMAL_VELOCITY = 0.72;
+const HIHAT_ACCENT_VELOCITY = 0.96;
 const hihatChokeState = { gain: null, open: 0 };
 const synthVoiceState = { gain: null, pitchHz: null, triggerTime: null };
 const REV_IR_REBUILD_DEBOUNCE_MS = 50;
@@ -668,7 +671,7 @@ function previewHihat(openAmount) {
   const t = A.currentTime + .015;
   const p = { ...tr.p, open: openAmount };
   triggerCompGate(t, tr.id);
-  synthHihat(t, tr.vol, p);
+  synthHihat(t, HIHAT_NORMAL_VELOCITY, p);
 }
 
 function previewVoice(trackIndex, synthFn) {
@@ -703,7 +706,7 @@ function previewEngineKit() {
   synthSnare(t + .12, snare.vol, snare.p);
 
   triggerCompGate(t + .24, hihat.id);
-  synthHihat(t + .24, hihat.vol, { ...hihat.p, open: HHT_PLACE });
+  synthHihat(t + .24, HIHAT_NORMAL_VELOCITY, { ...hihat.p, open: HHT_PLACE });
 }
 
 // ── CLAP ── 3 short bursts + tail
@@ -938,6 +941,10 @@ function getStepHihatOpen(step) {
   return State.getHihatOpenness(HHT_OPENNESS[S.patt], step);
 }
 
+function getStepHihatVelocity(step) {
+  return State.getHihatAccent(HHT_ACCENT[S.patt], step) ? HIHAT_ACCENT_VELOCITY : HIHAT_NORMAL_VELOCITY;
+}
+
 function getStepSynthRatio(step) {
   return State.getSynthNoteRatio(SYNTH_NOTES[S.patt], step);
 }
@@ -1027,7 +1034,7 @@ function fire(ti, t) {
   switch (tr.id) {
     case 'kick':  synthKick(t, v, tr.p); break;
     case 'snare': synthSnare(t, v, tr.p); break;
-    case 'hihat': synthHihat(t, v, { ...tr.p, open: getStepHihatOpen(firingStep) }); break;
+    case 'hihat': synthHihat(t, getStepHihatVelocity(firingStep), { ...tr.p, open: getStepHihatOpen(firingStep) }); break;
     case 'clap':  synthClap(t, v, tr.p); break;
     case 'input': synthInput(t, v, tr.p); break;
     case 'ether': synthEther(t, v, tr.p); break;
@@ -1272,16 +1279,22 @@ function buildSeq() {
         c.dataset.note = State.formatSynthNoteMarkerLabel(ratio);
       }
       const setHihatCellMarker = () => {
-        c.classList.remove('hht-tight', 'hht-open');
+        c.classList.remove('hht-tight', 'hht-open', 'hht-accent');
         delete c.dataset.hat;
+        delete c.dataset.acc;
         if (trackId !== 'hihat' || !PATTERNS[S.patt][trackId][i]) return;
         const open = State.getHihatOpenness(HHT_OPENNESS[S.patt], i);
+        const accented = State.getHihatAccent(HHT_ACCENT[S.patt], i) === 1;
         if (isOpenHihatRow && open === 1) {
           c.classList.add('hht-open');
           c.dataset.hat = 'open';
         } else if (!isOpenHihatRow && open === 0.45) {
           c.classList.add('hht-tight');
           c.dataset.hat = 'tight';
+        }
+        if (accented) {
+          c.classList.add('hht-accent');
+          c.dataset.acc = 'ACC';
         }
       };
       if (isCellOn()) c.classList.add('on');
@@ -1314,6 +1327,7 @@ function buildSeq() {
         } else if (tr.id === 'hihat') {
           HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
         }
+        if (tr.id === 'hihat' && !PATTERNS[S.patt][trackId][i]) HHT_ACCENT[S.patt] = State.clearHihatAccent(HHT_ACCENT[S.patt], i);
         RATCHETS[S.patt] = State.cycleRatchetCount(RATCHETS[S.patt], tr.id, i);
         if (tr.id === 'hihat') buildSeq();
         else refreshCell();
@@ -1329,11 +1343,14 @@ function buildSeq() {
           if (!wasOn) {
             PATTERNS[S.patt][trackId][i] = 1;
             HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, 1);
+          } else if (trackId === 'hihat' && wasOn && trackIndex === S.sel) {
+            HHT_ACCENT[S.patt] = State.toggleHihatAccent(HHT_ACCENT[S.patt], i);
           } else {
             const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
             PATTERNS[S.patt] = result.pattern;
             RATCHETS[S.patt] = result.ratchets;
             HHT_OPENNESS[S.patt] = State.clearHihatOpenness(HHT_OPENNESS[S.patt], i);
+            HHT_ACCENT[S.patt] = State.clearHihatAccent(HHT_ACCENT[S.patt], i);
           }
           buildSeq();
           renderRhythmIntelligence();
@@ -1362,6 +1379,12 @@ function buildSeq() {
             if (!S.playing) previewHihat(HHT_PLACE);
             return;
           }
+          HHT_ACCENT[S.patt] = State.toggleHihatAccent(HHT_ACCENT[S.patt], i);
+          buildSeq();
+          renderRhythmIntelligence();
+          autosave();
+          if (!S.playing) previewHihat(HHT_PLACE);
+          return;
         }
         const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
         PATTERNS[S.patt] = result.pattern;
@@ -1370,6 +1393,7 @@ function buildSeq() {
           HHT_OPENNESS[S.patt] = wasOn
             ? State.clearHihatOpenness(HHT_OPENNESS[S.patt], i)
             : State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
+          if (wasOn) HHT_ACCENT[S.patt] = State.clearHihatAccent(HHT_ACCENT[S.patt], i);
         }
         if (tr.id === 'hihat') buildSeq();
         else refreshCell();
@@ -1792,7 +1816,7 @@ function autosave() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try {
-      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, synthNotes: SYNTH_NOTES, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain });
+      const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, hihatAccent: HHT_ACCENT, synthNotes: SYNTH_NOTES, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain });
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch(e) {}
   }, 250);
@@ -1946,6 +1970,7 @@ function createRhythmActionVariation() {
     pattern: PATTERNS[S.patt],
     ratchets: RATCHETS[S.patt],
     hihatOpenness: HHT_OPENNESS[S.patt],
+    hihatAccent: HHT_ACCENT[S.patt],
   });
   if (!action || !action.edit) {
     lastBrainLoopResultStatus = '';
@@ -1957,6 +1982,7 @@ function createRhythmActionVariation() {
     patterns: PATTERNS,
     ratchets: RATCHETS,
     hihatOpenness: HHT_OPENNESS,
+    hihatAccent: HHT_ACCENT,
     sourceIndex: S.patt,
     targetIndex: (S.patt + 1) % 4,
     edit: action.edit,
@@ -1964,6 +1990,7 @@ function createRhythmActionVariation() {
   PATTERNS[result.targetIndex] = result.patterns[result.targetIndex];
   RATCHETS[result.targetIndex] = result.ratchets[result.targetIndex];
   HHT_OPENNESS[result.targetIndex] = result.hihatOpenness[result.targetIndex];
+  HHT_ACCENT[result.targetIndex] = result.hihatAccent[result.targetIndex];
   lastBrainLoopResultStatus = formatBrainLoopResultStatus(action, result.targetIndex);
   selectPattern(result.targetIndex, { source: 'manual', autosave: false });
   renderRhythmIntelligence();
@@ -1984,6 +2011,7 @@ function createControlledPatternVariation() {
     patterns: PATTERNS,
     ratchets: RATCHETS,
     hihatOpenness: HHT_OPENNESS,
+    hihatAccent: HHT_ACCENT,
     sourceIndex: S.patt,
     targetIndex: (S.patt + 1) % 4,
     edit: {
@@ -1997,6 +2025,7 @@ function createControlledPatternVariation() {
   PATTERNS[result.targetIndex] = result.patterns[result.targetIndex];
   RATCHETS[result.targetIndex] = result.ratchets[result.targetIndex];
   HHT_OPENNESS[result.targetIndex] = result.hihatOpenness[result.targetIndex];
+  HHT_ACCENT[result.targetIndex] = result.hihatAccent[result.targetIndex];
   selectPattern(result.targetIndex, { source: 'manual', autosave: false });
   renderRhythmIntelligence();
   autosave();
@@ -2132,6 +2161,7 @@ function applyProjectData(d) {
     PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
     RATCHETS[i] = State.cloneRatchetGrid(d.ratchets[i]);
     HHT_OPENNESS[i] = State.cloneHihatOpennessGrid(d.hihatOpenness[i]);
+    HHT_ACCENT[i] = State.cloneHihatAccentGrid(d.hihatAccent && d.hihatAccent[i]);
     SYNTH_NOTES[i] = State.cloneSynthNotesGrid(d.synthNotes && d.synthNotes[i]);
     PATTERN_FX_SCENES[i] = d.patternFxScenes ? State.clonePatternFxScene(d.patternFxScenes[i]) : null;
   }
@@ -2406,6 +2436,7 @@ function wire() {
     PATTERNS[S.patt] = State.clearPattern();
     RATCHETS[S.patt] = State.createDefaultRatchetGrid();
     HHT_OPENNESS[S.patt] = State.createDefaultHihatOpennessGrid();
+    HHT_ACCENT[S.patt] = State.createDefaultHihatAccentGrid();
     SYNTH_NOTES[S.patt] = State.createDefaultSynthNotesGrid();
     buildSeq();
     renderRhythmIntelligence();
@@ -2503,7 +2534,7 @@ function doTap() {
 }
 
 function exportJSON() {
-  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, synthNotes: SYNTH_NOTES, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain, timestamp: new Date().toISOString() });
+  const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, hihatAccent: HHT_ACCENT, synthNotes: SYNTH_NOTES, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain, timestamp: new Date().toISOString() });
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

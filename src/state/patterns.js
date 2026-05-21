@@ -39,8 +39,16 @@
     return Array(STEP_COUNT).fill(0);
   }
 
+  function createDefaultHihatAccentGrid() {
+    return Array(STEP_COUNT).fill(0);
+  }
+
   function createHihatOpennessBanks() {
     return Array.from({ length: BANK_COUNT }, createDefaultHihatOpennessGrid);
+  }
+
+  function createHihatAccentBanks() {
+    return Array.from({ length: BANK_COUNT }, createDefaultHihatAccentGrid);
   }
 
   function cloneHihatOpennessGrid(opennessGrid) {
@@ -48,6 +56,19 @@
     if (!Array.isArray(opennessGrid)) return clone;
     for (let i = 0; i < Math.min(STEP_COUNT, opennessGrid.length); i++) {
       if (isAllowedHihatOpenness(opennessGrid[i])) clone[i] = opennessGrid[i];
+    }
+    return clone;
+  }
+
+  function isAccentOn(value) {
+    return value === 1 || value === true || value === '1' || value === 'ACC' || value === 'acc';
+  }
+
+  function cloneHihatAccentGrid(accentGrid) {
+    const clone = createDefaultHihatAccentGrid();
+    if (!Array.isArray(accentGrid)) return clone;
+    for (let i = 0; i < Math.min(STEP_COUNT, accentGrid.length); i++) {
+      clone[i] = isAccentOn(accentGrid[i]) ? 1 : 0;
     }
     return clone;
   }
@@ -73,6 +94,9 @@
     createDefaultHihatOpennessGrid,
     createHihatOpennessBanks,
     cloneHihatOpennessGrid,
+    createDefaultHihatAccentGrid,
+    createHihatAccentBanks,
+    cloneHihatAccentGrid,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

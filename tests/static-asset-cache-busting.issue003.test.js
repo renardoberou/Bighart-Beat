@@ -9,21 +9,21 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const head = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
 
-const STALE_TOKEN = 'v=boost-week-20260521-bpmnudge';
-const EXPECTED_TOKEN = 'v=boost-week-20260521-cachefresh';
-const localAssetTokenPattern = /[?&]v=boost-week-\d{8}(?:-[a-z0-9-]+)?/g;
+const STALE_TOKEN = 'v=boost-week-20260521-cachefresh';
+const EXPECTED_TOKEN = 'v=hihat-accent-20260521';
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl) {
   assert(
     !assetUrl.includes(STALE_TOKEN),
-    `${assetUrl} must not use stale boost-week cache token ${STALE_TOKEN}`,
+    `${assetUrl} must not use stale cache token ${STALE_TOKEN}`,
   );
 
   const tokenMatches = assetUrl.match(localAssetTokenPattern) || [];
   assert.deepStrictEqual(
     tokenMatches,
     [`?${EXPECTED_TOKEN}`],
-    `${assetUrl} has exactly one current boost-week cache token`,
+    `${assetUrl} has exactly one current hihat accent cache token`,
   );
 }
 
@@ -37,7 +37,7 @@ const localStylesheets = stylesheetHrefs.filter((href) => href.startsWith('style
 assert.deepStrictEqual(
   localStylesheets,
   [`styles/main.css?${EXPECTED_TOKEN}`],
-  'index.html loads local stylesheet with the current boost-week cache token',
+  'index.html loads local stylesheet with the current hihat accent cache token',
 );
 localStylesheets.forEach(assertExactlyOneCurrentToken);
 
@@ -82,7 +82,7 @@ const expectedScriptSrcs = [
 assert.deepStrictEqual(
   scriptSrcs,
   expectedScriptSrcs,
-  'cache busting preserves static script execution order and gives every local script exactly one current boost-week token',
+  'cache busting preserves static script execution order and gives every local script exactly one current hihat accent token',
 );
 scriptSrcs.forEach(assertExactlyOneCurrentToken);
 

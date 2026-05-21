@@ -26,6 +26,10 @@
     }
   }
 
+  function assertHihatAccent(value) {
+    if (value !== 0 && value !== 1) throw new Error('Hihat accent must be exactly 0 or 1');
+  }
+
   function createEmptyGrid() {
     const grid = {};
     TRACK_IDS.forEach(id => { grid[id] = Array(STEP_COUNT).fill(0); });
@@ -65,12 +69,27 @@
     return Array(STEP_COUNT).fill(0);
   }
 
+  function createDefaultHihatAccentGrid() {
+    return Array(STEP_COUNT).fill(0);
+  }
+
   function cloneHihatOpennessGrid(opennessGrid) {
     const clone = createDefaultHihatOpennessGrid();
     if (!Array.isArray(opennessGrid)) return clone;
     for (let i = 0; i < Math.min(STEP_COUNT, opennessGrid.length); i++) {
       if (opennessGrid[i] === 0 || opennessGrid[i] === 0.45 || opennessGrid[i] === 1) clone[i] = opennessGrid[i];
     }
+    return clone;
+  }
+
+  function isAccentOn(value) {
+    return value === 1 || value === true || value === '1' || value === 'ACC' || value === 'acc';
+  }
+
+  function cloneHihatAccentGrid(accentGrid) {
+    const clone = createDefaultHihatAccentGrid();
+    if (!Array.isArray(accentGrid)) return clone;
+    for (let i = 0; i < Math.min(STEP_COUNT, accentGrid.length); i++) clone[i] = isAccentOn(accentGrid[i]) ? 1 : 0;
     return clone;
   }
 
@@ -98,6 +117,29 @@
     if (current === 0) return setHihatOpenness(opennessGrid, stepIndex, 0.45);
     if (current === 0.45) return setHihatOpenness(opennessGrid, stepIndex, 1);
     return setHihatOpenness(opennessGrid, stepIndex, 0);
+  }
+
+  function getHihatAccent(accentGrid, stepIndex) {
+    assertStepIndex(stepIndex);
+    const value = Array.isArray(accentGrid) ? accentGrid[stepIndex] : 0;
+    return isAccentOn(value) ? 1 : 0;
+  }
+
+  function setHihatAccent(accentGrid, stepIndex, value) {
+    assertStepIndex(stepIndex);
+    assertHihatAccent(value);
+    const next = cloneHihatAccentGrid(accentGrid);
+    next[stepIndex] = value;
+    return next;
+  }
+
+  function clearHihatAccent(accentGrid, stepIndex) {
+    if (stepIndex === undefined) return createDefaultHihatAccentGrid();
+    return setHihatAccent(accentGrid, stepIndex, 0);
+  }
+
+  function toggleHihatAccent(accentGrid, stepIndex) {
+    return setHihatAccent(accentGrid, stepIndex, getHihatAccent(accentGrid, stepIndex) ? 0 : 1);
   }
 
   function getRatchetCount(ratchetGrid, trackId, stepIndex) {
@@ -157,6 +199,12 @@
     setHihatOpenness,
     clearHihatOpenness,
     cycleHihatOpenness,
+    createDefaultHihatAccentGrid,
+    cloneHihatAccentGrid,
+    getHihatAccent,
+    setHihatAccent,
+    clearHihatAccent,
+    toggleHihatAccent,
     toggleStep,
     clearPattern,
   };
