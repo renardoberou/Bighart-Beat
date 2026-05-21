@@ -1096,6 +1096,69 @@ function stopPlay() {
    UI LOOP — playhead + VU
 ═══════════════════════════════════════════════ */
 let uiStep = -1;
+const outputVuCache = {
+  ana: null,
+  binCount: 0,
+  buffer: null,
+  root: null,
+  rootChildCount: -1,
+  segments: [],
+  segmentCount: 0,
+  binsPerSegment: 0
+};
+
+function resetOutputVuCache() {
+  outputVuCache.ana = null;
+  outputVuCache.binCount = 0;
+  outputVuCache.buffer = null;
+  outputVuCache.root = null;
+  outputVuCache.rootChildCount = -1;
+  outputVuCache.segments = [];
+  outputVuCache.segmentCount = 0;
+  outputVuCache.binsPerSegment = 0;
+}
+
+function outputVuSegmentsChanged(root) {
+  if (!root || outputVuCache.root !== root) return true;
+  if (outputVuCache.rootChildCount !== root.childElementCount) return true;
+  if (!outputVuCache.segmentCount) return true;
+  for (let i = 0; i < outputVuCache.segmentCount; i++) {
+    const seg = outputVuCache.segments[i];
+    if (!seg || seg.parentElement !== root || root.children[i] !== seg) return true;
+  }
+  return false;
+}
+
+function ensureOutputVuCache(ana) {
+  if (!ana) return null;
+  const root = $('ovu');
+  if (!root) return null;
+  const binCount = ana.frequencyBinCount;
+  const binsChanged = outputVuCache.ana !== ana || outputVuCache.binCount !== binCount || !outputVuCache.buffer;
+  const segmentsChanged = outputVuSegmentsChanged(root);
+
+  if (binsChanged) {
+    outputVuCache.ana = ana;
+    outputVuCache.binCount = binCount;
+    outputVuCache.buffer = new Uint8Array(binCount);
+  }
+
+  if (segmentsChanged) {
+    outputVuCache.root = root;
+    outputVuCache.rootChildCount = root.childElementCount;
+    outputVuCache.segments = Array.prototype.filter.call(root.children, child => child.classList.contains('ovu-s'));
+    outputVuCache.segmentCount = outputVuCache.segments.length;
+  }
+
+  if (binsChanged || segmentsChanged) {
+    outputVuCache.binsPerSegment = outputVuCache.segmentCount
+      ? Math.max(1, Math.floor(outputVuCache.binCount / outputVuCache.segmentCount))
+      : 0;
+  }
+
+  return outputVuCache.segmentCount ? outputVuCache : null;
+}
+
 function uiLoop() {
   requestAnimationFrame(uiLoop);
   if (!A) return;
@@ -1117,14 +1180,17 @@ function uiLoop() {
 
   // output VU
   if (N.ana) {
-    const d = new Uint8Array(N.ana.frequencyBinCount);
-    N.ana.getByteFrequencyData(d);
-    const segs = document.querySelectorAll('.ovu-s');
-    const bpg = Math.floor(d.length / segs.length);
+    const vu = ensureOutputVuCache(N.ana);
+    if (!vu) return;
+    N.ana.getByteFrequencyData(vu.buffer);
+    const d = vu.buffer;
+    const segs = vu.segments;
+    const bpg = vu.binsPerSegment;
     segs.forEach((seg, i) => {
       let s = 0;
-      for (let j = i * bpg; j < (i + 1) * bpg; j++) s += d[j];
+      for (let j = i * bpg; j < (i + 1) * bpg && j < d.length; j++) s += d[j];
       const v = s / bpg / 255;
+      seg.classList.toggle('on', v > .05);
       seg.style.background = v > .72 ? 'var(--redLt)' : v > .42 ? 'var(--amberLt)' : 'var(--greenLt)';
       seg.style.opacity = .1 + v * .9;
     });
@@ -2479,6 +2545,7 @@ function launch() {
     s.className = 'ovu-s';
     ovu.appendChild(s);
   }
+  resetOutputVuCache();
   // restore UI state
   syncMasterControls();
   syncPatternButtons();
