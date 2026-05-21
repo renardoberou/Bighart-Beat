@@ -1270,6 +1270,13 @@ function buildSeq() {
         renderRhythmIntelligence();
         autosave();
         if (trackId === 'hihat' && !S.playing) previewHihat(State.getHihatOpenness(HHT_OPENNESS[S.patt], i));
+        if (!S.playing) {
+          if (trackId === 'kick') previewVoice(0, synthKick);
+          if (trackId === 'snare') previewVoice(1, synthSnare);
+          if (trackId === 'clap') previewVoice(3, synthClap);
+          if (trackId === 'input') previewInput();
+          if (trackId === 'ether') previewVoice(5, synthEther);
+        }
       });
       c.addEventListener('contextmenu', e => {
         e.preventDefault();
