@@ -9,10 +9,16 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const head = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
 
-const EXPECTED_TOKEN = 'v=boost-week-20260521-bpmnudge';
+const STALE_TOKEN = 'v=boost-week-20260521-bpmnudge';
+const EXPECTED_TOKEN = 'v=boost-week-20260521-cachefresh';
 const localAssetTokenPattern = /[?&]v=boost-week-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl) {
+  assert(
+    !assetUrl.includes(STALE_TOKEN),
+    `${assetUrl} must not use stale boost-week cache token ${STALE_TOKEN}`,
+  );
+
   const tokenMatches = assetUrl.match(localAssetTokenPattern) || [];
   assert.deepStrictEqual(
     tokenMatches,
