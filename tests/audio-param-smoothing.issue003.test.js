@@ -81,4 +81,15 @@ assert(
   'fallback clamps the anchor to the requested positive floor'
 );
 
+const staleValueParam = fakeParam(0.73, false);
+sandbox.cancelAndHoldOrSmoothParam(staleValueParam, 3, { floor: 0.0008, fallbackValue: 0.0008, smoothTime: 0.004 });
+assert(
+  staleValueParam.events.some((event) => event[0] === 'setTargetAtTime' && event[1] === 0.0008),
+  'fallback re-anchors from the known-safe fallbackValue instead of stale AudioParam.value'
+);
+assert(
+  !staleValueParam.events.some((event) => event[1] === 0.73),
+  'fallback must not schedule the stale raw AudioParam.value as the smoothing anchor'
+);
+
 console.log('Issue 003 AudioParam smoothing regression checks passed.');

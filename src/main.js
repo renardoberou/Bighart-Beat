@@ -61,8 +61,7 @@ function cancelAndHoldOrSmoothParam(param, t, options = {}) {
   const floor = Number.isFinite(options.floor) ? options.floor : 0;
   const smoothTime = Number.isFinite(options.smoothTime) ? Math.max(0, options.smoothTime) : .003;
   const fallbackValue = Number.isFinite(options.fallbackValue) ? options.fallbackValue : floor;
-  const rawValue = Number.isFinite(param.value) ? param.value : fallbackValue;
-  const anchor = Math.max(floor, rawValue);
+  const anchor = Math.max(floor, fallbackValue);
 
   if (typeof param.cancelScheduledValues === 'function') param.cancelScheduledValues(t);
   if (smoothTime > 0 && typeof param.setTargetAtTime === 'function') {
