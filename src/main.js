@@ -817,7 +817,8 @@ function applySynthGlideFrequency(frequencyParam, targetHz, t, spec, shouldGlide
 }
 
 // ── SYNTH ── playable monophonic row with engine-selected personalities
-function synthSynth(t, v, p) {
+function synthSynth(t, v, p, options = {}) {
+  const audition = options.audition === true;
   const spec = SynthVoice.resolveSynthVoiceSpec(S.engine, p);
   const dest = routeVoice(t, 6, spec.stopSec);
   const voiceGain = A.createGain();
@@ -825,18 +826,22 @@ function synthSynth(t, v, p) {
   voiceGain.gain.linearRampToValueAtTime(clamp(v * spec.bodyGain, 0, .7), t + spec.attackSec);
   voiceGain.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec);
   voiceGain.connect(dest);
-  triggerSynthChoke(t, voiceGain, spec);
+  if (!audition) {
+    triggerSynthChoke(t, voiceGain, spec);
+  }
 
   const osc = A.createOscillator();
   osc.type = spec.oscType;
-  const previousPitchHz = synthVoiceState.pitchHz;
-  const previousTriggerTime = synthVoiceState.triggerTime;
+  const previousPitchHz = audition ? null : synthVoiceState.pitchHz;
+  const previousTriggerTime = audition ? null : synthVoiceState.triggerTime;
   const recentlyTriggered = Number.isFinite(previousTriggerTime) && t >= previousTriggerTime && (t - previousTriggerTime) <= Math.max(spec.stopSec, spec.glideSec);
   const shouldGlide = spec.glideSec > 0 && recentlyTriggered && Number.isFinite(previousPitchHz) && previousPitchHz !== spec.pitchHz;
   applySynthGlideFrequency(osc.frequency, spec.pitchHz, t, spec, shouldGlide, previousPitchHz);
   if (Number.isFinite(spec.detuneCents)) osc.detune.setValueAtTime(spec.detuneCents, t);
-  synthVoiceState.pitchHz = spec.pitchHz;
-  synthVoiceState.triggerTime = t;
+  if (!audition) {
+    synthVoiceState.pitchHz = spec.pitchHz;
+    synthVoiceState.triggerTime = t;
+  }
 
   const filter = A.createBiquadFilter();
   filter.type = spec.filterType;
@@ -886,7 +891,7 @@ function previewSynth() {
   const tr = TRACKS[6];
   const t = A.currentTime + .015;
   triggerCompGate(t, tr.id);
-  synthSynth(t, tr.vol, { ...tr.p, pitch: getStepSynthPitch(LAST_SYNTH_NOTE_STEP) });
+  synthSynth(t, tr.vol, { ...tr.p, pitch: getStepSynthPitch(LAST_SYNTH_NOTE_STEP) }, { audition: true });
 }
 
 function getStepHihatOpen(step) {

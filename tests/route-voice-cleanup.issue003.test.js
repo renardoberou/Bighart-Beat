@@ -12,8 +12,22 @@ function extractFunction(name) {
   const marker = `function ${name}(`;
   const start = js.indexOf(marker);
   assert(start !== -1, `${name} function exists`);
+
+  let paramDepth = 0;
+  let paramsEnd = -1;
+  for (let i = start + marker.length - 1; i < js.length; i++) {
+    if (js[i] === '(') paramDepth++;
+    if (js[i] === ')') paramDepth--;
+    if (paramDepth === 0) {
+      paramsEnd = i;
+      break;
+    }
+  }
+  assert(paramsEnd !== -1, `${name} parameter list closes`);
+
   let depth = 0;
-  const bodyStart = js.indexOf('{', start);
+  const bodyStart = js.indexOf('{', paramsEnd);
+  assert(bodyStart !== -1, `${name} function body opens`);
   for (let i = bodyStart; i < js.length; i++) {
     if (js[i] === '{') depth++;
     if (js[i] === '}') depth--;
