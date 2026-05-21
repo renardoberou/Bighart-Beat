@@ -1442,6 +1442,11 @@ function buildVE() {
     mkRow('TONE',  900, 3000, 10, tr.p.tone, x=>`${x|0} Hz`, v=>tr.p.tone=v, c);
   } else if (tr.id === 'input') {
     // sample picker + pitch/decay
+    const inpTest = document.createElement('div');
+    inpTest.className = 'voice-test';
+    inpTest.innerHTML = `<button class="mstr-btn voice-test__btn" data-voice-test="input">TEST INP</button>`;
+    pn.appendChild(inpTest);
+    inpTest.querySelector('[data-voice-test="input"]').addEventListener('click', () => previewVoice(4, synthInput));
     const ip = document.createElement('div'); ip.className = 'ip-row';
     ip.innerHTML = `
       <div class="ip-info" id="ipInfo">${tr.smpN || 'no sample loaded'}</div>
@@ -1452,6 +1457,11 @@ function buildVE() {
     mkRow('PITCH', 25, 300, 1, Math.round(tr.p.pitch*100), x=>`${(x/100).toFixed(2)}×`, v=>tr.p.pitch=v/100, c);
     mkRow('LEN',   10, 100, 1, Math.round(tr.p.decay*100), x=>`${x}%`, v=>tr.p.decay=v/100, c);
   } else if (tr.id === 'ether') {
+    const ethTest = document.createElement('div');
+    ethTest.className = 'voice-test';
+    ethTest.innerHTML = `<button class="mstr-btn voice-test__btn" data-voice-test="ether">TEST ETH</button>`;
+    pn.appendChild(ethTest);
+    ethTest.querySelector('[data-voice-test="ether"]').addEventListener('click', () => previewVoice(5, synthEther));
     const em = document.createElement('div'); em.className = 'em-row';
     em.innerHTML = `<div class="ve-lbl">MODE</div>
       <div class="em-btns">
