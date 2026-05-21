@@ -175,8 +175,13 @@ assert(/function updateSynthNoteStatus\(\) \{[\s\S]*?querySelector\('\[data-synt
 const noteEditCellTapBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && SYNTH_NOTE_EDIT\) \{[\s\S]*?\n        \}/);
 assert(noteEditCellTapBranch, 'runtime handles selected SYN NOTE EDIT cell taps');
 assert(
-  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?setLastSynthNoteStep\(i\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynth\(\)/.test(noteEditCellTapBranch[0]),
-  'SYN NOTE EDIT cell taps preview the cycled harmonic after state, editor rebuild, rhythm render, and autosave updates'
+  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?setLastSynthNoteStep\(i\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)[\s\S]*?if \(!S\.playing\) previewSynth\(\)/.test(noteEditCellTapBranch[0]),
+  'SYN NOTE EDIT cell taps preview the cycled harmonic only after state, editor rebuild, rhythm render, and autosave updates while transport is stopped'
+);
+const noteEditCellTapBranchWithoutStoppedPreview = noteEditCellTapBranch[0].replace(/if \(!S\.playing\)\s*previewSynth\(\);?/g, '');
+assert(
+  !/previewSynth\(\)/.test(noteEditCellTapBranchWithoutStoppedPreview),
+  'SYN NOTE EDIT cell taps do not include an unconditional preview trigger while transport may be playing'
 );
 assert(!mainJs.includes("'×' + ratio.toFixed"), 'runtime does not duplicate inline synth ratio marker formatting');
 assert(mainJs.includes('synthNotes: SYNTH_NOTES'), 'runtime saves/exports synth note banks');
