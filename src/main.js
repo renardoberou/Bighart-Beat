@@ -722,15 +722,23 @@ function synthInput(t, v, p) {
   const rate = Math.max(.01, Math.abs(p.pitch || 1));
   const sampleDur = tr.smp.duration / rate;
   const dur = p.decay < 1.0 ? sampleDur * p.decay : sampleDur;
-  const stopAt = t + Math.min(dur + .05, sampleDur + .05);
+  const attackSec = .003;
+  const releaseSec = .008;
+  const stopAt = t + Math.min(dur, sampleDur);
+  const attackEnd = Math.min(t + attackSec, stopAt);
+  const fadeStart = Math.min(stopAt, Math.max(attackEnd, stopAt - releaseSec));
   const dest = routeVoice(t, 4, stopAt - t);
   const src = A.createBufferSource(); src.buffer = tr.smp;
   src.playbackRate.value = p.pitch;
   const g = A.createGain();
-  g.gain.setValueAtTime(v, t);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(v, attackEnd);
   if (p.decay < 1.0) {
-    g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    const decayEnd = Math.min(stopAt, Math.max(attackEnd, fadeStart));
+    g.gain.exponentialRampToValueAtTime(.001, decayEnd);
   }
+  g.gain.setValueAtTime(p.decay < 1.0 ? .001 : v, fadeStart);
+  g.gain.linearRampToValueAtTime(0, stopAt);
   src.connect(g); g.connect(dest);
   src.onended = () => {
     try { src.disconnect(); } catch (_) {}

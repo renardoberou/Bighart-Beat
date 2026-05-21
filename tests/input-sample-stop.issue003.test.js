@@ -22,8 +22,37 @@ assert(
   'synthInput derives audible duration from sample duration and decay without shortening full one-shots',
 );
 assert(
-  /g\.gain\.exponentialRampToValueAtTime\(\.001,\s*t \+ dur\)/.test(synthInput),
-  'synthInput keeps short-decay fade envelope ending at the derived audible duration',
+  /const\s+attackSec\s*=\s*\.00[2-5]/.test(synthInput),
+  'synthInput defines a 2-5 ms click-guard micro-attack for arbitrary input samples',
+);
+assert(
+  /const\s+attackEnd\s*=\s*Math\.min\(\s*t \+ attackSec,\s*stopAt\s*\)/.test(synthInput),
+  'synthInput bounds the click-guard attack endpoint at the source stop time for very short samples',
+);
+assert(
+  /g\.gain\.setValueAtTime\(0,\s*t\)/.test(synthInput) && /g\.gain\.linearRampToValueAtTime\(v,\s*attackEnd\)/.test(synthInput),
+  'synthInput ramps input sample gain up from silence to requested velocity over the bounded micro-attack',
+);
+assert(
+  /const\s+releaseSec\s*=\s*\.00[5-9]/.test(synthInput) || /const\s+releaseSec\s*=\s*\.01/.test(synthInput),
+  'synthInput defines a 5-10 ms pre-stop release for full-length and decayed input samples',
+);
+assert(
+  /const\s+fadeStart\s*=\s*Math\.min\(\s*stopAt,\s*Math\.max\(attackEnd,\s*stopAt - releaseSec\)\s*\)/.test(synthInput),
+  'synthInput schedules the stop fade shortly before BufferSource stop time without placing release automation after stop',
+);
+assert(
+  !/const\s+fadeStart\s*=\s*Math\.max\(t,\s*stopAt - releaseSec\)/.test(synthInput) &&
+    !/g\.gain\.setValueAtTime\(v,\s*fadeStart\)/.test(synthInput),
+  'synthInput must not set full velocity at a fadeStart that can equal trigger time and override the click-guard attack for very short full-length samples',
+);
+assert(
+  /g\.gain\.setValueAtTime\(p\.decay\s*<\s*1\.0\s*\?\s*\.001\s*:\s*v,\s*fadeStart\)/.test(synthInput) && /g\.gain\.linearRampToValueAtTime\(0,\s*stopAt\)/.test(synthInput),
+  'synthInput applies a pre-stop release to silence before stopping to prevent clicks/pops without re-amplifying decayed samples',
+);
+assert(
+  /const\s+decayEnd\s*=\s*Math\.min\(\s*stopAt,\s*Math\.max\(attackEnd,\s*fadeStart\)\s*\)/.test(synthInput) && /g\.gain\.exponentialRampToValueAtTime\(\.001,\s*decayEnd\)/.test(synthInput),
+  'synthInput keeps short-decay fade envelope leading into the pre-stop release',
 );
 assert(
   /const\s+stopAt\s*=\s*t \+/.test(synthInput) && /src\.stop\(\s*stopAt\s*\)/.test(synthInput),
