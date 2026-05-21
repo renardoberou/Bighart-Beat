@@ -9,7 +9,17 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const head = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
 
-const EXPECTED_TOKEN = 'v=boost-week-20260520';
+const EXPECTED_TOKEN = 'v=boost-week-20260521';
+const localAssetTokenPattern = /[?&]v=boost-week-\d{8}/g;
+
+function assertExactlyOneCurrentToken(assetUrl) {
+  const tokenMatches = assetUrl.match(localAssetTokenPattern) || [];
+  assert.deepStrictEqual(
+    tokenMatches,
+    [`?${EXPECTED_TOKEN}`],
+    `${assetUrl} has exactly one current boost-week cache token`,
+  );
+}
 
 const stylesheetMatches = [...head.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)];
 const stylesheetHrefs = stylesheetMatches
@@ -23,6 +33,7 @@ assert.deepStrictEqual(
   [`styles/main.css?${EXPECTED_TOKEN}`],
   'index.html loads local stylesheet with the current boost-week cache token',
 );
+localStylesheets.forEach(assertExactlyOneCurrentToken);
 
 const googleFontHrefs = stylesheetHrefs.filter((href) => href.startsWith('https://fonts.googleapis.com/'));
 assert(
@@ -67,5 +78,6 @@ assert.deepStrictEqual(
   expectedScriptSrcs,
   'cache busting preserves static script execution order and gives every local script exactly one current boost-week token',
 );
+scriptSrcs.forEach(assertExactlyOneCurrentToken);
 
 console.log('Static asset cache-busting checks passed.');
