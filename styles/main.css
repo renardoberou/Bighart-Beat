@@ -744,9 +744,11 @@ body.running #ss  { display: none; }
 }
 .row[data-id="synth"] .sc.syn-note:not(.on)::before { color: var(--t-syn); opacity: .85; }
 
-/* playhead */
-.sc.r2::before,
-.sc.r3::before {
+/* ratchet badges */
+.row:not([data-id="synth"]) .sc.r2::before,
+.row:not([data-id="synth"]) .sc.r3::before,
+.row[data-id="synth"] .sc.r2::after,
+.row[data-id="synth"] .sc.r3::after {
   content: attr(data-r);
   position: absolute;
   right: 2px;
@@ -758,16 +760,16 @@ body.running #ss  { display: none; }
   text-shadow: 0 1px 1px rgba(255,255,255,.2);
   pointer-events: none;
 }
-.sc.r3::before { font-weight: 800; }
-.sc.r2:not(.on)::before,
-.sc.r3:not(.on)::before { color: var(--amberLt); }
-.row[data-id="synth"] .sc.syn-note::before { content: attr(data-note); }
+.row:not([data-id="synth"]) .sc.r3::before,
+.row[data-id="synth"] .sc.r3::after { font-weight: 800; }
+.row:not([data-id="synth"]) .sc.r2:not(.on)::before,
+.row:not([data-id="synth"]) .sc.r3:not(.on)::before,
+.row[data-id="synth"] .sc.r2:not(.on)::after,
+.row[data-id="synth"] .sc.r3:not(.on)::after { color: var(--amberLt); }
 
 /* playhead */
-.sc.ph::after {
-  content: ''; position: absolute; inset: 0;
-  background: rgba(255,255,255,.12);
-  pointer-events: none;
+.sc.ph {
+  filter: brightness(1.18);
 }
 .sc.ph.on {
   animation: stepFlash .16s ease-out;
