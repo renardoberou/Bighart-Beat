@@ -1227,6 +1227,7 @@ function buildSeq() {
           buildSeq();
           renderRhythmIntelligence();
           autosave();
+          if (!S.playing) previewHihat(1);
           return;
         }
         if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT) {
@@ -1247,6 +1248,7 @@ function buildSeq() {
             buildSeq();
             renderRhythmIntelligence();
             autosave();
+            if (!S.playing) previewHihat(HHT_PLACE);
             return;
           }
         }
@@ -1262,6 +1264,7 @@ function buildSeq() {
         else refreshCell();
         renderRhythmIntelligence();
         autosave();
+        if (trackId === 'hihat' && !S.playing) previewHihat(State.getHihatOpenness(HHT_OPENNESS[S.patt], i));
       });
       c.addEventListener('contextmenu', e => {
         e.preventDefault();
