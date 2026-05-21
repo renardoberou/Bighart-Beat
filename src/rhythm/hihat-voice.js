@@ -64,12 +64,16 @@
     const bandpassHz = clamp(10500 * profile.bright * jitter(rand, instability), 4500, 18000);
     const bandpassQ = clamp(0.7 + instability * 8, 0.5, 2.5);
     const noiseLevel = clamp(0.42 * profile.noise * (1 - softHit * 0.05) * jitter(rand, instability * 0.6), 0, 0.72);
-    const metalLevel = clamp(metal * (0.14 + profile.tone * 0.18), 0, 0.34);
+    const baseMetalLevel = clamp(metal * (0.14 + profile.tone * 0.18), 0, 0.34);
+    const isAphex = engine === 'aphex';
+    const idmEdge = isAphex ? clamp(0.35 + metal * 0.10 + accentedHit * 0.45 - softHit * 0.25, 0.08, 0.95) : 0;
+    const metalLevel = clamp(baseMetalLevel * (1 + idmEdge * 0.14), 0, 0.34);
     const ratios = profile.ratios.slice(0, 6).map(r => clamp(r, 0.1, 12));
     const oscillatorFrequencies = ratios.map(r => clamp(205 * r * profile.bright * jitter(rand, instability), 80, 18000));
-    const glitchChance = clamp(profile.glitchChance || 0, 0, 0.30);
+    const baseGlitchChance = clamp(profile.glitchChance || 0, 0, 0.30);
+    const glitchChance = clamp(baseGlitchChance * (isAphex ? (0.65 + idmEdge * 0.75) : 1), 0, 0.30);
     const glitchWillFire = glitchChance > 0 && rand01(rand) < glitchChance;
-    const glitchBandpassHz = clamp(7000 * jitter(rand, 0.4), 3500, 14000);
+    const glitchBandpassHz = clamp(7000 * (1 + idmEdge * 0.12) * jitter(rand, 0.4), 3500, 14000);
     const attackSec = clamp(0.0009 + open * 0.0024 + instability * 0.004, 0.0008, 0.004);
     const accentedOpenTailTighten = accentedHit * smoothstep01(open);
     const tailReleaseTau = clamp((0.014 + open * 0.062 + open * open * 0.036 + instability * 0.20) * (1 - accentedOpenTailTighten * 0.10), 0.010, 0.16);
@@ -112,7 +116,8 @@
       glitchChance,
       glitchWillFire,
       glitchBandpassHz,
-      glitchGain: clamp(glitchChance * 0.16, 0, 0.06),
+      glitchGain: clamp(glitchChance * (0.13 + idmEdge * 0.08), 0, 0.06),
+      idmEdge,
       chokeClosedTau: clamp(profile.chokeClosedTau, 0.001, 0.099),
       chokeOpenTau: clamp(Math.max(profile.chokeOpenTau, profile.chokeClosedTau + 0.001), 0.002, 0.10),
       metalHighpassHz: clamp(freq * 0.85 * profile.bright, 2200, 17000),

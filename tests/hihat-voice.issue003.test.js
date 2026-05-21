@@ -33,7 +33,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'glitchChance', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -53,6 +53,9 @@ function assertFiniteBounded(spec, label) {
   assert(spec.outputTrim >= 0.62 && spec.outputTrim <= 1, `${label}: output trim is bounded for hihat headroom`);
   assert(spec.airLowpassHz >= 8500 && spec.airLowpassHz <= 18000, `${label}: air lowpass is bright but bounded`);
   assert(spec.airLowpassQ >= 0.2 && spec.airLowpassQ <= 0.9, `${label}: air lowpass Q is gentle and mobile-safe`);
+  assert(spec.glitchChance >= 0 && spec.glitchChance <= 0.30, `${label}: glitch chance remains bounded`);
+  assert(spec.glitchGain >= 0 && spec.glitchGain <= 0.06, `${label}: glitch gain remains bounded/headroom-safe`);
+  assert(spec.idmEdge >= 0 && spec.idmEdge <= 1, `${label}: IDM edge normalized and bounded`);
   assert(spec.chokeClosedTau > 0, `${label}: closed choke tau positive`);
   assert(spec.chokeClosedTau < spec.chokeOpenTau, `${label}: closed choke tau is shorter than open`);
   assert(spec.chokeOpenTau <= 0.10, `${label}: open choke tau bounded`);
@@ -85,6 +88,21 @@ assert(accentedVelocity.airLowpassHz > normalVelocity.airLowpassHz, 'accented hi
 assert(accentedVelocity.transientGain > normalVelocity.transientGain, 'accented hihat hit has more transient than normal velocity');
 assert(accentedVelocity.outputTrim < normalVelocity.outputTrim, 'accented hihat trims output for headroom');
 assert(accentedVelocity.noiseGain <= normalVelocity.noiseGain, 'accented hihat does not increase raw noise gain before trim');
+
+const softAphex = resolveHihatVoiceSpec('aphex', baseParams, () => 0.5, 0.25);
+const normalAphex = resolveHihatVoiceSpec('aphex', baseParams, () => 0.5, 0.75);
+const accentedAphex = resolveHihatVoiceSpec('aphex', baseParams, () => 0.5, 1.0);
+assert(softAphex.idmEdge < normalAphex.idmEdge, 'soft aphex hihat has calmer IDM edge than normal velocity');
+assert(accentedAphex.idmEdge > normalAphex.idmEdge, 'accented aphex hihat has stronger IDM edge than normal velocity');
+assert(softAphex.glitchChance < normalAphex.glitchChance, 'soft aphex hihat has lower glitch probability than normal velocity');
+assert(accentedAphex.glitchChance > normalAphex.glitchChance, 'accented aphex hihat has higher glitch probability than normal velocity');
+assert(softAphex.glitchGain < normalAphex.glitchGain, 'soft aphex hihat has quieter glitch tick than normal velocity');
+assert(accentedAphex.glitchGain > normalAphex.glitchGain, 'accented aphex hihat has louder-but-bounded glitch tick than normal velocity');
+assert(softAphex.metalLevel < normalAphex.metalLevel, 'soft aphex hihat has calmer metallic edge than normal velocity');
+assert(accentedAphex.metalLevel > normalAphex.metalLevel, 'accented aphex hihat has stronger metallic edge than normal velocity');
+assertFiniteBounded(softAphex, 'soft aphex IDM edge hihat');
+assertFiniteBounded(normalAphex, 'normal aphex IDM edge hihat');
+assertFiniteBounded(accentedAphex, 'accented aphex IDM edge hihat');
 
 const normalOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
 const accentedOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 1.0);
