@@ -901,6 +901,48 @@ body.running #ss  { display: none; }
 }
 .mt-btn.on  { background: var(--amberDim); color: var(--amberLt); border-color: var(--amber); }
 .mt-btn.mute.on { background: var(--red); color: #fff; border-color: var(--redLt); }
+
+@media (max-width: 640px), (pointer: coarse) {
+  .mt {
+    grid-template-columns: 28px minmax(0, 1fr) 30px;
+    grid-template-areas:
+      "name fader value"
+      "toggles toggles toggles";
+  }
+  .mt-n {
+    grid-area: name;
+  }
+  .mt .fdr {
+    grid-area: fader;
+    min-width: 0;
+    height: 44px;
+    touch-action: pan-y;
+  }
+  .fdr::-webkit-slider-thumb {
+    width: 24px; height: 32px;
+    margin-top: -14px;
+  }
+  .fdr::-moz-range-thumb {
+    width: 24px; height: 32px;
+  }
+  .mt-val {
+    grid-area: value;
+  }
+  .mt-toggles {
+    grid-area: toggles;
+    grid-template-columns: repeat(4, 44px);
+    width: max-content;
+    justify-self: center;
+  }
+  .mt-btn {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    touch-action: manipulation;
+  }
+}
+
 .mt-val {
   font-size: 8px;
   color: var(--amberLt);

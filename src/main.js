@@ -1394,10 +1394,10 @@ function buildMix() {
     row.innerHTML = `
       <div class="mt-n" style="color:var(--t-${colKey})">${tr.n}</div>
       <div class="mt-toggles">
-        <button class="mt-btn mute${tr.mute?' on':''}" data-k="mute" title="Mute">M</button>
-        <button class="mt-btn${tr.dlyS?' on':''}" data-k="dlyS" title="Delay send">D</button>
-        <button class="mt-btn${tr.revS?' on':''}" data-k="revS" title="Reverb send">R</button>
-        <button class="mt-btn${tr.wreckS?' on':''}" data-k="wreckS" title="Digi Wreck send">W</button>
+        <button class="mt-btn mute${tr.mute?' on':''}" data-k="mute" title="Mute" aria-label="Mute ${tr.n}" aria-pressed="${tr.mute?'true':'false'}">M</button>
+        <button class="mt-btn${tr.dlyS?' on':''}" data-k="dlyS" title="Delay send" aria-label="Delay send ${tr.n}" aria-pressed="${tr.dlyS?'true':'false'}">D</button>
+        <button class="mt-btn${tr.revS?' on':''}" data-k="revS" title="Reverb send" aria-label="Reverb send ${tr.n}" aria-pressed="${tr.revS?'true':'false'}">R</button>
+        <button class="mt-btn${tr.wreckS?' on':''}" data-k="wreckS" title="Digi Wreck send" aria-label="Digi Wreck send ${tr.n}" aria-pressed="${tr.wreckS?'true':'false'}">W</button>
       </div>
       <input type="range" class="fdr ${tr.col}" min="0" max="100" value="${Math.round(tr.vol*100)}">
       <div class="mt-val">${Math.round(tr.vol*100)}%</div>
@@ -1406,7 +1406,8 @@ function buildMix() {
       b.addEventListener('click', () => {
         const k = b.dataset.k;
         tr[k] = !tr[k];
-        b.classList.toggle('on');
+        b.classList.toggle('on', tr[k]);
+        b.setAttribute('aria-pressed', String(!!tr[k]));
         if (k === 'wreckS') {
           updateWreckSendStatus();
           updateWreckProcessorFeed(shouldFeedWreckProcessor());
