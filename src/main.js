@@ -2074,22 +2074,59 @@ function wire() {
   $('playBtn').addEventListener('click', play);
   $('stopBtn').addEventListener('click', stopPlay);
 
-  $('bpmUp').addEventListener('click', () => chgBPM(1));
-  $('bpmDn').addEventListener('click', () => chgBPM(-1));
   let bpmHold = null;
+  let bpmSuppressClickTarget = null;
+  let bpmSuppressClickTimer = null;
   function clearBpmHold() {
     clearInterval(bpmHold);
     bpmHold = null;
   }
+  function clearBpmClickSuppression() {
+    clearTimeout(bpmSuppressClickTimer);
+    bpmSuppressClickTimer = null;
+    bpmSuppressClickTarget = null;
+  }
+  function suppressNextBpmClick(buttonId) {
+    clearTimeout(bpmSuppressClickTimer);
+    bpmSuppressClickTimer = null;
+    bpmSuppressClickTarget = buttonId;
+  }
+  function scheduleBpmClickSuppressionCleanup(buttonId) {
+    clearTimeout(bpmSuppressClickTimer);
+    bpmSuppressClickTimer = setTimeout(() => {
+      if (bpmSuppressClickTarget === buttonId) clearBpmClickSuppression();
+    }, 400);
+  }
+  function handleBpmClick(buttonId, delta, event) {
+    if (bpmSuppressClickTarget === buttonId && (!event || event.detail !== 0)) {
+      clearBpmClickSuppression();
+      if (event && typeof event.preventDefault === 'function') event.preventDefault();
+      return;
+    }
+    chgBPM(delta);
+  }
   function startBpmHold(delta) {
     clearBpmHold();
+    chgBPM(delta);
     bpmHold = setInterval(() => chgBPM(delta), 110);
   }
-  $('bpmUp').addEventListener('pointerdown', () => { startBpmHold(2); });
-  $('bpmDn').addEventListener('pointerdown', () => { startBpmHold(-2); });
+  function endBpmHold(buttonId) {
+    clearBpmHold();
+    scheduleBpmClickSuppressionCleanup(buttonId);
+  }
+  $('bpmUp').addEventListener('click', event => handleBpmClick('bpmUp', 1, event));
+  $('bpmDn').addEventListener('click', event => handleBpmClick('bpmDn', -1, event));
+  $('bpmUp').addEventListener('pointerdown', event => {
+    suppressNextBpmClick('bpmUp');
+    startBpmHold(2);
+  });
+  $('bpmDn').addEventListener('pointerdown', event => {
+    suppressNextBpmClick('bpmDn');
+    startBpmHold(-2);
+  });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(e => {
-    $('bpmUp').addEventListener(e, clearBpmHold);
-    $('bpmDn').addEventListener(e, clearBpmHold);
+    $('bpmUp').addEventListener(e, () => endBpmHold('bpmUp'));
+    $('bpmDn').addEventListener(e, () => endBpmHold('bpmDn'));
   });
 
   $('tapBtn').addEventListener('click', doTap);

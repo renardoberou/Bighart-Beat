@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const head = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
 
-const EXPECTED_TOKEN = 'v=boost-week-20260521-mixstrip';
+const EXPECTED_TOKEN = 'v=boost-week-20260521-bpmnudge';
 const localAssetTokenPattern = /[?&]v=boost-week-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl) {
