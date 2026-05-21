@@ -32,8 +32,8 @@ assert(
   'hihat choke helper compares continuous new hat openness with the previous active tail'
 );
 assert(
-  /if\s*\(\s*previous\s*&&\s*previous\.gain\s*\)\s*\{[\s\S]*g\.cancelScheduledValues\(t\)[\s\S]*g\.setValueAtTime\(Math\.max\(\.001,\s*g\.value\s*\|\|\s*\.001\),\s*t\)[\s\S]*g\.setTargetAtTime\(\.0008,\s*t,\s*tau\)/.test(main),
-  'hihat choke helper safely cancels and ramps the previous tail instead of letting open hats pile up'
+  /if\s*\(\s*previous\s*&&\s*previous\.gain\s*\)\s*\{[\s\S]*cancelAndHoldOrSmoothParam\(g,\s*t,\s*\{\s*floor:\s*\.0008[\s\S]*g\.setTargetAtTime\(\.0008,\s*t,\s*tau\)/.test(main),
+  'hihat choke helper smoothly cancels and ramps the previous tail instead of letting open hats pile up'
 );
 assert(
   /const\s+tau\s*=\s*HihatVoice\.calculateHihatChokeTau\(currentOpen,\s*previousOpen,\s*spec\)/.test(main),

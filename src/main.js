@@ -51,6 +51,29 @@ const OPEN_HIHAT_ROW_LABEL = 'OHH';
 const hihatChokeState = { gain: null, open: 0 };
 const synthVoiceState = { gain: null, pitchHz: null, triggerTime: null };
 
+function cancelAndHoldOrSmoothParam(param, t, options = {}) {
+  if (!param) return;
+  if (typeof param.cancelAndHoldAtTime === 'function') {
+    param.cancelAndHoldAtTime(t);
+    return;
+  }
+
+  const floor = Number.isFinite(options.floor) ? options.floor : 0;
+  const smoothTime = Number.isFinite(options.smoothTime) ? Math.max(0, options.smoothTime) : .003;
+  const fallbackValue = Number.isFinite(options.fallbackValue) ? options.fallbackValue : floor;
+  const rawValue = Number.isFinite(param.value) ? param.value : fallbackValue;
+  const anchor = Math.max(floor, rawValue);
+
+  if (typeof param.cancelScheduledValues === 'function') param.cancelScheduledValues(t);
+  if (smoothTime > 0 && typeof param.setTargetAtTime === 'function') {
+    param.setTargetAtTime(anchor, t, smoothTime);
+  } else if (smoothTime > 0 && typeof param.linearRampToValueAtTime === 'function') {
+    param.linearRampToValueAtTime(anchor, t + smoothTime);
+  } else if (typeof param.setValueAtTime === 'function') {
+    param.setValueAtTime(anchor, t);
+  }
+}
+
 function setHihatPlacement(value) {
   const next = parseFloat(value);
   if (![0, .45, 1].includes(next)) return;
@@ -428,14 +451,7 @@ function triggerGate(t) {
   if (!FX.rev.on) return;
   const g = N.revGate.gain;
   const atk = .003, hold = FX.rev.gate / 1000, rel = .020;
-  // Use cancelAndHoldAtTime where supported (Chrome/Safari) — gracefully clears
-  // future events while preserving the current ramp position.
-  if (g.cancelAndHoldAtTime) {
-    g.cancelAndHoldAtTime(t);
-  } else {
-    g.cancelScheduledValues(t);
-    g.setValueAtTime(g.value, t);
-  }
+  cancelAndHoldOrSmoothParam(g, t, { floor: 0, smoothTime: .003, fallbackValue: 0 });
   g.linearRampToValueAtTime(1, t + atk);
   g.setValueAtTime(1, t + atk + hold);
   g.linearRampToValueAtTime(0, t + atk + hold + rel);
@@ -452,12 +468,7 @@ function triggerCompGate(t, trackId) {
   const weightedClosed = clamp(closed + (1 - closed) * (1 - weight), dbToGain(-80), 1);
   const analogClosed = clamp(weightedClosed * dbToGain(analogClosedDb), dbToGain(-80), 1);
   const atk = Math.max(.001, .002 + analogJitter * .25), hold = Math.max(.003, .006 + Math.abs(analogJitter) * .5), rel = Math.max(.01, FX.comp.gateRate / 1000 + analogJitter);
-  if (g.cancelAndHoldAtTime) {
-    g.cancelAndHoldAtTime(t);
-  } else {
-    g.cancelScheduledValues(t);
-    g.setValueAtTime(g.value, t);
-  }
+  cancelAndHoldOrSmoothParam(g, t, { floor: dbToGain(-80), smoothTime: .003, fallbackValue: analogClosed });
   g.linearRampToValueAtTime(1, t + atk);
   g.setValueAtTime(1, t + atk + hold);
   g.setTargetAtTime(analogClosed, t + atk + hold, Math.max(.005, rel / 3));
@@ -539,12 +550,7 @@ function triggerHihatChoke(t, openAmount, choke, spec) {
   const currentOpen = clamp(openAmount, 0, 1);
   if (previous && previous.gain) {
     const g = previous.gain;
-    if (g.cancelAndHoldAtTime) {
-      g.cancelAndHoldAtTime(t);
-    } else {
-      g.cancelScheduledValues(t);
-      g.setValueAtTime(Math.max(.001, g.value || .001), t);
-    }
+    cancelAndHoldOrSmoothParam(g, t, { floor: .0008, smoothTime: .003, fallbackValue: .0008 });
     const tau = HihatVoice.calculateHihatChokeTau(currentOpen, previousOpen, spec);
     g.setTargetAtTime(.0008, t, tau);
   }
@@ -787,12 +793,7 @@ function triggerSynthChoke(t, voiceGain, spec) {
   const previous = synthVoiceState.gain;
   if (previous && previous.gain) {
     const g = previous.gain;
-    if (g.cancelAndHoldAtTime) {
-      g.cancelAndHoldAtTime(t);
-    } else {
-      g.cancelScheduledValues(t);
-      g.setValueAtTime(Math.max(.001, g.value || .001), t);
-    }
+    cancelAndHoldOrSmoothParam(g, t, { floor: .0008, smoothTime: .003, fallbackValue: .0008 });
     g.setTargetAtTime(.0008, t, spec.chokeTau);
   }
   synthVoiceState.gain = voiceGain;
