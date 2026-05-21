@@ -50,6 +50,9 @@ const OPEN_HIHAT_ROW_ID = 'open-hihat';
 const OPEN_HIHAT_ROW_LABEL = 'OHH';
 const hihatChokeState = { gain: null, open: 0 };
 const synthVoiceState = { gain: null, pitchHz: null, triggerTime: null };
+const REV_IR_REBUILD_DEBOUNCE_MS = 50;
+let revIRRebuildTimer = null;
+let lastRevIRParams = null;
 
 function cancelAndHoldOrSmoothParam(param, t, options = {}) {
   if (!param) return;
@@ -397,9 +400,16 @@ function genRevIR() {
   if (!A) return;
   const size = FX.rev.size;   // 0..1 → short → long
   const damp = FX.rev.damp;   // 0..1 → brighter → darker
+  const sampleRate = A.sampleRate;
+  if (
+    N.conv && N.conv.buffer && lastRevIRParams &&
+    lastRevIRParams.size === size &&
+    lastRevIRParams.damp === damp &&
+    lastRevIRParams.sampleRate === sampleRate
+  ) return;
   const dur  = 0.4 + size * 2.2;   // seconds
-  const len  = Math.max(1, Math.floor(A.sampleRate * dur));
-  const ir   = A.createBuffer(2, len, A.sampleRate);
+  const len  = Math.max(1, Math.floor(sampleRate * dur));
+  const ir   = A.createBuffer(2, len, sampleRate);
   const decayExp = 2.4 - damp * 1.4; // higher damp → faster decay shape
   for (let ch = 0; ch < 2; ch++) {
     const d = ir.getChannelData(ch);
@@ -414,6 +424,16 @@ function genRevIR() {
     }
   }
   N.conv.buffer = ir;
+  lastRevIRParams = { size, damp, sampleRate };
+}
+
+function scheduleRevIRRebuild() {
+  if (!A) return;
+  if (revIRRebuildTimer) clearTimeout(revIRRebuildTimer);
+  revIRRebuildTimer = setTimeout(() => {
+    revIRRebuildTimer = null;
+    genRevIR();
+  }, REV_IR_REBUILD_DEBOUNCE_MS);
 }
 
 /* ═══════════════════════════════════════════════
@@ -2165,8 +2185,8 @@ function wire() {
     applyFXState();
     autosave();
   });
-  bindF('revSize', v => { FX.rev.size = v / 100; if (A) genRevIR(); }, v => v + '%');
-  bindF('revDamp', v => { FX.rev.damp = v / 100; if (A) genRevIR(); }, v => v + '%');
+  bindF('revSize', v => { FX.rev.size = v / 100; scheduleRevIRRebuild(); }, v => v + '%');
+  bindF('revDamp', v => { FX.rev.damp = v / 100; scheduleRevIRRebuild(); }, v => v + '%');
   bindF('revGate', v => { FX.rev.gate = v; }, v => v + ' ms');
   bindF('revWet',  v => { FX.rev.wet  = v / 100; applyFXState(); }, v => v + '%');
 
