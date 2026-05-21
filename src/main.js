@@ -630,6 +630,14 @@ function previewVoice(trackIndex, synthFn) {
   synthFn(t, tr.vol, tr.p);
 }
 
+function previewInput() {
+  if (!TRACKS[4].smp) {
+    toast('load a sample first');
+    return;
+  }
+  previewVoice(4, synthInput);
+}
+
 function previewEngineKit() {
   if (S.playing) return;
   initAudio();
@@ -1469,7 +1477,7 @@ function buildVE() {
     inpTest.className = 'voice-test';
     inpTest.innerHTML = `<button class="mstr-btn voice-test__btn" data-voice-test="input">TEST INP</button>`;
     pn.appendChild(inpTest);
-    inpTest.querySelector('[data-voice-test="input"]').addEventListener('click', () => previewVoice(4, synthInput));
+    inpTest.querySelector('[data-voice-test="input"]').addEventListener('click', () => previewInput());
     const ip = document.createElement('div'); ip.className = 'ip-row';
     ip.innerHTML = `
       <div class="ip-info" id="ipInfo">${tr.smpN || 'no sample loaded'}</div>

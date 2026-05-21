@@ -38,7 +38,8 @@ assertMatches(/data-voice-test=['"]ether['"][\s\S]*?>TEST ETH<|>TEST ETH<[\s\S]*
 assertMatches(/querySelector\(\s*['"]\[data-voice-test="kick"\]['"]\s*\)\.addEventListener\(\s*['"]click['"]\s*,\s*\(\s*\)\s*=>\s*previewVoice\s*\(\s*0\s*,\s*synthKick\s*\)\s*\)/, 'kick TEST button previews synthKick on TRACKS[0]');
 assertMatches(/querySelector\(\s*['"]\[data-voice-test="snare"\]['"]\s*\)\.addEventListener\(\s*['"]click['"]\s*,\s*\(\s*\)\s*=>\s*previewVoice\s*\(\s*1\s*,\s*synthSnare\s*\)\s*\)/, 'snare TEST button previews synthSnare on TRACKS[1]');
 assertMatches(/querySelector\(\s*['"]\[data-voice-test="clap"\]['"]\s*\)\.addEventListener\(\s*['"]click['"]\s*,\s*\(\s*\)\s*=>\s*previewVoice\s*\(\s*3\s*,\s*synthClap\s*\)\s*\)/, 'clap TEST button previews synthClap on TRACKS[3]');
-assertMatches(/querySelector\(\s*['"]\[data-voice-test="input"\]['"]\s*\)\.addEventListener\(\s*['"]click['"]\s*,\s*\(\s*\)\s*=>\s*previewVoice\s*\(\s*4\s*,\s*synthInput\s*\)\s*\)/, 'input TEST button previews synthInput on TRACKS[4]');
+assertMatches(/querySelector\(\s*['"]\[data-voice-test="input"\]['"]\s*\)\.addEventListener\(\s*['"]click['"]\s*,\s*\(\s*\)\s*=>\s*previewInput\s*\(\s*\)\s*\)/, 'input TEST button uses the sample-aware input preview helper');
+assertMatches(/function\s+previewInput\s*\(\s*\)\s*\{[\s\S]*?previewVoice\s*\(\s*4\s*,\s*synthInput\s*\)/, 'loaded input TEST path previews synthInput on TRACKS[4]');
 assertMatches(/querySelector\(\s*['"]\[data-voice-test="ether"\]['"]\s*\)\.addEventListener\(\s*['"]click['"]\s*,\s*\(\s*\)\s*=>\s*previewVoice\s*\(\s*5\s*,\s*synthEther\s*\)\s*\)/, 'ether TEST button previews synthEther on TRACKS[5]');
 
 assert(!/PATTERNS\s*\[\s*S\.patt\s*\]\s*\[[^\]]+\]\s*=/.test(main), 'voice audition buttons do not write pattern steps');
