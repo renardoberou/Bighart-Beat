@@ -33,7 +33,8 @@ assert(/N\.wreckOut\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master graph cre
 assert(!/N\.compMakeup\.connect\(N\.wreckIn\)/.test(buildGraph), 'DIGI WRECK is not fed by the full master compressor output');
 assert(!/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(buildGraph), 'bypassed DIGI WRECK must not keep feeding the mobile-costly sample-hold processor');
 assert(/updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)/.test(buildGraph), 'initial DIGI WRECK processor feed follows audible wet-feed state');
-assert(/N\.wreckDownsample\.connect\(N\.wreckCrusher\)/.test(buildGraph), 'sample-hold/downsample stage feeds the crusher instead of only shaping a curve');
+assert(!/N\.wreckDownsample\.connect\(N\.wreckCrusher\)/.test(buildGraph), 'inactive DIGI WRECK must not leave the sample-hold/downsample processor output connected at build time');
+assert(!/N\.wreckCrusher\.connect\(N\.wreckTone\)/.test(buildGraph), 'inactive DIGI WRECK must not leave the downstream processor chain connected at build time');
 assert(/N\.wreckOut\.connect\(N\.wreckPreCompGain\)/.test(buildGraph), 'DIGI WRECK return can enter before compressor');
 assert(/N\.wreckPreCompGain\.gain\.value\s*=\s*FX\.wreck\.order\s*===\s*'wreck-comp'\s*\?\s*1\s*:\s*0/.test(buildGraph), 'buildGraph initializes pre-compressor WRECK return branch from persisted order');
 assert(/N\.wreckPreCompGain\.connect\(N\.mstSum\)/.test(buildGraph), 'wreck-comp order feeds Wreck return into compressed master sum');
@@ -47,8 +48,17 @@ assert(/function\s+hasWreckSend\s*\(\)\s*\{/.test(js), 'runtime defines a shared
 assert(/return\s+TRACKS\.some\([^)]*wreckS/.test(extractFunction('hasWreckSend')), 'active W-send predicate detects at least one enabled W send');
 assert(/return\s+!!\(FX\.wreck\.on\s*&&\s*FX\.wreck\.mix\s*>\s*0\s*&&\s*FX\.wreck\.out\s*>\s*0\s*&&\s*hasWreckSend\(\)\)/.test(js), 'DIGI WRECK only feeds processor when enabled with audible wet mix/output and at least one W send');
 assert(/function\s+updateWreckProcessorFeed\s*\(active\)\s*\{/.test(js), 'runtime defines a gated DIGI WRECK processor-feed helper');
-assert(/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper reconnects wet input only when DIGI WRECK wet path is audible');
-assert(/N\.wreckIn\.disconnect\(N\.wreckDownsample\)/.test(js), 'processor-feed helper disconnects wet input when DIGI WRECK is bypassed or zero-wet');
+const updateWreckProcessorFeed = extractFunction('updateWreckProcessorFeed');
+assert(/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(updateWreckProcessorFeed), 'processor-feed helper reconnects wet input only when DIGI WRECK wet path is audible');
+assert(/N\.wreckDownsample\.connect\(N\.wreckCrusher\)/.test(updateWreckProcessorFeed), 'processor-feed helper reconnects sample-hold/downsample output only when DIGI WRECK wet path is audible');
+assert(/N\.wreckCrusher\.connect\(N\.wreckTone\)/.test(updateWreckProcessorFeed), 'processor-feed helper reconnects crusher-to-tone chain only when DIGI WRECK wet path is audible');
+assert(/N\.wreckTone\.connect\(N\.wreckWet\)/.test(updateWreckProcessorFeed), 'processor-feed helper reconnects tone-to-wet chain only when DIGI WRECK wet path is audible');
+assert(/N\.wreckWet\.connect\(N\.wreckOut\)/.test(updateWreckProcessorFeed), 'processor-feed helper reconnects wet-to-output chain only when DIGI WRECK wet path is audible');
+assert(/N\.wreckIn\.disconnect\(N\.wreckDownsample\)/.test(updateWreckProcessorFeed), 'processor-feed helper disconnects wet input when DIGI WRECK is bypassed or zero-wet');
+assert(/N\.wreckDownsample\.disconnect\(N\.wreckCrusher\)/.test(updateWreckProcessorFeed), 'processor-feed helper disconnects sample-hold/downsample output when DIGI WRECK is bypassed or zero-wet');
+assert(/N\.wreckCrusher\.disconnect\(N\.wreckTone\)/.test(updateWreckProcessorFeed), 'processor-feed helper disconnects crusher-to-tone chain when DIGI WRECK is bypassed or zero-wet');
+assert(/N\.wreckTone\.disconnect\(N\.wreckWet\)/.test(updateWreckProcessorFeed), 'processor-feed helper disconnects tone-to-wet chain when DIGI WRECK is bypassed or zero-wet');
+assert(/N\.wreckWet\.disconnect\(N\.wreckOut\)/.test(updateWreckProcessorFeed), 'processor-feed helper disconnects wet-to-output chain when DIGI WRECK is bypassed or zero-wet');
 
 const routeVoice = extractFunction('routeVoice');
 assert(/tr\.wreckS\s*&&\s*shouldFeedWreckProcessor\(\)/.test(routeVoice), 'routeVoice gates DIGI WRECK send by per-track W state and audible Wreck state');

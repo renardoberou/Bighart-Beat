@@ -201,7 +201,7 @@ function buildGraph() {
   N.wreckPreCompGain = A.createGain(); N.wreckPreCompGain.gain.value = FX.wreck.order === 'wreck-comp' ? 1 : 0;
   N.wreckPostCompGain = A.createGain(); N.wreckPostCompGain.gain.value = FX.wreck.order === 'comp-wreck' ? 1 : 0;
   N.wreckWetFeedConnected = false;
-  N.wreckDownsample.connect(N.wreckCrusher); N.wreckCrusher.connect(N.wreckTone); N.wreckTone.connect(N.wreckWet); N.wreckWet.connect(N.wreckOut);
+  N.wreckProcessorChainConnected = false;
   // Order toggle meaning for send-style Wreck:
   //   wreck-comp: wreck wet return joins N.mstSum and is compressed with the master.
   //   comp-wreck: wreck wet return joins after compressor/makeup, before master saturation/limiter.
@@ -282,7 +282,7 @@ function updateWreckSendStatus() {
 }
 
 function updateWreckProcessorFeed(active) {
-  if (!N || !N.wreckIn || !N.wreckDownsample) return;
+  if (!N || !N.wreckIn || !N.wreckDownsample || !N.wreckCrusher || !N.wreckTone || !N.wreckWet || !N.wreckOut) return;
   const shouldConnect = !!active;
   if (shouldConnect && !N.wreckWetFeedConnected) {
     N.wreckIn.connect(N.wreckDownsample);
@@ -290,6 +290,19 @@ function updateWreckProcessorFeed(active) {
   } else if (!shouldConnect && N.wreckWetFeedConnected) {
     try { N.wreckIn.disconnect(N.wreckDownsample); } catch (_) {}
     N.wreckWetFeedConnected = false;
+  }
+  if (shouldConnect && !N.wreckProcessorChainConnected) {
+    N.wreckDownsample.connect(N.wreckCrusher);
+    N.wreckCrusher.connect(N.wreckTone);
+    N.wreckTone.connect(N.wreckWet);
+    N.wreckWet.connect(N.wreckOut);
+    N.wreckProcessorChainConnected = true;
+  } else if (!shouldConnect && N.wreckProcessorChainConnected) {
+    try { N.wreckDownsample.disconnect(N.wreckCrusher); } catch (_) {}
+    try { N.wreckCrusher.disconnect(N.wreckTone); } catch (_) {}
+    try { N.wreckTone.disconnect(N.wreckWet); } catch (_) {}
+    try { N.wreckWet.disconnect(N.wreckOut); } catch (_) {}
+    N.wreckProcessorChainConnected = false;
   }
 }
 
