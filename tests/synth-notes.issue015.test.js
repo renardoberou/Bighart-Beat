@@ -90,6 +90,21 @@ assert.strictEqual(
   'STEP 16 · oct↓ · 0.50×',
   'status helper bounds selected synth step labels to the 16-step grid'
 );
+assert.strictEqual(
+  SynthNotes.formatSynthNoteEditHintLabel(1),
+  'HARM ▼ 5th↓ · HARM ▲ 3rd-ish',
+  'edit hint helper shows the previous/down and next/up approved harmonic labels for root'
+);
+assert.strictEqual(
+  SynthNotes.formatSynthNoteEditHintLabel(0.5),
+  'HARM ▼ 2 oct · HARM ▲ 5th↓',
+  'edit hint helper wraps from the lowest approved harmonic to the highest approved harmonic'
+);
+assert.strictEqual(
+  SynthNotes.formatSynthNoteEditHintLabel(1.37),
+  'HARM ▼ 4th · HARM ▲ 5th',
+  'edit hint helper describes adjacent approved harmonics for non-listed ratios without duplicating the table in UI code'
+);
 
 const activeSteps = Array(16).fill(0);
 activeSteps[3] = 1;
@@ -151,9 +166,12 @@ assert(/function cycleSelectedSynthNoteStepForward\(\) \{[\s\S]*?State\.cycleSyn
 assert(mainJs.includes('previewSynth();'), 'selected-step random harmonic previews the selected-step pitch');
 assert(/querySelector\('\[data-synth-rnd-harm\]'\)\.addEventListener\('\s*click\s*'\s*,\s*\(\)\s*=>\s*\{[\s\S]*?State\.randomHarmonicSynthNotes\(SYNTH_NOTES\[S\.patt\],\s*PATTERNS\[S\.patt\]\.synth\)[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynth\(\)[\s\S]*?toast\('SYN harmonic steps randomized'\)/.test(mainJs), 'global RND HARM randomizes, rebuilds status, autosaves, previews selected synth step, and toasts');
 assert(mainJs.includes('data-synth-note-status'), 'voice editor exposes selected synth note status marker');
+assert(mainJs.includes('data-synth-note-hint'), 'voice editor exposes selected synth note harmonic edit hint marker');
 assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');
 assert(mainJs.includes('formatSynthNoteStatusLabel'), 'voice editor uses synth note status label helper');
+assert(mainJs.includes('formatSynthNoteEditHintLabel'), 'voice editor uses synth note edit hint helper');
 assert(mainJs.includes('State.formatSynthNoteMarkerLabel(ratio)'), 'runtime uses compact marker helper for step badges');
+assert(/function updateSynthNoteStatus\(\) \{[\s\S]*?querySelector\('\[data-synth-note-status\]'\)[\s\S]*?querySelector\('\[data-synth-note-hint\]'\)[\s\S]*?synthNoteStatusText\(LAST_SYNTH_NOTE_STEP\)[\s\S]*?synthNoteEditHintText\(LAST_SYNTH_NOTE_STEP\)/.test(mainJs), 'selected synth note refresh updates both status and adjacent harmonic edit hint');
 const noteEditCellTapBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && SYNTH_NOTE_EDIT\) \{[\s\S]*?\n        \}/);
 assert(noteEditCellTapBranch, 'runtime handles selected SYN NOTE EDIT cell taps');
 assert(
@@ -168,6 +186,9 @@ assert(css.includes('content: attr(data-note)'), 'CSS reads synth harmonic ratio
 assert(mainJs.includes('syn-note-selected'), 'runtime uses a stable selected synth note step marker class');
 assert(/function\s+setSynthNoteMarker\s*\(\s*\)\s*\{[\s\S]*?classList\.remove\('syn-note',\s*'syn-note-selected'\)[\s\S]*?trackId\s*===\s*'synth'[\s\S]*?trackIndex\s*===\s*S\.sel[\s\S]*?SYNTH_NOTE_EDIT[\s\S]*?i\s*===\s*LAST_SYNTH_NOTE_STEP[\s\S]*?classList\.add\('syn-note-selected'\)/.test(mainJs), 'SYN NOTE EDIT grid refresh removes/reapplies selected-step marker from LAST_SYNTH_NOTE_STEP only for selected SYN');
 assert(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*\{[\s\S]*?setLastSynthNoteStep[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)/.test(mainJs), 'STEP navigation rebuilds the sequencer so the selected-step marker moves');
+const selectPatternBody = mainJs.match(/function\s+selectPattern\s*\(\s*patternIndex\s*,\s*options\s*\)\s*\{([\s\S]*?)\n\}/);
+assert(selectPatternBody, 'runtime exposes the pattern selection helper body');
+assert(/S\.patt\s*=\s*patternIndex[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?renderRhythmIntelligence\(\)/.test(selectPatternBody[1]), 'pattern switch rebuilds the sequencer and refreshes synth note status/hint for the new pattern bank before rhythm render');
 const moveSelectedSynthNoteStepBody = mainJs.match(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*\{([\s\S]*?)\n\}/);
 assert(moveSelectedSynthNoteStepBody, 'runtime exposes the selected synth-step navigation helper body');
 assert(/buildSeq\(\)[\s\S]*updateSynthNoteStatus\(\)[\s\S]*previewSynth\(\)[\s\S]*toast\(`SYN step \$\{String\(LAST_SYNTH_NOTE_STEP \+ 1\)\.padStart\(2, '0'\)\} selected`\)/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation rebuilds marker/status, previews the newly selected pitch, and toasts the selected step number');

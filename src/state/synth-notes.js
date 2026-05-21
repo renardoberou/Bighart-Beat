@@ -75,6 +75,32 @@
     return parts.join(' · ');
   }
 
+  function findNextApprovedHarmonicRatio(ratio) {
+    const value = normalizeSynthNoteRatio(ratio == null ? 1 : ratio);
+    let currentIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => Math.abs(r - value) < SYNTH_INTERVAL_RATIO_EPSILON);
+    if (currentIndex < 0) currentIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => r > value) - 1;
+    const nextIndex = (Math.max(-1, currentIndex) + 1) % SYNTH_HARMONIC_RATIOS.length;
+    return SYNTH_HARMONIC_RATIOS[nextIndex];
+  }
+
+  function findPreviousApprovedHarmonicRatio(ratio) {
+    const value = normalizeSynthNoteRatio(ratio == null ? 1 : ratio);
+    const exactIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => Math.abs(r - value) < SYNTH_INTERVAL_RATIO_EPSILON);
+    let prevIndex = exactIndex >= 0 ? exactIndex - 1 : -1;
+    if (exactIndex < 0) {
+      prevIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => r >= value) - 1;
+      if (prevIndex < -1) prevIndex = SYNTH_HARMONIC_RATIOS.length - 1;
+    }
+    const nextIndex = (prevIndex + SYNTH_HARMONIC_RATIOS.length) % SYNTH_HARMONIC_RATIOS.length;
+    return SYNTH_HARMONIC_RATIOS[nextIndex];
+  }
+
+  function formatSynthNoteEditHintLabel(ratio) {
+    const previous = formatSynthNoteIntervalLabel(findPreviousApprovedHarmonicRatio(ratio));
+    const next = formatSynthNoteIntervalLabel(findNextApprovedHarmonicRatio(ratio));
+    return 'HARM ▼ ' + previous + ' · HARM ▲ ' + next;
+  }
+
   function createDefaultSynthNotesGrid() {
     return Array.from({ length: STEP_COUNT }, randomHarmonicRatio);
   }
@@ -121,23 +147,11 @@
   }
 
   function cycleSynthNoteRatio(grid, stepIndex) {
-    const current = getSynthNoteRatio(grid, stepIndex);
-    let currentIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => Math.abs(r - current) < 0.001);
-    if (currentIndex < 0) currentIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => r > current) - 1;
-    const nextIndex = (Math.max(-1, currentIndex) + 1) % SYNTH_HARMONIC_RATIOS.length;
-    return setSynthNoteRatio(grid, stepIndex, SYNTH_HARMONIC_RATIOS[nextIndex]);
+    return setSynthNoteRatio(grid, stepIndex, findNextApprovedHarmonicRatio(getSynthNoteRatio(grid, stepIndex)));
   }
 
   function cycleSynthNoteRatioBackward(grid, stepIndex) {
-    const current = getSynthNoteRatio(grid, stepIndex);
-    const exactIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => Math.abs(r - current) < SYNTH_INTERVAL_RATIO_EPSILON);
-    let prevIndex = exactIndex >= 0 ? exactIndex - 1 : -1;
-    if (exactIndex < 0) {
-      prevIndex = SYNTH_HARMONIC_RATIOS.findIndex(r => r >= current) - 1;
-      if (prevIndex < -1) prevIndex = SYNTH_HARMONIC_RATIOS.length - 1;
-    }
-    const nextIndex = (prevIndex + SYNTH_HARMONIC_RATIOS.length) % SYNTH_HARMONIC_RATIOS.length;
-    return setSynthNoteRatio(grid, stepIndex, SYNTH_HARMONIC_RATIOS[nextIndex]);
+    return setSynthNoteRatio(grid, stepIndex, findPreviousApprovedHarmonicRatio(getSynthNoteRatio(grid, stepIndex)));
   }
 
   function synthPitchForStep(rootHz, ratio) {
@@ -168,6 +182,7 @@
     formatSynthNoteIntervalLabel,
     formatSynthNoteMarkerLabel,
     formatSynthNoteStatusLabel,
+    formatSynthNoteEditHintLabel,
     createDefaultSynthNotesGrid,
     createSynthNotesBanks,
     cloneSynthNotesGrid,

@@ -37,6 +37,8 @@ const synthPanel = synthPanelMatch[1];
   'data-synth-test',
   'data-synth-note-prev',
   'data-synth-note-next',
+  'data-synth-note-status',
+  'data-synth-note-hint',
   'data-synth-note-edit',
   'data-synth-prev-step',
   'data-synth-next-step',
@@ -48,6 +50,8 @@ const synthPanel = synthPanelMatch[1];
 });
 
 assert(/class="[^"]*syn-note-controls[^"]*"/.test(synthPanel), 'SYN note controls have a scoped wrapper class');
+assert(/data-synth-note-status="1"[\s\S]*data-synth-note-hint="1"/.test(synthPanel), 'SYN panel shows the adjacent harmonic edit hint immediately under the selected-step status');
+assert(/data-synth-note-hint="1"[\s\S]*\$\{synthNoteEditHintText\(LAST_SYNTH_NOTE_STEP\)\}/.test(synthPanel), 'SYN panel renders hint text from the state-backed helper');
 assert(/data-synth-note-controls="1"/.test(synthPanel), 'SYN note controls expose a stable wrapper data hook');
 assert(/class="[^"]*syn-note-controls__row[^"]*syn-note-controls__row--performance[^"]*"[\s\S]*data-synth-test[\s\S]*data-synth-note-prev[\s\S]*data-synth-note-next/.test(synthPanel), 'performance row groups TEST SYN and step navigation');
 assert(/class="[^"]*syn-note-controls__row[^"]*syn-note-controls__row--edit[^"]*"[\s\S]*data-synth-note-edit[\s\S]*data-synth-prev-step[\s\S]*data-synth-next-step[\s\S]*data-synth-rnd-step[\s\S]*data-synth-root-step/.test(synthPanel), 'edit row groups NOTE EDIT, harmonic decrement/increment, random selected step, and root reset');

@@ -904,9 +904,17 @@ function synthNoteStatusText(step) {
   });
 }
 
+function synthNoteEditHintText(step) {
+  const boundedStep = clamp(Number.isInteger(step) ? step : LAST_SYNTH_NOTE_STEP, 0, 15);
+  return State.formatSynthNoteEditHintLabel(getStepSynthRatio(boundedStep));
+}
+
 function updateSynthNoteStatus() {
-  const status = $('vePanel') && document.querySelector('[data-synth-note-status]');
+  const panel = $('vePanel');
+  const status = panel && document.querySelector('[data-synth-note-status]');
+  const hint = panel && document.querySelector('[data-synth-note-hint]');
   if (status) status.textContent = synthNoteStatusText(LAST_SYNTH_NOTE_STEP);
+  if (hint) hint.textContent = synthNoteEditHintText(LAST_SYNTH_NOTE_STEP);
 }
 
 function moveSelectedSynthNoteStep(delta) {
@@ -1523,6 +1531,7 @@ function buildVE() {
         <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.toUpperCase()}</div>
         <div>ROOT 40 Hz–3000 Hz · STEP NOTES ARE HARMONIC RATIOS</div>
         <div data-synth-note-status="1">${synthNoteStatusText(LAST_SYNTH_NOTE_STEP)}</div>
+        <div data-synth-note-hint="1">${synthNoteEditHintText(LAST_SYNTH_NOTE_STEP)}</div>
         <div>${SYNTH_NOTE_EDIT ? 'NOTE EDIT ON: TAP SYN STEPS TO CYCLE RATIOS' : 'ENABLE NOTE EDIT TO CHANGE SYN STEPS'}</div>
       </div>
       <div class="syn-note-controls" data-synth-note-controls="1">
@@ -1700,6 +1709,7 @@ function selectPattern(patternIndex, options) {
   }
   syncPatternButtons();
   buildSeq();
+  updateSynthNoteStatus();
   restorePatternFxScene(S.patt);
   renderRhythmIntelligence();
   if (opts.autosave !== false) autosave();
