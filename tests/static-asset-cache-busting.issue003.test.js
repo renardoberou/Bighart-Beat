@@ -11,8 +11,8 @@ const head = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
 
 const STALE_TOKEN = 'v=boost-week-20260521-cachefresh';
 const PREVIOUS_TOKEN = 'v=hihat-accent-20260521';
-const EXPECTED_TOKEN = 'v=syn-pitch-cap-20260522';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent|syn-pitch-cap)-\d{8}(?:-[a-z0-9-]+)?/g;
+const EXPECTED_TOKEN = 'v=hihat-idm-spark-20260522';
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl) {
   assert(

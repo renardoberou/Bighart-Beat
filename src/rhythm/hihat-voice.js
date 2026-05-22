@@ -66,6 +66,7 @@
     const noiseLevel = clamp(0.42 * profile.noise * (1 - softHit * 0.05) * jitter(rand, instability * 0.6), 0, 0.72);
     const baseMetalLevel = clamp(metal * (0.14 + profile.tone * 0.18), 0, 0.34);
     const isAphex = engine === 'aphex';
+    const isReznor = engine === 'reznor';
     const idmEdge = isAphex ? clamp(0.35 + metal * 0.10 + accentedHit * 0.45 - softHit * 0.25, 0.08, 0.95) : 0;
     const metalLevel = clamp(baseMetalLevel * (1 + idmEdge * 0.14), 0, 0.34);
     const ratios = profile.ratios.slice(0, 6).map(r => clamp(r, 0.1, 12));
@@ -91,6 +92,12 @@
     const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + accentedHit * 0.08), 0.006, 0.72);
     const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
     const openShimmerQ = clamp(1.6 + open * 1.2 + instability * 10, 1.2, 4.2);
+    const idmSparkCharacter = isAphex ? 1 : (isReznor ? 0.58 : 0);
+    const idmSparkEnergy = clamp((0.36 + metal * 0.26 + accentedHit * 0.64 - softHit * 0.28) * idmSparkCharacter, 0, 1);
+    const idmSparkGain = clamp(idmSparkEnergy * (isAphex ? 0.052 : 0.034) * jitter(rand, instability * 0.5), 0, 0.065);
+    const idmSparkTailSec = clamp(0.0065 + open * 0.006 + instability * 0.12 - accentedHit * 0.0012, 0.003, 0.045);
+    const idmSparkHz = clamp(freq * (isAphex ? 1.62 : 1.36) * profile.bright * (1 + accentedHit * 0.035) * jitter(rand, instability * 0.7), 9000, 18000);
+    const idmSparkQ = clamp(5.0 + idmSparkEnergy * 4.4 + instability * 38, 3, 14);
 
     return {
       engine,
@@ -118,6 +125,10 @@
       openShimmerTailSec,
       openShimmerHz,
       openShimmerQ,
+      idmSparkGain,
+      idmSparkTailSec,
+      idmSparkHz,
+      idmSparkQ,
       oscType: profile.oscType,
       ratios,
       oscillatorFrequencies,

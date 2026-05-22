@@ -33,7 +33,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -57,6 +57,10 @@ function assertFiniteBounded(spec, label) {
   assert(spec.openShimmerTailSec >= 0.006 && spec.openShimmerTailSec <= 0.72, `${label}: open shimmer tail is bounded/mobile-safe`);
   assert(spec.openShimmerHz >= 6500 && spec.openShimmerHz <= 18000, `${label}: open shimmer frequency is bright but bounded`);
   assert(spec.openShimmerQ >= 1.2 && spec.openShimmerQ <= 4.2, `${label}: open shimmer Q is focused but bounded`);
+  assert(spec.idmSparkGain >= 0 && spec.idmSparkGain <= 0.065, `${label}: IDM spark gain remains headroom-safe`);
+  assert(spec.idmSparkTailSec >= 0.003 && spec.idmSparkTailSec <= 0.045, `${label}: IDM spark tail is short/mobile-safe`);
+  assert(spec.idmSparkHz >= 9000 && spec.idmSparkHz <= 18000, `${label}: IDM spark frequency is high but bounded`);
+  assert(spec.idmSparkQ >= 3 && spec.idmSparkQ <= 14, `${label}: IDM spark Q is focused but bounded`);
   assert(spec.glitchChance >= 0 && spec.glitchChance <= 0.30, `${label}: glitch chance remains bounded`);
   assert(spec.glitchGain >= 0 && spec.glitchGain <= 0.06, `${label}: glitch gain remains bounded/headroom-safe`);
   assert(spec.idmEdge >= 0 && spec.idmEdge <= 1, `${label}: IDM edge normalized and bounded`);

@@ -603,6 +603,7 @@ function synthHihat(t, v, p) {
   const hihatTailSec = Math.max(
     spec.noiseTailSec + spec.tailReleaseTau * 4,
     spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
+    spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau : 0,
     spec.metalGain > 0.001 ? spec.metalTailSec + .025 : 0,
     spec.glitchWillFire ? .010 : 0
   );
@@ -639,6 +640,18 @@ function synthHihat(t, v, p) {
     sg.gain.exponentialRampToValueAtTime(.001, t + spec.openShimmerTailSec);
     shimmer.connect(sf); sf.connect(sg); sg.connect(choke);
     shimmer.start(t); shimmer.stop(t + spec.openShimmerTailSec + spec.tailReleaseTau * 4);
+  }
+  if (spec.idmSparkGain > 0.001) {
+    const spark = A.createBufferSource(); spark.buffer = nz; spark.loop = true;
+    const sparkFilter = A.createBiquadFilter(); sparkFilter.type = 'bandpass';
+    sparkFilter.frequency.value = spec.idmSparkHz;
+    sparkFilter.Q.value = spec.idmSparkQ;
+    const sparkGain = A.createGain();
+    sparkGain.gain.setValueAtTime(0, t);
+    sparkGain.gain.linearRampToValueAtTime(clamp(v * spec.idmSparkGain, 0, .065), t + Math.min(.0015, spec.attackSec));
+    sparkGain.gain.exponentialRampToValueAtTime(.001, t + spec.idmSparkTailSec);
+    spark.connect(sparkFilter); sparkFilter.connect(sparkGain); sparkGain.connect(choke);
+    spark.start(t); spark.stop(t + spec.idmSparkTailSec + spec.tailReleaseTau);
   }
   // metallic tone mix — only if metal > 0
   if (spec.metalGain > 0.001) {
