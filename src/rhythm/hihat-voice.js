@@ -103,6 +103,12 @@
     const idmSparkTailSec = clamp(0.0065 + open * 0.006 + instability * 0.12 - accentedHit * 0.0012, 0.003, 0.045);
     const idmSparkHz = clamp(freq * (isAphex ? 1.62 : 1.36) * profile.bright * (1 + accentedHit * 0.035) * jitter(rand, instability * 0.7), 9000, 18000);
     const idmSparkQ = clamp(5.0 + idmSparkEnergy * 4.4 + instability * 38, 3, 14);
+    const openFlutterCharacter = isAphex ? 1 : (isReznor ? 0.45 : 0);
+    const openFlutterEnergy = clamp(openShape * openFlutterCharacter * (0.42 + metal * 0.28 + accentedHit * 0.48 - softHit * 0.20), 0, 1);
+    const openFlutterGain = clamp(openFlutterEnergy * (isAphex ? 0.038 : 0.025) * jitter(rand, instability * 0.55), 0, 0.045);
+    const openFlutterTailSec = clamp((0.018 + open * 0.048 + instability * 0.60) * (1 - accentedHit * 0.04), 0.004, 0.16);
+    const openFlutterHz = clamp(7200 * profile.bright * (1 + open * 0.14 + accentedHit * 0.06) * jitter(rand, instability * 0.8), 5200, 16000);
+    const openFlutterQ = clamp(3.2 + openFlutterEnergy * 3.2 + instability * 45, 2.5, 10);
 
     return {
       engine,
@@ -134,6 +140,10 @@
       openBodyTailSec,
       openBodyHz,
       openBodyQ,
+      openFlutterGain,
+      openFlutterTailSec,
+      openFlutterHz,
+      openFlutterQ,
       idmSparkGain,
       idmSparkTailSec,
       idmSparkHz,

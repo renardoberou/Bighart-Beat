@@ -625,6 +625,7 @@ function synthHihat(t, v, p) {
     spec.noiseTailSec + spec.tailReleaseTau * 4,
     spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
     spec.openBodyGain > 0.001 ? spec.openBodyTailSec + spec.tailReleaseTau * 4 : 0,
+    spec.openFlutterGain > 0.001 ? spec.openFlutterTailSec + spec.tailReleaseTau : 0,
     spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau : 0,
     spec.metalGain > 0.001 ? spec.metalTailSec + .025 : 0,
     spec.glitchWillFire ? .010 : 0
@@ -673,6 +674,19 @@ function synthHihat(t, v, p) {
     bg.gain.exponentialRampToValueAtTime(.001, t + spec.openBodyTailSec);
     body.connect(bf); bf.connect(bg); bg.connect(choke);
     body.start(t); body.stop(t + spec.openBodyTailSec + spec.tailReleaseTau * 4);
+  }
+  if (spec.openFlutterGain > 0.001) {
+    const flutter = A.createBufferSource(); flutter.buffer = nz; flutter.loop = true;
+    const flutterFilter = A.createBiquadFilter(); flutterFilter.type = 'bandpass';
+    flutterFilter.frequency.value = spec.openFlutterHz;
+    flutterFilter.Q.value = spec.openFlutterQ;
+    const flutterGain = A.createGain();
+    flutterGain.gain.setValueAtTime(0, t);
+    flutterGain.gain.linearRampToValueAtTime(clamp(v * spec.openFlutterGain, 0, .045), t + Math.min(.002, spec.attackSec));
+    flutterGain.gain.setTargetAtTime(.001, t + spec.openFlutterTailSec * .42, spec.tailReleaseTau * .45);
+    flutterGain.gain.exponentialRampToValueAtTime(.001, t + spec.openFlutterTailSec);
+    flutter.connect(flutterFilter); flutterFilter.connect(flutterGain); flutterGain.connect(choke);
+    flutter.start(t); flutter.stop(t + spec.openFlutterTailSec + spec.tailReleaseTau);
   }
   if (spec.idmSparkGain > 0.001) {
     const spark = A.createBufferSource(); spark.buffer = nz; spark.loop = true;

@@ -33,7 +33,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -61,6 +61,10 @@ function assertFiniteBounded(spec, label) {
   assert(spec.openBodyTailSec >= 0.004 && spec.openBodyTailSec <= 0.64, `${label}: open body/bloom tail is bounded/mobile-safe`);
   assert(spec.openBodyHz >= 2600 && spec.openBodyHz <= 12000, `${label}: open body/bloom frequency is present but bounded`);
   assert(spec.openBodyQ >= 0.45 && spec.openBodyQ <= 2.8, `${label}: open body/bloom Q is musical and bounded`);
+  assert(spec.openFlutterGain >= 0 && spec.openFlutterGain <= 0.045, `${label}: open IDM flutter/rattle gain remains headroom-safe`);
+  assert(spec.openFlutterTailSec >= 0.004 && spec.openFlutterTailSec <= 0.16, `${label}: open IDM flutter/rattle tail is bounded/mobile-safe`);
+  assert(spec.openFlutterHz >= 5200 && spec.openFlutterHz <= 16000, `${label}: open IDM flutter/rattle frequency is metallic but bounded`);
+  assert(spec.openFlutterQ >= 2.5 && spec.openFlutterQ <= 10, `${label}: open IDM flutter/rattle Q is focused but bounded`);
   assert(spec.idmSparkGain >= 0 && spec.idmSparkGain <= 0.065, `${label}: IDM spark gain remains headroom-safe`);
   assert(spec.idmSparkTailSec >= 0.003 && spec.idmSparkTailSec <= 0.045, `${label}: IDM spark tail is short/mobile-safe`);
   assert(spec.idmSparkHz >= 9000 && spec.idmSparkHz <= 18000, `${label}: IDM spark frequency is high but bounded`);
@@ -179,6 +183,22 @@ const openAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay
 assert(open808.openBodyGain < open.openBodyGain, '808 open body/bloom stays classic-clean versus 909');
 assert(openAphex.openBodyGain > open.openBodyGain, 'aphex open body/bloom can be a little more characterful than classic engines');
 
+const closedAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5, 0.75);
+const tightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5, 0.75);
+const openReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
+const accentedOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 1.0);
+const open909Classic = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
+assert(closedAphex.openFlutterGain <= 0.001, 'closed aphex hihat keeps IDM flutter/rattle effectively silent');
+assert(tightAphex.openFlutterGain > closedAphex.openFlutterGain, 'tight aphex hihat introduces a bounded flutter/rattle layer');
+assert(openAphex.openFlutterGain > tightAphex.openFlutterGain, 'open aphex hihat has stronger flutter/rattle than tight hihat');
+assert(openAphex.openFlutterGain > openReznor.openFlutterGain, 'aphex open flutter/rattle is stronger than reznor');
+assert(openReznor.openFlutterGain > 0.001, 'reznor open hihat gets a modest industrial flutter/rattle layer');
+assert.strictEqual(open808.openFlutterGain, 0, '808 open hihat keeps classic-clean flutter/rattle disabled');
+assert.strictEqual(open909Classic.openFlutterGain, 0, '909 open hihat keeps classic-clean flutter/rattle disabled');
+assert(accentedOpenAphex.openFlutterGain > openAphex.openFlutterGain, 'accented open aphex hihat increases flutter/rattle intensity');
+assert(accentedOpenAphex.openFlutterGain <= 0.045, 'accented open aphex flutter/rattle remains headroom-safe');
+assert(accentedOpenAphex.openFlutterTailSec <= 0.16, 'accented open aphex flutter/rattle tail remains bounded/mobile-safe');
+
 for (const engine of ['808', '909', 'reznor', 'aphex']) {
   const highClosed = resolveHihatVoiceSpec(engine, { ...baseParams, open: 0, decay: 0.40 }, () => 0.5);
   const expectedLegacyDecay = 0.40 * HIHAT_ENGINE_PROFILES[engine].decay;
@@ -238,5 +258,11 @@ assert(/spec\.openBodyGain > 0\.001/.test(main), 'synthHihat adds open-hat body/
 assert(/bf\.frequency\.value\s*=\s*spec\.openBodyHz/.test(main), 'hihat body/bloom filter uses resolver frequency');
 assert(/bg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openBodyGain,\s*0,\s*\.11\),\s*t \+ spec\.attackSec\)/.test(main), 'hihat body/bloom gain uses resolver gain and headroom cap');
 assert(/body\.connect\(bf\);\s*bf\.connect\(bg\);\s*bg\.connect\(choke\);/.test(main), 'open hihat body/bloom routes through hihat choke');
+assert(/Math\.max\([\s\S]*spec\.openFlutterGain\s*>\s*0\.001\s*\?\s*spec\.openFlutterTailSec\s*\+\s*spec\.tailReleaseTau/.test(main), 'hihat tail budget includes open IDM flutter/rattle when enabled');
+assert(/if \(spec\.openFlutterGain > 0\.001\)/.test(main), 'synthHihat adds open-hat IDM flutter/rattle only when resolver enables it');
+assert(/flutterFilter\.frequency\.value\s*=\s*spec\.openFlutterHz/.test(main), 'hihat flutter/rattle filter uses resolver frequency');
+assert(/flutterGain\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openFlutterGain,\s*0,\s*\.045\),\s*t \+ Math\.min\(\.002,\s*spec\.attackSec\)\)/.test(main), 'hihat flutter/rattle gain uses resolver gain and headroom cap');
+assert(/flutter\.connect\(flutterFilter\);\s*flutterFilter\.connect\(flutterGain\);\s*flutterGain\.connect\(choke\);/.test(main), 'open hihat flutter/rattle routes through hihat choke');
+assert(/flutter\.stop\(t \+ spec\.openFlutterTailSec \+ spec\.tailReleaseTau\)/.test(main), 'open hihat flutter/rattle stops safely after its bounded tail');
 
 console.log('Issue 003 hihat voice resolver checks passed.');
