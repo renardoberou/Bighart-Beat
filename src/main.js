@@ -621,14 +621,18 @@ function triggerHihatChoke(t, openAmount, choke, spec) {
 // ── HIHAT ── highpass noise + engine-aware metallic ratios on existing HHT open control
 function synthHihat(t, v, p) {
   const spec = HihatVoice.resolveHihatVoiceSpec(S.engine, p, Math.random, v);
+  const hihatBudget = HihatVoice.resolveHihatRenderBudget(spec, {
+    mobile: typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''),
+    denseRatchet: !!(p && p.denseRatchet),
+  });
   const hihatTailSec = Math.max(
     spec.noiseTailSec + spec.tailReleaseTau * 4,
-    spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
-    spec.openBodyGain > 0.001 ? spec.openBodyTailSec + spec.tailReleaseTau * 4 : 0,
-    spec.openFlutterGain > 0.001 ? spec.openFlutterTailSec + spec.tailReleaseTau : 0,
-    spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau : 0,
+    hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
+    hihatBudget.useOpenBody && spec.openBodyGain > 0.001 ? spec.openBodyTailSec + spec.tailReleaseTau * 4 : 0,
+    hihatBudget.useOpenFlutter && spec.openFlutterGain > 0.001 ? spec.openFlutterTailSec + spec.tailReleaseTau : 0,
+    hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau : 0,
     spec.metalGain > 0.001 ? spec.metalTailSec + .025 : 0,
-    spec.glitchWillFire ? .010 : 0
+    hihatBudget.useGlitch && spec.glitchWillFire ? .010 : 0
   );
   const dest = routeVoice(t, 2, hihatTailSec);
   const choke = A.createGain();
@@ -653,7 +657,7 @@ function synthHihat(t, v, p) {
   ng.gain.exponentialRampToValueAtTime(.001, t + spec.noiseTailSec);
   ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(choke);
   ns.start(t); ns.stop(t + spec.noiseTailSec + spec.tailReleaseTau * 4);
-  if (spec.openShimmerGain > 0.001) {
+  if (hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001) {
     const shimmer = A.createBufferSource(); shimmer.buffer = nz; shimmer.loop = true;
     const sf = A.createBiquadFilter(); sf.type = 'bandpass'; sf.frequency.value = spec.openShimmerHz; sf.Q.value = spec.openShimmerQ;
     const sg = A.createGain();
@@ -664,7 +668,7 @@ function synthHihat(t, v, p) {
     shimmer.connect(sf); sf.connect(sg); sg.connect(choke);
     shimmer.start(t); shimmer.stop(t + spec.openShimmerTailSec + spec.tailReleaseTau * 4);
   }
-  if (spec.openBodyGain > 0.001) {
+  if (hihatBudget.useOpenBody && spec.openBodyGain > 0.001) {
     const body = A.createBufferSource(); body.buffer = nz; body.loop = true;
     const bf = A.createBiquadFilter(); bf.type = 'bandpass'; bf.frequency.value = spec.openBodyHz; bf.Q.value = spec.openBodyQ;
     const bg = A.createGain();
@@ -675,7 +679,7 @@ function synthHihat(t, v, p) {
     body.connect(bf); bf.connect(bg); bg.connect(choke);
     body.start(t); body.stop(t + spec.openBodyTailSec + spec.tailReleaseTau * 4);
   }
-  if (spec.openFlutterGain > 0.001) {
+  if (hihatBudget.useOpenFlutter && spec.openFlutterGain > 0.001) {
     const flutter = A.createBufferSource(); flutter.buffer = nz; flutter.loop = true;
     const flutterFilter = A.createBiquadFilter(); flutterFilter.type = 'bandpass';
     flutterFilter.frequency.value = spec.openFlutterHz;
@@ -688,7 +692,7 @@ function synthHihat(t, v, p) {
     flutter.connect(flutterFilter); flutterFilter.connect(flutterGain); flutterGain.connect(choke);
     flutter.start(t); flutter.stop(t + spec.openFlutterTailSec + spec.tailReleaseTau);
   }
-  if (spec.idmSparkGain > 0.001) {
+  if (hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001) {
     const spark = A.createBufferSource(); spark.buffer = nz; spark.loop = true;
     const sparkFilter = A.createBiquadFilter(); sparkFilter.type = 'bandpass';
     sparkFilter.frequency.value = spec.idmSparkHz;
@@ -717,7 +721,7 @@ function synthHihat(t, v, p) {
       o.start(t); o.stop(t + spec.metalTailSec + .025);
     }
   }
-  if (spec.glitchWillFire) {
+  if (hihatBudget.useGlitch && spec.glitchWillFire) {
     const tick = A.createBufferSource(); tick.buffer = nz; tick.loop = true;
     const tf = A.createBiquadFilter(); tf.type = 'bandpass'; tf.frequency.value = spec.glitchBandpassHz; tf.Q.value = 12;
     const tg = A.createGain();
@@ -1096,14 +1100,14 @@ function resetSelectedSynthNoteStepToRoot() {
   toast('SYN step reset to root');
 }
 
-function fire(ti, t) {
+function fire(ti, t, ratchetCount = 1) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
   triggerCompGate(t, tr.id);
   switch (tr.id) {
     case 'kick': { const v = getTrackVoiceVelocity(ti); synthKick(t, v, tr.p); break; }
     case 'snare': { const v = getTrackVoiceVelocity(ti); synthSnare(t, v, tr.p); break; }
-    case 'hihat': synthHihat(t, getStepHihatVelocity(firingStep), { ...tr.p, open: getStepHihatOpen(firingStep) }); break;
+    case 'hihat': synthHihat(t, getStepHihatVelocity(firingStep), { ...tr.p, open: getStepHihatOpen(firingStep), denseRatchet: ratchetCount > 1 }); break;
     case 'clap': { const v = getTrackVoiceVelocity(ti); synthClap(t, v, tr.p); break; }
     case 'input': { const v = getTrackVoiceVelocity(ti); synthInput(t, v, tr.p); break; }
     case 'ether': { const v = getTrackVoiceVelocity(ti); synthEther(t, v, tr.p); break; }
@@ -1141,7 +1145,7 @@ function schedStep(step, t) {
     if (!grid[tr.id][step] || tr.mute) continue;
     const count = State.getRatchetCount(RATCHETS[S.patt], tr.id, step);
     firingStep = step;
-    for (const hitT of Groove.scheduledHitTimes({ stepIndex: step, stepStart: t, stepDuration: dur, ratchets: count, swing: S.swing })) fire(ti, hitT);
+    for (const hitT of Groove.scheduledHitTimes({ stepIndex: step, stepStart: t, stepDuration: dur, ratchets: count, swing: S.swing })) fire(ti, hitT, count);
   }
 }
 function advance() {

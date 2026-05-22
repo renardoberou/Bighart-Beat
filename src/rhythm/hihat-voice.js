@@ -40,6 +40,48 @@
     return clamp(closedTau + (interpolatedTau - closedTau) * openTransitionSoftness, closedTau, openTau);
   }
 
+  function resolveHihatRenderBudget(spec, options) {
+    const s = spec || {};
+    const opts = options || {};
+    const audible = {
+      useOpenShimmer: finiteOr(s.openShimmerGain, 0) > 0.001,
+      useOpenBody: finiteOr(s.openBodyGain, 0) > 0.001,
+      useOpenFlutter: finiteOr(s.openFlutterGain, 0) > 0.001,
+      useIdmSpark: finiteOr(s.idmSparkGain, 0) > 0.001,
+      useGlitch: !!s.glitchWillFire && finiteOr(s.glitchGain, 0) > 0.001,
+    };
+    const availableOptionalSourceCount = Object.keys(audible).reduce((sum, key) => sum + (audible[key] ? 1 : 0), 0);
+    const fallbackCap = opts.mobile || opts.denseRatchet ? 3 : availableOptionalSourceCount;
+    const maxOptionalSources = clamp(Math.floor(finiteOr(opts.maxOptionalSources, fallbackCap)), 0, availableOptionalSourceCount);
+    const engine = typeof s.engine === 'string' ? s.engine : '';
+    const priority = engine === 'reznor'
+      ? ['useOpenFlutter', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
+      : engine === 'aphex'
+        ? ['useIdmSpark', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
+        : ['useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'];
+    const selected = {
+      useOpenShimmer: false,
+      useOpenBody: false,
+      useOpenFlutter: false,
+      useIdmSpark: false,
+      useGlitch: false,
+    };
+    let optionalSourceCount = 0;
+    for (const key of priority) {
+      if (!audible[key] || optionalSourceCount >= maxOptionalSources) continue;
+      selected[key] = true;
+      optionalSourceCount += 1;
+    }
+    return {
+      ...selected,
+      maxOptionalSources,
+      optionalSourceCount,
+      availableOptionalSourceCount,
+      mobile: !!opts.mobile,
+      denseRatchet: !!opts.denseRatchet,
+    };
+  }
+
   function resolveHihatVoiceSpec(engineId, params, rand, velocityOrAccent) {
     const requestedEngine = typeof engineId === 'string' ? engineId : '';
     const profile = HIHAT_ENGINE_PROFILES[requestedEngine] || HIHAT_ENGINE_PROFILES.aphex;
@@ -163,7 +205,7 @@
     };
   }
 
-  const api = { resolveHihatVoiceSpec, calculateHihatChokeTau, HIHAT_ENGINE_PROFILES };
+  const api = { resolveHihatVoiceSpec, resolveHihatRenderBudget, calculateHihatChokeTau, HIHAT_ENGINE_PROFILES };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.BighartBeatHihat = Object.assign(root.BighartBeatHihat || {}, api);

@@ -8,9 +8,10 @@ const hihatVoice = require(path.join(root, 'src', 'rhythm', 'hihat-voice.js'));
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 
-const { resolveHihatVoiceSpec, HIHAT_ENGINE_PROFILES } = hihatVoice;
+const { resolveHihatVoiceSpec, resolveHihatRenderBudget, HIHAT_ENGINE_PROFILES } = hihatVoice;
 
 assert.strictEqual(typeof resolveHihatVoiceSpec, 'function', 'resolveHihatVoiceSpec is exported');
+assert.strictEqual(typeof resolveHihatRenderBudget, 'function', 'resolveHihatRenderBudget is exported');
 assert(HIHAT_ENGINE_PROFILES && HIHAT_ENGINE_PROFILES.aphex, 'engine hihat profiles are exported');
 
 const baseParams = { freq: 9000, decay: 0.04, open: 0, metal: 0.7 };
@@ -188,6 +189,45 @@ const tightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, d
 const openReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
 const accentedOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 1.0);
 const open909Classic = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
+
+function assertFiniteBudget(budget, label) {
+  assert(budget && typeof budget === 'object', `${label}: budget object returned`);
+  ['maxOptionalSources', 'optionalSourceCount', 'availableOptionalSourceCount'].forEach(k => {
+    assert(Number.isFinite(budget[k]), `${label}: ${k} is finite`);
+  });
+  ['useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'].forEach(k => {
+    assert.strictEqual(typeof budget[k], 'boolean', `${label}: ${k} is boolean`);
+  });
+  assert(budget.maxOptionalSources >= 0, `${label}: maxOptionalSources non-negative`);
+  assert(budget.optionalSourceCount >= 0, `${label}: optionalSourceCount non-negative`);
+  assert(budget.optionalSourceCount <= budget.maxOptionalSources, `${label}: optionalSourceCount respects cap`);
+  assert(budget.optionalSourceCount <= budget.availableOptionalSourceCount, `${label}: optionalSourceCount no larger than available`);
+}
+
+const desktopAphexBudget = resolveHihatRenderBudget(openAphex);
+assertFiniteBudget(desktopAphexBudget, 'desktop aphex hihat render budget');
+assert.strictEqual(desktopAphexBudget.useOpenShimmer, openAphex.openShimmerGain > 0.001, 'desktop budget preserves open shimmer when audible');
+assert.strictEqual(desktopAphexBudget.useOpenBody, openAphex.openBodyGain > 0.001, 'desktop budget preserves open body when audible');
+assert.strictEqual(desktopAphexBudget.useOpenFlutter, openAphex.openFlutterGain > 0.001, 'desktop budget preserves open flutter when audible');
+assert.strictEqual(desktopAphexBudget.useIdmSpark, openAphex.idmSparkGain > 0.001, 'desktop budget preserves IDM spark when audible');
+assert.strictEqual(desktopAphexBudget.useGlitch, openAphex.glitchWillFire, 'desktop budget preserves glitch tick when resolver fires it');
+
+const mobileTightAphexBudget = resolveHihatRenderBudget(accentedOpenAphex, { mobile: true, denseRatchet: true, maxOptionalSources: 1 });
+assertFiniteBudget(mobileTightAphexBudget, 'mobile tight aphex hihat render budget');
+assert.strictEqual(mobileTightAphexBudget.maxOptionalSources, 1, 'explicit tight mobile budget cap is honored');
+assert.strictEqual(mobileTightAphexBudget.optionalSourceCount, 1, 'tight mobile budget keeps exactly one optional character source');
+assert(mobileTightAphexBudget.useIdmSpark || mobileTightAphexBudget.useOpenFlutter, 'tight mobile aphex keeps an IDM character layer');
+assert.strictEqual(mobileTightAphexBudget.useOpenShimmer, false, 'tight mobile aphex sheds open shimmer first');
+assert.strictEqual(mobileTightAphexBudget.useOpenBody, false, 'tight mobile aphex sheds open body/bloom first');
+assert.strictEqual(mobileTightAphexBudget.useGlitch, false, 'tight mobile aphex sheds optional glitch tick under tight cap');
+
+const mobileTightReznorBudget = resolveHihatRenderBudget(openReznor, { mobile: true, denseRatchet: true, maxOptionalSources: 1 });
+assertFiniteBudget(mobileTightReznorBudget, 'mobile tight reznor hihat render budget');
+assert.strictEqual(mobileTightReznorBudget.optionalSourceCount, 1, 'tight mobile reznor budget keeps exactly one optional character source');
+assert(mobileTightReznorBudget.useOpenFlutter || mobileTightReznorBudget.useIdmSpark, 'tight mobile reznor keeps a character layer');
+assert.strictEqual(mobileTightReznorBudget.useOpenShimmer, false, 'tight mobile reznor sheds open shimmer first');
+assert.strictEqual(mobileTightReznorBudget.useOpenBody, false, 'tight mobile reznor sheds open body/bloom first');
+
 assert(closedAphex.openFlutterGain <= 0.001, 'closed aphex hihat keeps IDM flutter/rattle effectively silent');
 assert(tightAphex.openFlutterGain > closedAphex.openFlutterGain, 'tight aphex hihat introduces a bounded flutter/rattle layer');
 assert(openAphex.openFlutterGain > tightAphex.openFlutterGain, 'open aphex hihat has stronger flutter/rattle than tight hihat');
@@ -242,6 +282,7 @@ assert(html.indexOf('src/rhythm/hihat-voice.js') > -1, 'index.html loads hihat v
 assert(html.indexOf('src/rhythm/hihat-voice.js') < html.indexOf('src/main.js'), 'hihat helper loads before main.js for GitHub Pages');
 assert(/BighartBeatHihat/.test(main) && /resolveHihatVoiceSpec/.test(main), 'main.js wires synthHihat to pure resolver');
 assert(/function\s+synthHihat\s*\(\s*t,\s*v,\s*p\s*\)\s*\{[\s\S]*resolveHihatVoiceSpec\(S\.engine,\s*p,\s*Math\.random,\s*v\)/.test(main), 'synthHihat passes current hihat velocity/accent into resolver');
+assert(/const\s+hihatBudget\s*=\s*HihatVoice\.resolveHihatRenderBudget\(spec,\s*\{[\s\S]*mobile:/.test(main), 'synthHihat resolves a mobile-aware hihat render budget near the voice spec');
 assert(/const\s+hatPolish\s*=\s*A\.createGain\(\)/.test(main), 'synthHihat adds a bounded post-choke polish gain');
 assert(/hatPolish\.gain\.setValueAtTime\(spec\.outputTrim,\s*t\)/.test(main), 'hihat polish gain uses resolver outputTrim');
 assert(/const\s+hatAir\s*=\s*A\.createBiquadFilter\(\)/.test(main) && /hatAir\.type\s*=\s*'lowpass'/.test(main), 'synthHihat adds a gentle post-choke air lowpass');
@@ -250,19 +291,21 @@ assert(/choke\.connect\(hatPolish\);\s*hatPolish\.connect\(hatAir\);\s*hatAir\.c
 assert(/choke\.gain\.setTargetAtTime\(\.0008,\s*t\s*\+\s*spec\.noiseTailSec,\s*spec\.tailReleaseTau\)/.test(main), 'hihat choke release uses resolver tailReleaseTau');
 assert(/ng\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.noiseGain \* spec\.transientGain,\s*0,\s*\.72\),\s*t \+ spec\.attackSec\);\s*ng\.gain\.setTargetAtTime\(\.001,\s*t \+ spec\.noiseTailSec \* spec\.openTailDamp,\s*spec\.tailReleaseTau\)/.test(main), 'hihat noise tail uses resolver damping and release tau');
 assert(/mg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.metalGain \* spec\.tailHeadroomTrim,\s*0,\s*\.34\),\s*t \+ Math\.max\(\.0008,\s*spec\.attackSec \* \.8\)\)/.test(main), 'hihat metallic layer uses resolver tail headroom trim');
-assert(/if \(spec\.openShimmerGain > 0\.001\)/.test(main), 'synthHihat adds open-hat shimmer only when resolver enables it');
+assert(/if \(hihatBudget\.useOpenShimmer && spec\.openShimmerGain > 0\.001\)/.test(main), 'synthHihat gates open-hat shimmer through render budget and resolver gain');
 assert(/sf\.frequency\.value\s*=\s*spec\.openShimmerHz/.test(main), 'hihat shimmer filter uses resolver frequency');
 assert(/sg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openShimmerGain,\s*0,\s*\.085\),\s*t \+ spec\.attackSec\)/.test(main), 'hihat shimmer gain uses resolver gain and headroom cap');
 assert(/shimmer\.connect\(sf\);\s*sf\.connect\(sg\);\s*sg\.connect\(choke\);/.test(main), 'open hihat shimmer routes through hihat choke');
-assert(/spec\.openBodyGain > 0\.001/.test(main), 'synthHihat adds open-hat body/bloom only when resolver enables it');
+assert(/if \(hihatBudget\.useOpenBody && spec\.openBodyGain > 0\.001\)/.test(main), 'synthHihat gates open-hat body/bloom through render budget and resolver gain');
 assert(/bf\.frequency\.value\s*=\s*spec\.openBodyHz/.test(main), 'hihat body/bloom filter uses resolver frequency');
 assert(/bg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openBodyGain,\s*0,\s*\.11\),\s*t \+ spec\.attackSec\)/.test(main), 'hihat body/bloom gain uses resolver gain and headroom cap');
 assert(/body\.connect\(bf\);\s*bf\.connect\(bg\);\s*bg\.connect\(choke\);/.test(main), 'open hihat body/bloom routes through hihat choke');
-assert(/Math\.max\([\s\S]*spec\.openFlutterGain\s*>\s*0\.001\s*\?\s*spec\.openFlutterTailSec\s*\+\s*spec\.tailReleaseTau/.test(main), 'hihat tail budget includes open IDM flutter/rattle when enabled');
-assert(/if \(spec\.openFlutterGain > 0\.001\)/.test(main), 'synthHihat adds open-hat IDM flutter/rattle only when resolver enables it');
+assert(/Math\.max\([\s\S]*hihatBudget\.useOpenFlutter\s*&&\s*spec\.openFlutterGain\s*>\s*0\.001\s*\?\s*spec\.openFlutterTailSec\s*\+\s*spec\.tailReleaseTau/.test(main), 'hihat tail budget includes open IDM flutter/rattle when budgeted and enabled');
+assert(/if \(hihatBudget\.useOpenFlutter && spec\.openFlutterGain > 0\.001\)/.test(main), 'synthHihat gates open-hat IDM flutter/rattle through render budget and resolver gain');
 assert(/flutterFilter\.frequency\.value\s*=\s*spec\.openFlutterHz/.test(main), 'hihat flutter/rattle filter uses resolver frequency');
 assert(/flutterGain\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openFlutterGain,\s*0,\s*\.045\),\s*t \+ Math\.min\(\.002,\s*spec\.attackSec\)\)/.test(main), 'hihat flutter/rattle gain uses resolver gain and headroom cap');
 assert(/flutter\.connect\(flutterFilter\);\s*flutterFilter\.connect\(flutterGain\);\s*flutterGain\.connect\(choke\);/.test(main), 'open hihat flutter/rattle routes through hihat choke');
 assert(/flutter\.stop\(t \+ spec\.openFlutterTailSec \+ spec\.tailReleaseTau\)/.test(main), 'open hihat flutter/rattle stops safely after its bounded tail');
+assert(/if \(hihatBudget\.useIdmSpark && spec\.idmSparkGain > 0\.001\)/.test(main), 'synthHihat gates IDM spark through render budget and resolver gain');
+assert(/if \(hihatBudget\.useGlitch && spec\.glitchWillFire\)/.test(main), 'synthHihat gates optional glitch tick through render budget and resolver decision');
 
 console.log('Issue 003 hihat voice resolver checks passed.');

@@ -37,7 +37,7 @@ assert(/function\s+getHihatAccentVelocity\s*\(\s*accented\s*\)/.test(main), 'run
 
 const fireBody = extractFunction(main, 'fire');
 const routeVoiceBody = extractFunction(main, 'routeVoice');
-assert(/case\s+['"]hihat['"]:[\s\S]*synthHihat\(t,\s*getStepHihatVelocity\(firingStep\),\s*\{\s*\.\.\.tr\.p,\s*open:\s*getStepHihatOpen\(firingStep\)\s*\}\);\s*break;/.test(fireBody), 'fire dispatches hihat with accent-derived velocity and per-step openness');
+assert(/case\s+['"]hihat['"]:[\s\S]*synthHihat\(t,\s*getStepHihatVelocity\(firingStep\),\s*\{\s*\.\.\.tr\.p,\s*open:\s*getStepHihatOpen\(firingStep\),\s*denseRatchet:\s*ratchetCount\s*>\s*1\s*\}\);\s*break;/.test(fireBody), 'fire dispatches hihat with accent-derived velocity, per-step openness, and dense ratchet budget hint');
 assert(!/case\s+['"]hihat['"]:[\s\S]*synthHihat\(t,\s*(?:v|tr\.vol)\s*,/.test(fireBody), 'fire does not pass the HHT mixer fader as hihat tone velocity');
 assert(/out\.gain\.value\s*=\s*tr\.vol/.test(routeVoiceBody), 'routeVoice remains the single post-voice mixer trim for track volume');
 
@@ -92,6 +92,10 @@ assert.strictEqual(firedHihats.length, 2, 'accented hihat hit fired once');
 assert.strictEqual(firedHihats[1].v, accentVelocity, 'accented hihat hit uses stable accent velocity, not HHT fader value');
 assert.notStrictEqual(firedHihats[1].v, context.TRACKS[2].vol, 'accented hihat velocity remains decoupled from HHT fader changes');
 assert.strictEqual(firedHihats[1].p.open, 0.78, 'accented hihat hit preserves per-step openness');
+
+context.fire(2, 13.5, 2);
+assert.strictEqual(firedHihats.length, 3, 'ratcheted hihat hit fired once through fire dispatcher');
+assert.strictEqual(firedHihats[2].p.denseRatchet, true, 'ratcheted hihat hit passes denseRatchet budget hint into synthHihat');
 
 const gains = [];
 function makeGain(label) {

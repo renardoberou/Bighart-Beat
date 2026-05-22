@@ -101,7 +101,7 @@ assert(/const\s+RATCHETS\s*=\s*State\.createRatchetBanks\(\)/.test(js));
 assert(/function\s+ratchetOffsets\s*\(\s*stepDuration\s*,\s*count\s*\)/.test(js));
 assert(/function\s+scheduledHitTimes\s*\(\s*stepStart\s*,\s*stepDuration\s*,\s*count\s*\)/.test(js));
 assert(/Groove\.scheduledHitTimes\(\{[\s\S]*stepIndex:\s*step[\s\S]*ratchets:\s*count[\s\S]*\}\)/.test(js), 'runtime schedules ratchets through the groove timing helper');
-assert(/fire\(ti,\s*hitT\)/.test(js));
+assert(/fire\(ti,\s*hitT,\s*count\)/.test(js), 'scheduled ratchet hits pass resolved count into fire for hihat render budget');
 assert(/getRatchetCount\(RATCHETS\[S\.patt\],\s*tr\.id,\s*step\)/.test(js));
 assert(/addEventListener\(['"]contextmenu['"]/.test(js));
 assert(/addEventListener\(['"]contextmenu['"],\s*e\s*=>\s*{[\s\S]*?e\.preventDefault\(\);[\s\S]*?if\s*\(\s*longPressFired\s*\)\s*return;[\s\S]*?cycleCellRatchet\(\);[\s\S]*?}\)/.test(js), 'contextmenu suppresses duplicate cycle after pointer long-press');
