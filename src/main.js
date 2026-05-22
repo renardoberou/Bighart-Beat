@@ -50,8 +50,15 @@ const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
 const CHAIN_SLOT_BAR_CHOICES = [1, 2, 4, 8, 16];
 const OPEN_HIHAT_ROW_ID = 'open-hihat';
 const OPEN_HIHAT_ROW_LABEL = 'OHH';
+const DEFAULT_VOICE_VELOCITY = 0.75;
+const KICK_VOICE_VELOCITY = 0.78;
+const SNARE_VOICE_VELOCITY = 0.68;
 const HIHAT_NORMAL_VELOCITY = 0.72;
 const HIHAT_ACCENT_VELOCITY = 0.96;
+const CLAP_VOICE_VELOCITY = 0.58;
+const INPUT_VOICE_VELOCITY = 0.70;
+const ETHER_VOICE_VELOCITY = 0.62;
+const SYNTH_VOICE_VELOCITY = 0.52;
 const SYNTH_MAX_FREQUENCY_HZ = State.SYNTH_MAX_FREQUENCY_HZ || SynthVoice.SYNTH_MAX_FREQUENCY_HZ || 500;
 const SYNTH_ROOT_MAX_HZ = State.SYNTH_ROOT_MAX_HZ || SynthVoice.SYNTH_ROOT_MAX_HZ || 125;
 const SYNTH_OSC_SAFETY_MIN_HZ = 1;
@@ -514,6 +521,19 @@ function triggerCompGate(t, trackId) {
   g.setTargetAtTime(analogClosed, t + atk + hold, Math.max(.005, rel / 3));
 }
 
+function getTrackVoiceVelocity(trackIndex) {
+  const tr = TRACKS[trackIndex];
+  switch (tr && tr.id) {
+    case 'kick': return KICK_VOICE_VELOCITY;
+    case 'snare': return SNARE_VOICE_VELOCITY;
+    case 'clap': return CLAP_VOICE_VELOCITY;
+    case 'input': return INPUT_VOICE_VELOCITY;
+    case 'ether': return ETHER_VOICE_VELOCITY;
+    case 'synth': return SYNTH_VOICE_VELOCITY;
+    default: return DEFAULT_VOICE_VELOCITY;
+  }
+}
+
 // ── KICK ── deep thump with click and saturation
 function synthKick(t, v, p) {
   const spec = KickVoice.resolveKickVoiceSpec(S.engine, p, v);
@@ -698,7 +718,7 @@ function previewVoice(trackIndex, synthFn) {
   const tr = TRACKS[trackIndex];
   const t = A.currentTime + .018;
   triggerCompGate(t, tr.id);
-  synthFn(t, tr.vol, tr.p);
+  synthFn(t, getTrackVoiceVelocity(trackIndex), tr.p);
 }
 
 function previewInput() {
@@ -718,10 +738,10 @@ function previewEngineKit() {
   const hihat = TRACKS[2];
 
   triggerCompGate(t, kick.id);
-  synthKick(t, kick.vol, kick.p);
+  synthKick(t, getTrackVoiceVelocity(0), kick.p);
 
   triggerCompGate(t + .12, snare.id);
-  synthSnare(t + .12, snare.vol, snare.p);
+  synthSnare(t + .12, getTrackVoiceVelocity(1), snare.p);
 
   triggerCompGate(t + .24, hihat.id);
   synthHihat(t + .24, HIHAT_NORMAL_VELOCITY, { ...hihat.p, open: HHT_PLACE });
@@ -954,7 +974,7 @@ function previewSynth() {
   const tr = TRACKS[6];
   const t = A.currentTime + .015;
   triggerCompGate(t, tr.id);
-  synthSynth(t, tr.vol, { ...tr.p, pitch: getStepSynthPitch(LAST_SYNTH_NOTE_STEP) }, { audition: true });
+  synthSynth(t, getTrackVoiceVelocity(6), { ...tr.p, pitch: getStepSynthPitch(LAST_SYNTH_NOTE_STEP) }, { audition: true });
 }
 
 function getStepHihatOpen(step) {
@@ -1054,15 +1074,14 @@ function fire(ti, t) {
   const tr = TRACKS[ti];
   if (tr.mute) return;
   triggerCompGate(t, tr.id);
-  const v = tr.vol;
   switch (tr.id) {
-    case 'kick':  synthKick(t, v, tr.p); break;
-    case 'snare': synthSnare(t, v, tr.p); break;
+    case 'kick': { const v = getTrackVoiceVelocity(ti); synthKick(t, v, tr.p); break; }
+    case 'snare': { const v = getTrackVoiceVelocity(ti); synthSnare(t, v, tr.p); break; }
     case 'hihat': synthHihat(t, getStepHihatVelocity(firingStep), { ...tr.p, open: getStepHihatOpen(firingStep) }); break;
-    case 'clap':  synthClap(t, v, tr.p); break;
-    case 'input': synthInput(t, v, tr.p); break;
-    case 'ether': synthEther(t, v, tr.p); break;
-    case 'synth': synthSynth(t, v, { ...tr.p, pitch: getStepSynthPitch(firingStep) }); break;
+    case 'clap': { const v = getTrackVoiceVelocity(ti); synthClap(t, v, tr.p); break; }
+    case 'input': { const v = getTrackVoiceVelocity(ti); synthInput(t, v, tr.p); break; }
+    case 'ether': { const v = getTrackVoiceVelocity(ti); synthEther(t, v, tr.p); break; }
+    case 'synth': { const v = getTrackVoiceVelocity(ti); synthSynth(t, v, { ...tr.p, pitch: getStepSynthPitch(firingStep) }); break; }
   }
 }
 

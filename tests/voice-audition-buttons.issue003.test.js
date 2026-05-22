@@ -27,7 +27,7 @@ assertMatches(/function\s+previewVoice\s*\(\s*trackIndex\s*,\s*synthFn\s*\)\s*\{
 assertMatches(/function\s+previewVoice\s*\(\s*trackIndex\s*,\s*synthFn\s*\)\s*\{[\s\S]*?const\s+tr\s*=\s*TRACKS\s*\[\s*trackIndex\s*\]/, 'shared voice preview helper reads the requested TRACKS entry');
 assertMatches(/function\s+previewVoice\s*\(\s*trackIndex\s*,\s*synthFn\s*\)\s*\{[\s\S]*?const\s+t\s*=\s*A\.currentTime\s*\+\s*\.0?1[58]/, 'shared voice preview helper schedules from current audio time with a small offset');
 assertMatches(/function\s+previewVoice\s*\(\s*trackIndex\s*,\s*synthFn\s*\)\s*\{[\s\S]*?triggerCompGate\s*\(\s*t\s*,\s*tr\.id\s*\)/, 'shared voice preview helper triggers the compressor gate through runtime routing');
-assertMatches(/function\s+previewVoice\s*\(\s*trackIndex\s*,\s*synthFn\s*\)\s*\{[\s\S]*?synthFn\s*\(\s*t\s*,\s*tr\.vol\s*,\s*tr\.p\s*\)/, 'shared voice preview helper calls the selected synth with current track volume and params');
+assertMatches(/function\s+previewVoice\s*\(\s*trackIndex\s*,\s*synthFn\s*\)\s*\{[\s\S]*?synthFn\s*\(\s*t\s*,\s*getTrackVoiceVelocity\(\s*trackIndex\s*\)\s*,\s*tr\.p\s*\)/, 'shared voice preview helper calls the selected synth with stable voice excitation and current params');
 
 assertMatches(/data-voice-test=['"]kick['"][\s\S]*?>TEST KCK<|>TEST KCK<[\s\S]*?data-voice-test=['"]kick['"]/, 'kick TEST button has a stable data hook and exact label');
 assertMatches(/data-voice-test=['"]snare['"][\s\S]*?>TEST SNR<|>TEST SNR<[\s\S]*?data-voice-test=['"]snare['"]/, 'snare TEST button has a stable data hook and exact label');

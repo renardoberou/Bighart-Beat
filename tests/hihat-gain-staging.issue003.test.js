@@ -67,6 +67,7 @@ const context = {
   synthEther() { throw new Error('ether should not fire'); },
   synthSynth() { throw new Error('synth should not fire'); },
   triggerCompGate(t, id) { compGateHits.push({ t, id }); },
+  getTrackVoiceVelocity() { throw new Error('hihat fire should not consume non-hihat velocity'); },
 };
 vm.createContext(context);
 vm.runInContext(`

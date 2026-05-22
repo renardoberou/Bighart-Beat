@@ -38,11 +38,11 @@ assert(
   'synthSynth only writes shared pitch/time state for non-audition playback'
 );
 assert(
-  /function\s+previewSynth\s*\(\s*\)\s*\{[\s\S]*triggerCompGate\(t,\s*tr\.id\)[\s\S]*synthSynth\(t,\s*tr\.vol,\s*\{\s*\.\.\.tr\.p,\s*pitch:\s*getStepSynthPitch\(LAST_SYNTH_NOTE_STEP\)\s*\},\s*\{\s*audition:\s*true\s*\}\s*\)/.test(main),
+  /function\s+previewSynth\s*\(\s*\)\s*\{[\s\S]*triggerCompGate\(t,\s*tr\.id\)[\s\S]*synthSynth\(t,\s*getTrackVoiceVelocity\(\s*6\s*\),\s*\{\s*\.\.\.tr\.p,\s*pitch:\s*getStepSynthPitch\(LAST_SYNTH_NOTE_STEP\)\s*\},\s*\{\s*audition:\s*true\s*\}\s*\)/.test(main),
   'previewSynth/TEST SYN passes audition true while preserving compressor gate and selected harmonic pitch'
 );
 assert(
-  /case\s+'synth':\s*synthSynth\(t,\s*v,\s*\{\s*\.\.\.tr\.p,\s*pitch:\s*getStepSynthPitch\(firingStep\)\s*\}\);\s*break;/.test(main),
+  /case\s+'synth':\s*\{\s*const\s+v\s*=\s*getTrackVoiceVelocity\(ti\);\s*synthSynth\(t,\s*v,\s*\{\s*\.\.\.tr\.p,\s*pitch:\s*getStepSynthPitch\(firingStep\)\s*\}\);\s*break;\s*\}/.test(main),
   'sequenced synth playback keeps the normal non-audition synthSynth call'
 );
 
