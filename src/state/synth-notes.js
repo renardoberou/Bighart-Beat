@@ -4,8 +4,11 @@
   const STEP_COUNT = 16;
   const BANK_COUNT = 4;
   const SYNTH_MIN_HZ = 40;
-  const SYNTH_MAX_HZ = 3000;
+  const SYNTH_MAX_FREQUENCY_HZ = 500;
   const SYNTH_HARMONIC_RATIOS = [0.5, 0.75, 1, 1.25, 4 / 3, 1.5, 5 / 3, 2, 2.5, 3, 4];
+  const SYNTH_MAX_HARMONIC_RATIO = Math.max(...SYNTH_HARMONIC_RATIOS);
+  const SYNTH_ROOT_MAX_HZ = SYNTH_MAX_FREQUENCY_HZ / SYNTH_MAX_HARMONIC_RATIO;
+  const SYNTH_MAX_HZ = SYNTH_ROOT_MAX_HZ;
   const SYNTH_HARMONIC_INTERVAL_LABELS = [
     [0.5, 'oct↓'],
     [0.75, '5th↓'],
@@ -155,7 +158,7 @@
   }
 
   function synthPitchForStep(rootHz, ratio) {
-    return clamp(finiteOr(rootHz, 220) * normalizeSynthNoteRatio(ratio == null ? 1 : ratio), SYNTH_MIN_HZ, SYNTH_MAX_HZ);
+    return clamp(finiteOr(rootHz, SYNTH_ROOT_MAX_HZ) * normalizeSynthNoteRatio(ratio == null ? 1 : ratio), SYNTH_MIN_HZ, SYNTH_MAX_FREQUENCY_HZ);
   }
 
   function randomHarmonicSynthNotes(grid, activeSteps) {
@@ -175,6 +178,9 @@
 
   const api = {
     SYNTH_MIN_HZ,
+    SYNTH_MAX_FREQUENCY_HZ,
+    SYNTH_MAX_HARMONIC_RATIO,
+    SYNTH_ROOT_MAX_HZ,
     SYNTH_MAX_HZ,
     SYNTH_HARMONIC_RATIOS,
     normalizeSynthNoteRatio,

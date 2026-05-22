@@ -12,7 +12,10 @@ const { createPatternBanks } = require(path.join(root, 'src', 'state', 'patterns
 const { serializeProject, parseProjectImport } = require(path.join(root, 'src', 'state', 'persistence.js'));
 
 assert.strictEqual(SynthNotes.SYNTH_MIN_HZ, 40, 'synth root minimum is 40 Hz');
-assert.strictEqual(SynthNotes.SYNTH_MAX_HZ, 3000, 'synth root maximum is 3000 Hz');
+assert.strictEqual(SynthNotes.SYNTH_MAX_FREQUENCY_HZ, 500, 'canonical synth maximum frequency is 500 Hz');
+assert.strictEqual(SynthNotes.SYNTH_MAX_HARMONIC_RATIO, 4, 'synth harmonic ratios expose the canonical 4x maximum');
+assert.strictEqual(SynthNotes.SYNTH_ROOT_MAX_HZ, 125, 'synth root maximum is derived from the 500 Hz cap divided by the 4x harmonic');
+assert.strictEqual(SynthNotes.SYNTH_MAX_HZ, 125, 'synth root maximum aliases the 125 Hz root cap');
 assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(1.5), 'harmonic list includes perfect fifth ratio');
 assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(2), 'harmonic list includes octave ratio');
 
@@ -55,7 +58,9 @@ assert.deepStrictEqual(otherBank, otherBankBefore, 'selected-step random harmoni
 
 assert.strictEqual(SynthNotes.synthPitchForStep(220, 2), 440, 'step pitch multiplies root by harmonic ratio');
 assert.strictEqual(SynthNotes.synthPitchForStep(17, 1), 40, 'step pitch clamps below 40 Hz');
-assert.strictEqual(SynthNotes.synthPitchForStep(8000, 4), 3000, 'step pitch clamps above 3000 Hz');
+assert.strictEqual(SynthNotes.synthPitchForStep(125, 4), 500, 'step pitch reaches 500 Hz at max root and max harmonic ratio');
+assert.strictEqual(SynthNotes.synthPitchForStep(125, 3), 375, 'high harmonic ratios remain distinct at the maximum synth root');
+assert.strictEqual(SynthNotes.synthPitchForStep(8000, 4), 500, 'step pitch still has a final 500 Hz output safety cap');
 assert.strictEqual(SynthNotes.normalizeSynthNoteRatio(999), 16, 'ratios are bounded for import safety');
 assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(1), '×1', 'ratio helper preserves root marker style');
 assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(1.25), '×1.25', 'ratio helper preserves above-root marker style');
@@ -119,13 +124,13 @@ const appState = createAppState();
 const tracks = createDefaultTracks();
 const fx = createDefaultFxState();
 const patterns = createPatternBanks();
-tracks[6].p.pitch = 3000;
+tracks[6].p.pitch = 125;
 banks[2][5] = 1.5;
 const serialized = serializeProject({ appState, tracks, fx, patterns, synthNotes: banks });
 assert.deepStrictEqual(serialized.synthNotes[2][5], 1.5, 'serializeProject persists per-step synth harmonic ratios');
 const parsed = parseProjectImport(serialized);
 assert.strictEqual(parsed.ok, true, 'parseProjectImport accepts synth note banks');
-assert.strictEqual(parsed.value.tracks[6].p.pitch, 3000, 'parseProjectImport accepts the canonical 3000 Hz synth root ceiling');
+assert.strictEqual(parsed.value.tracks[6].p.pitch, 125, 'parseProjectImport accepts the canonical 125 Hz synth root ceiling');
 assert.strictEqual(parsed.value.synthNotes[2][5], 1.5, 'parseProjectImport round-trips synth note banks');
 
 const legacy = serializeProject({ appState, tracks, fx, patterns });

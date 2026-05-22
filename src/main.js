@@ -51,6 +51,10 @@ const OPEN_HIHAT_ROW_ID = 'open-hihat';
 const OPEN_HIHAT_ROW_LABEL = 'OHH';
 const HIHAT_NORMAL_VELOCITY = 0.72;
 const HIHAT_ACCENT_VELOCITY = 0.96;
+const SYNTH_MAX_FREQUENCY_HZ = State.SYNTH_MAX_FREQUENCY_HZ || SynthVoice.SYNTH_MAX_FREQUENCY_HZ || 500;
+const SYNTH_ROOT_MAX_HZ = State.SYNTH_ROOT_MAX_HZ || SynthVoice.SYNTH_ROOT_MAX_HZ || 125;
+const SYNTH_OSC_SAFETY_MIN_HZ = 1;
+const SYNTH_OSC_SAFETY_MAX_HZ = 20000;
 const hihatChokeState = { gain: null, open: 0 };
 const synthVoiceState = { gain: null, pitchHz: null, triggerTime: null };
 const REV_IR_REBUILD_DEBOUNCE_MS = 50;
@@ -855,8 +859,10 @@ function triggerSynthChoke(t, voiceGain, spec) {
 }
 
 function applySynthGlideFrequency(frequencyParam, targetHz, t, spec, shouldGlide, previousTargetHz) {
-  frequencyParam.setValueAtTime(shouldGlide ? previousTargetHz : targetHz, t);
-  if (shouldGlide) frequencyParam.setTargetAtTime(targetHz, t, spec.glideSec);
+  const target = clamp(targetHz, SYNTH_OSC_SAFETY_MIN_HZ, SYNTH_OSC_SAFETY_MAX_HZ);
+  const previous = clamp(previousTargetHz, SYNTH_OSC_SAFETY_MIN_HZ, SYNTH_OSC_SAFETY_MAX_HZ);
+  frequencyParam.setValueAtTime(shouldGlide ? previous : target, t);
+  if (shouldGlide) frequencyParam.setTargetAtTime(target, t, spec.glideSec);
 }
 
 // ── SYNTH ── playable monophonic row with engine-selected personalities
@@ -1688,7 +1694,7 @@ function buildVE() {
     syn.innerHTML = `<div class="hat-help">
         <div class="hat-help-engine">SYNTH ENGINE: ${S.engine.toUpperCase()}</div>
         <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.toUpperCase()}</div>
-        <div>ROOT 40 Hz–3000 Hz · STEP NOTES ARE HARMONIC RATIOS</div>
+        <div>ROOT 40 Hz–125 Hz · STEP NOTES ARE HARMONIC RATIOS</div>
         <div data-synth-note-status="1">${synthNoteStatusText(LAST_SYNTH_NOTE_STEP)}</div>
         <div data-synth-note-hint="1">${synthNoteEditHintText(LAST_SYNTH_NOTE_STEP)}</div>
         <div>${SYNTH_NOTE_EDIT ? 'NOTE EDIT ON: TAP SYN STEPS TO CYCLE RATIOS' : 'ENABLE NOTE EDIT TO CHANGE SYN STEPS'}</div>
@@ -1731,7 +1737,7 @@ function buildVE() {
       previewSynth();
       toast('SYN harmonic steps randomized');
     });
-    mkRow('PITCH', 40, 3000, 1, tr.p.pitch, x=>`${x|0} Hz`, v=>{ tr.p.pitch=v; updateSynthNoteStatus(); }, c);
+    mkRow('PITCH', 40, SYNTH_ROOT_MAX_HZ, 1, Math.min(tr.p.pitch, SYNTH_ROOT_MAX_HZ), x=>`${x|0} Hz`, v=>{ tr.p.pitch=Math.min(v, SYNTH_ROOT_MAX_HZ); updateSynthNoteStatus(); }, c);
     mkRow('DECAY', 4, 220, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
     mkRow('TONE', 0, 100, 1, Math.round(tr.p.tone*100), x=>`${x}%`, v=>tr.p.tone=v/100, c);
     mkRow('SHAPE', 0, 100, 1, Math.round(tr.p.shape*100), x=>`${x}%`, v=>tr.p.shape=v/100, c);

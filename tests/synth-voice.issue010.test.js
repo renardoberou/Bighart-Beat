@@ -14,6 +14,8 @@ const { resolveSynthVoiceSpec, SYNTH_ENGINE_PROFILES } = synthVoice;
 
 assert.strictEqual(typeof resolveSynthVoiceSpec, 'function', 'resolveSynthVoiceSpec is exported');
 assert(SYNTH_ENGINE_PROFILES && SYNTH_ENGINE_PROFILES['808'] && SYNTH_ENGINE_PROFILES.aphex, 'synth engine profiles are exported');
+assert.strictEqual(synthVoice.SYNTH_MAX_FREQUENCY_HZ, 500, 'synth voice exposes the shared 500 Hz output frequency cap');
+assert.strictEqual(synthVoice.SYNTH_ROOT_MAX_HZ, 125, 'synth voice exposes the shared 125 Hz root cap');
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
@@ -23,7 +25,7 @@ function assertFiniteBounded(spec, label) {
     'bodyGain', 'subGain', 'noiseGain', 'glideSec', 'stopSec', 'chokeTau', 'shape', 'tone',
     'modRatio', 'modIndex', 'detuneCents'
   ].forEach(k => assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`));
-  assert(spec.pitchHz >= 40 && spec.pitchHz <= 3000, `${label}: pitchHz bounded`);
+  assert(spec.pitchHz >= 40 && spec.pitchHz <= 500, `${label}: pitchHz bounded to synth hotfix ceiling`);
   assert(spec.decaySec >= 0.04 && spec.decaySec <= 2.5, `${label}: decaySec bounded`);
   assert(spec.attackSec >= 0.001 && spec.attackSec <= 0.03, `${label}: attackSec bounded`);
   assert(spec.releaseTau >= 0.003 && spec.releaseTau <= 0.20, `${label}: releaseTau bounded`);
@@ -126,6 +128,7 @@ const low = resolveSynthVoiceSpec('909', { pitch: 20, decay: -1, tone: -2, shape
 const high = resolveSynthVoiceSpec('909', { pitch: Infinity, decay: 99, tone: 99, shape: 99 });
 assertFiniteBounded(low, 'invalid low input sanitized');
 assertFiniteBounded(high, 'invalid high input sanitized');
+assert.strictEqual(resolveSynthVoiceSpec('aphex', { pitch: 900, decay: 0.35, tone: 0.5, shape: 0.5 }).pitchHz, 500, 'resolver clamps over-limit synth pitch to 500 Hz after engine scaling');
 assert(low.filterHz < high.filterHz, 'tone control opens filter frequency');
 assert(low.filterQ < high.filterQ, 'shape control increases acid/resonant shape');
 
@@ -135,5 +138,6 @@ assert(/BighartBeatSynth/.test(main) && /resolveSynthVoiceSpec/.test(main), 'mai
 assert(/filter\.frequency\.setValueAtTime\(spec\.filterRestHz, t\)/.test(main), 'main.js starts synth filter at explicit trigger-envelope rest cutoff');
 assert(/filter\.frequency\.exponentialRampToValueAtTime\(Math\.max\(80, spec\.filterTriggerHz\), t \+ spec\.filterAttackSec\)/.test(main), 'main.js opens synth filter with explicit trigger cutoff and snap time');
 assert(/filter\.frequency\.exponentialRampToValueAtTime\(Math\.max\(80, spec\.filterRestHz\), t \+ spec\.filterDecaySec\)/.test(main), 'main.js decays synth filter envelope back to rest cutoff using explicit filter decay articulation');
+assert(/const\s+SYNTH_ROOT_MAX_HZ\s*=\s*State\.SYNTH_ROOT_MAX_HZ\s*\|\|\s*SynthVoice\.SYNTH_ROOT_MAX_HZ\s*\|\|\s*125/.test(main), 'main.js uses the shared synth root cap constant from state/synth voice');
 
 console.log('Issue 010 synth voice resolver checks passed.');

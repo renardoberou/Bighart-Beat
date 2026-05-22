@@ -71,7 +71,7 @@ assert.strictEqual(serialized.tracks[0].mute, true);
 assert.strictEqual(serialized.tracks[0].p.pitch, 123);
 assert.strictEqual(serialized.tracks.length, 7, 'serializeProject persists all seven canonical tracks');
 assert.strictEqual(serialized.tracks[6].id, 'synth', 'serializeProject includes the canonical synth track');
-assert.deepStrictEqual(serialized.tracks[6].p, { pitch:220, decay:.35, tone:.50, shape:.50 }, 'serialized synth track includes default params');
+assert.deepStrictEqual(serialized.tracks[6].p, { pitch:125, decay:.35, tone:.50, shape:.50 }, 'serialized synth track includes default params');
 assert.strictEqual(serialized.patterns[2].ether[15], 1);
 assert.deepStrictEqual(serialized.patterns[0].synth, Array(16).fill(0), 'serializeProject includes empty synth pattern lanes');
 assert.strictEqual(serialized.tracks[0].n, undefined, 'serialized tracks include only runtime save/import fields');

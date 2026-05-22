@@ -43,17 +43,17 @@ assert.deepStrictEqual(synthTrack(legacyParsed.value), {
   dlyS: false,
   revS: true,
   wreckS: true,
-  p: { pitch: 3000, decay: 1.25, tone: 0.75, shape: 0.2 },
+  p: { pitch: 125, decay: 1.25, tone: 0.75, shape: 0.2 },
 }, 'legacy boosted synth pitch is narrowly clamped while valid synth fields are preserved');
 
 const validSynthProject = clone(baseProject);
-synthTrack(validSynthProject).p.pitch = 2999;
+synthTrack(validSynthProject).p.pitch = 124;
 synthTrack(validSynthProject).p.decay = 0.9;
 synthTrack(validSynthProject).p.tone = 0.6;
 synthTrack(validSynthProject).p.shape = 0.4;
 const validParsed = parseProjectImport(validSynthProject);
 assert.strictEqual(validParsed.ok, true, 'valid synth pitch below the canonical ceiling imports');
-assert.strictEqual(synthTrack(validParsed.value).p.pitch, 2999, 'valid synth pitch is preserved exactly');
-assert.deepStrictEqual(synthTrack(validParsed.value).p, { pitch: 2999, decay: 0.9, tone: 0.6, shape: 0.4 }, 'valid synth params are preserved');
+assert.strictEqual(synthTrack(validParsed.value).p.pitch, 124, 'valid synth pitch is preserved exactly');
+assert.deepStrictEqual(synthTrack(validParsed.value).p, { pitch: 124, decay: 0.9, tone: 0.6, shape: 0.4 }, 'valid synth params are preserved');
 
 console.log('Issue 016 synth pitch import clamp checks passed.');

@@ -8,19 +8,23 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const persistence = fs.readFileSync(path.join(root, 'src', 'state', 'persistence.js'), 'utf8');
-const { SYNTH_MAX_HZ, synthPitchForStep } = require(path.join(root, 'src', 'state', 'synth-notes.js'));
+const { SYNTH_MAX_FREQUENCY_HZ, SYNTH_ROOT_MAX_HZ, SYNTH_MAX_HZ, SYNTH_MAX_HARMONIC_RATIO, synthPitchForStep } = require(path.join(root, 'src', 'state', 'synth-notes.js'));
 
-assert.strictEqual(SYNTH_MAX_HZ, 3000, 'canonical synth max pitch constant is 3000 Hz');
-assert.strictEqual(synthPitchForStep(1000, 16), 3000, 'synthPitchForStep clamps harmonic note pitch to 3000 Hz');
+assert.strictEqual(SYNTH_MAX_FREQUENCY_HZ, 500, 'canonical synth max output frequency cap is 500 Hz');
+assert.strictEqual(SYNTH_MAX_HARMONIC_RATIO, 4, 'canonical synth harmonic table tops out at a 4x ratio');
+assert.strictEqual(SYNTH_ROOT_MAX_HZ, 125, 'canonical synth root max keeps the 4x harmonic distinct under the 500 Hz output cap');
+assert.strictEqual(SYNTH_MAX_HZ, SYNTH_ROOT_MAX_HZ, 'legacy synth root maximum alias matches the 125 Hz root cap');
+assert.strictEqual(synthPitchForStep(125, 4), 500, 'synthPitchForStep maps max root and max harmonic ratio to the 500 Hz output cap');
+assert.strictEqual(synthPitchForStep(125, 3), 375, 'higher harmonics remain distinct at the max root instead of collapsing to 500 Hz');
 
 assert(
-  /ROOT 40 Hz[–-]3000 Hz · STEP NOTES ARE HARMONIC RATIOS/.test(main),
-  'SYN voice editor help text announces the new 40 Hz–3000 Hz root pitch range'
+  /ROOT 40 Hz[–-]125 Hz · STEP NOTES ARE HARMONIC RATIOS/.test(main),
+  'SYN voice editor help text announces the 40 Hz–125 Hz root pitch range'
 );
 
 assert(
-  /tr\.id\s*===\s*'synth'[\s\S]*mkRow\(\s*'PITCH'\s*,\s*40\s*,\s*3000\s*,\s*1\s*,\s*tr\.p\.pitch[\s\S]*updateSynthNoteStatus\(\)/.test(main),
-  'SYN pitch fader is clamped to 40 Hz minimum and 3000 Hz maximum while updating note status'
+  /tr\.id\s*===\s*'synth'[\s\S]*mkRow\(\s*'PITCH'\s*,\s*40\s*,\s*SYNTH_ROOT_MAX_HZ\s*,\s*1\s*,\s*Math\.min\(tr\.p\.pitch,\s*SYNTH_ROOT_MAX_HZ\)[\s\S]*updateSynthNoteStatus\(\)/.test(main),
+  'SYN pitch fader is clamped to 40 Hz minimum and the 125 Hz root max constant while updating note status'
 );
 
 assert(
@@ -29,8 +33,18 @@ assert(
 );
 
 assert(
-  /synth:\s*\{\s*pitch:\s*\[\s*40\s*,\s*3000\s*\]/.test(persistence),
-  'SYN persistence validation range uses the canonical 40 Hz–3000 Hz root pitch range'
+  /synth:\s*\{\s*pitch:\s*\[\s*40\s*,\s*SYNTH_ROOT_MAX_HZ\s*\]/.test(persistence),
+  'SYN persistence validation range uses the canonical 40 Hz–125 Hz root pitch range'
+);
+
+assert(
+  /function\s+applySynthGlideFrequency[\s\S]*clamp\(targetHz,\s*SYNTH_OSC_SAFETY_MIN_HZ,\s*SYNTH_OSC_SAFETY_MAX_HZ\)[\s\S]*setTargetAtTime\(target,\s*t,\s*spec\.glideSec\)/.test(main),
+  'runtime uses a broad oscillator safety clamp for derived synth oscillator glide targets'
+);
+
+assert(
+  !/function\s+applySynthGlideFrequency[\s\S]*clamp\(targetHz,\s*40,\s*SYNTH_MAX_FREQUENCY_HZ\)/.test(main),
+  'runtime does not blindly apply the strict 40 Hz–500 Hz cap to sub/FM/modulator derived oscillator targets'
 );
 
 assert(
