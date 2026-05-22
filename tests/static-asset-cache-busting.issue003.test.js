@@ -11,8 +11,8 @@ const head = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
 
 const STALE_TOKEN = 'v=boost-week-20260521-cachefresh';
 const PREVIOUS_TOKEN = 'v=hihat-accent-20260522-ux';
-const EXPECTED_TOKEN = 'v=hihat-gain-stage-20260522';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent|hihat-open-contract|hihat-gain-stage|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const EXPECTED_TOKEN = 'v=hihat-open-body-20260522';
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent|hihat-open-contract|hihat-gain-stage|hihat-open-body|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl) {
   assert(
@@ -24,7 +24,7 @@ function assertExactlyOneCurrentToken(assetUrl) {
   assert.deepStrictEqual(
     tokenMatches,
     [`?${EXPECTED_TOKEN}`],
-    `${assetUrl} has exactly one current hihat gain-stage cache token`,
+    `${assetUrl} has exactly one current hihat open-body cache token`,
   );
 }
 
@@ -38,7 +38,7 @@ const localStylesheets = stylesheetHrefs.filter((href) => href.startsWith('style
 assert.deepStrictEqual(
   localStylesheets,
   [`styles/main.css?${EXPECTED_TOKEN}`],
-  'index.html loads local stylesheet with the current hihat gain-stage cache token',
+  'index.html loads local stylesheet with the current hihat open-body cache token',
 );
 localStylesheets.forEach(assertExactlyOneCurrentToken);
 
@@ -83,7 +83,7 @@ const expectedScriptSrcs = [
 assert.deepStrictEqual(
   scriptSrcs,
   expectedScriptSrcs,
-  'cache busting preserves static script execution order and gives every local script exactly one current hihat gain-stage cache token',
+  'cache busting preserves static script execution order and gives every local script exactly one current hihat open-body cache token',
 );
 scriptSrcs.forEach(assertExactlyOneCurrentToken);
 

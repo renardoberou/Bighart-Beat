@@ -624,6 +624,7 @@ function synthHihat(t, v, p) {
   const hihatTailSec = Math.max(
     spec.noiseTailSec + spec.tailReleaseTau * 4,
     spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
+    spec.openBodyGain > 0.001 ? spec.openBodyTailSec + spec.tailReleaseTau * 4 : 0,
     spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau : 0,
     spec.metalGain > 0.001 ? spec.metalTailSec + .025 : 0,
     spec.glitchWillFire ? .010 : 0
@@ -661,6 +662,17 @@ function synthHihat(t, v, p) {
     sg.gain.exponentialRampToValueAtTime(.001, t + spec.openShimmerTailSec);
     shimmer.connect(sf); sf.connect(sg); sg.connect(choke);
     shimmer.start(t); shimmer.stop(t + spec.openShimmerTailSec + spec.tailReleaseTau * 4);
+  }
+  if (spec.openBodyGain > 0.001) {
+    const body = A.createBufferSource(); body.buffer = nz; body.loop = true;
+    const bf = A.createBiquadFilter(); bf.type = 'bandpass'; bf.frequency.value = spec.openBodyHz; bf.Q.value = spec.openBodyQ;
+    const bg = A.createGain();
+    bg.gain.setValueAtTime(0, t);
+    bg.gain.linearRampToValueAtTime(clamp(v * spec.openBodyGain, 0, .11), t + spec.attackSec);
+    bg.gain.setTargetAtTime(.001, t + spec.openBodyTailSec * spec.openTailDamp, spec.tailReleaseTau);
+    bg.gain.exponentialRampToValueAtTime(.001, t + spec.openBodyTailSec);
+    body.connect(bf); bf.connect(bg); bg.connect(choke);
+    body.start(t); body.stop(t + spec.openBodyTailSec + spec.tailReleaseTau * 4);
   }
   if (spec.idmSparkGain > 0.001) {
     const spark = A.createBufferSource(); spark.buffer = nz; spark.loop = true;

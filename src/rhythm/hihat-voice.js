@@ -92,6 +92,11 @@
     const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + accentedHit * 0.08), 0.006, 0.72);
     const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
     const openShimmerQ = clamp(1.6 + open * 1.2 + instability * 10, 1.2, 4.2);
+    const openBodyCharacter = engine === '808' ? 0.74 : (engine === '909' ? 1.0 : (isReznor ? 1.12 : 1.24));
+    const openBodyGain = clamp(openShape * (0.034 + profile.tone * 0.035 + metal * 0.012) * openBodyCharacter * (0.72 + accentedHit * 0.38 - softHit * 0.22) * jitter(rand, instability * 0.35), 0, 0.11);
+    const openBodyTailSec = clamp(noiseTailSec * (0.70 + open * 0.12) * (1 + accentedHit * 0.04), 0.004, 0.64);
+    const openBodyHz = clamp(4200 * profile.bright * (0.95 + profile.tone * 0.28) * (1 + open * 0.20) * (1 - softHit * 0.06 + accentedHit * 0.10) * jitter(rand, instability * 0.45), 2600, 12000);
+    const openBodyQ = clamp(0.65 + open * 0.55 + profile.tone * 0.75 + instability * 8, 0.45, 2.8);
     const idmSparkCharacter = isAphex ? 1 : (isReznor ? 0.58 : 0);
     const idmSparkEnergy = clamp((0.36 + metal * 0.26 + accentedHit * 0.64 - softHit * 0.28) * idmSparkCharacter, 0, 1);
     const idmSparkGain = clamp(idmSparkEnergy * (isAphex ? 0.052 : 0.034) * jitter(rand, instability * 0.5), 0, 0.065);
@@ -125,6 +130,10 @@
       openShimmerTailSec,
       openShimmerHz,
       openShimmerQ,
+      openBodyGain,
+      openBodyTailSec,
+      openBodyHz,
+      openBodyQ,
       idmSparkGain,
       idmSparkTailSec,
       idmSparkHz,
