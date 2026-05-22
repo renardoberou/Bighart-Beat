@@ -91,11 +91,20 @@
     return value === 0.45 || value === 1 ? value : 0;
   }
 
+  function isHihatAccentValue(value) {
+    return value === 1 || value === true || value === '1' || value === 'ACC' || value === 'acc';
+  }
+
+  function hihatAccentAt(hihatAccent, pattern, step) {
+    return !!(Array.isArray(hihatAccent) && isHihatAccentValue(hihatAccent[step]) && hasHit(pattern, 'hihat', step));
+  }
+
   function analyzeRhythm(input) {
     const opts = input || {};
     const pattern = opts.pattern || {};
     const ratchets = opts.ratchets || null;
     const hihatOpenness = opts.hihatOpenness || null;
+    const hihatAccent = opts.hihatAccent || null;
     const stepsPerBar = Number.isInteger(opts.stepsPerBar) && opts.stepsPerBar > 0 ? opts.stepsPerBar : DEFAULT_STEPS;
     const salience = METER_SALIENCE.slice(0, stepsPerBar);
     while (salience.length < stepsPerBar) salience.push(METER_SALIENCE[salience.length % METER_SALIENCE.length]);
@@ -107,6 +116,7 @@
     let strongWeight = 0;
     let offbeatWeight = 0;
     let activeSteps = 0;
+    let activeHihatAccents = 0;
 
     for (let step = 0; step < stepsPerBar; step++) {
       let stepWeight = 0;
@@ -117,11 +127,14 @@
           const count = ratchetCount(ratchets, trackId, step);
           let weight = (TRACK_WEIGHTS[trackId] || 0.5) * ratchetWeightMultiplier(count);
           if (trackId === 'hihat') weight += hihatOpennessAt(hihatOpenness, step) * 0.22;
+          if (trackId === 'hihat' && hihatAccentAt(hihatAccent, pattern, step)) weight += 0.12;
           stepWeight += weight;
           hits.push(trackId);
           if (count > 1) ratchetMetrics[trackId] = count;
         }
       }
+      const hihatAccented = hihatAccentAt(hihatAccent, pattern, step);
+      if (hihatAccented) activeHihatAccents++;
       const meter = clamp01(salience[step]);
       const surprise = 1 - meter;
       if (stepWeight > 0) activeSteps++;
@@ -139,6 +152,7 @@
       };
       const hihatOpen = hasHit(pattern, 'hihat', step) ? hihatOpennessAt(hihatOpenness, step) : 0;
       if (hihatOpen) metric.hihatOpen = hihatOpen;
+      if (hihatAccented) metric.hihatAccent = true;
       if (Object.keys(ratchetMetrics).length) metric.ratchets = ratchetMetrics;
       stepMetrics.push(metric);
     }
@@ -213,7 +227,7 @@
       labels,
       interpretation: makeInterpretation(metrics, labels, totalWeight),
       pumpArousal: analyzePumpArousal(opts.fx && opts.fx.comp),
-      brainLoop: makeBrainLoop(metrics, labels, totalWeight),
+      brainLoop: makeBrainLoop(metrics, labels, totalWeight, activeHihatAccents),
       motorCoupling,
       predictiveTiming,
       cognitiveLoad: makeCognitiveLoad(metrics, labels, totalWeight, predictiveTiming),
@@ -425,7 +439,16 @@
     };
   }
 
-  function makeBrainLoop(metrics, labels, totalWeight) {
+  function withHihatAccentCue(result, activeHihatAccents) {
+    if (!activeHihatAccents || !result || result.value === 'OVERLOADED') return result;
+    return Object.assign({}, result, {
+      line: activeHihatAccents === 1
+        ? 'Hat spark adds a small lift.'
+        : 'Hat accents add small sparks.',
+    });
+  }
+
+  function makeBrainLoop(metrics, labels, totalWeight, activeHihatAccents) {
     if (!totalWeight) {
       return {
         value: 'LOST',
@@ -439,27 +462,27 @@
       };
     }
     if (labels.tension === 'high' || labels.sync === 'tense') {
-      return {
+      return withHihatAccentCue({
         value: 'USEFUL SURPRISE',
         line: 'The beat surprises you but still pulls back.',
-      };
+      }, activeHihatAccents);
     }
     if (labels.anchor === 'locked' && (labels.tension === 'low' || labels.recover === 'recovers')) {
-      return {
+      return withHihatAccentCue({
         value: 'CLEAR',
         line: 'Your body can predict this pulse.',
-      };
+      }, activeHihatAccents);
     }
     if (labels.recover === 'recovers' && metrics.movementDrive >= 0.025) {
-      return {
+      return withHihatAccentCue({
         value: 'USEFUL SURPRISE',
         line: 'The beat surprises you but still pulls back.',
-      };
+      }, activeHihatAccents);
     }
-    return {
+    return withHihatAccentCue({
       value: 'LOST',
       line: 'Add an anchor so your body knows where the pulse starts.',
-    };
+    }, activeHihatAccents);
   }
 
   const api = { analyzeRhythm, analyzePumpArousal, METER_SALIENCE, TRACK_WEIGHTS };

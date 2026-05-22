@@ -6,10 +6,28 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const patterns = require(path.join(root, 'src', 'state', 'patterns.js'));
 const ops = require(path.join(root, 'src', 'state', 'pattern-operations.js'));
+const { analyzeRhythm } = require(path.join(root, 'src', 'rhythm', 'rhythm-intelligence.js'));
 const { createAppState } = require(path.join(root, 'src', 'state', 'app-state.js'));
 const { createDefaultTracks } = require(path.join(root, 'src', 'state', 'tracks.js'));
 const { createDefaultFxState } = require(path.join(root, 'src', 'state', 'fx-state.js'));
 const { serializeProject, parseProjectImport } = require(path.join(root, 'src', 'state', 'persistence.js'));
+
+function extractFunction(source, name) {
+  const start = source.indexOf(`function ${name}(`);
+  assert(start >= 0, `${name} exists`);
+  let depth = 0;
+  let seenBody = false;
+  for (let i = start; i < source.length; i++) {
+    if (source[i] === '{') {
+      depth++;
+      seenBody = true;
+    } else if (source[i] === '}') {
+      depth--;
+      if (seenBody && depth === 0) return source.slice(start, i + 1);
+    }
+  }
+  throw new Error(`${name} body not found`);
+}
 
 assert.strictEqual(typeof patterns.createDefaultHihatAccentGrid, 'function', 'patterns exposes default hihat accent grid');
 assert.strictEqual(typeof patterns.createHihatAccentBanks, 'function', 'patterns exposes hihat accent banks');
@@ -60,9 +78,81 @@ const normalized = parseProjectImport({ ...serializeProject({ appState, tracks, 
 assert.strictEqual(normalized.ok, true, normalized.errors && normalized.errors.join('; '));
 assert.deepStrictEqual(normalized.value.hihatAccent[0].slice(0, 5), [1, 1, 1, 0, 0], 'import safely clamps/normalizes hihat accent banks');
 
+function gridWith(hits) {
+  const rhythmGrid = ops.createEmptyGrid();
+  for (const [track, steps] of Object.entries(hits)) {
+    for (const step of steps) rhythmGrid[track][step] = 1;
+  }
+  return rhythmGrid;
+}
+
+function accentsAt(steps) {
+  const accentGrid = Array.from({ length: 16 }, () => 0);
+  for (const step of steps) accentGrid[step] = 1;
+  return accentGrid;
+}
+
+const rhythmPattern = gridWith({
+  kick: [0, 8],
+  snare: [4, 12],
+  hihat: [2, 6, 10, 14],
+});
+const baseRhythm = analyzeRhythm({ bpm: 112, swing: 0, pattern: rhythmPattern, stepsPerBar: 16 });
+const accentedRhythm = analyzeRhythm({
+  bpm: 112,
+  swing: 0,
+  pattern: rhythmPattern,
+  stepsPerBar: 16,
+  hihatAccent: accentsAt([2, 3]),
+});
+assert.strictEqual(accentedRhythm.stepMetrics[2].hihatAccent, true, 'active accented hihat exposes hihatAccent marker');
+assert.strictEqual(accentedRhythm.stepMetrics[3].hihatAccent, undefined, 'stale hihat accent on an inactive step is hidden');
+assert(accentedRhythm.stepMetrics[2].weight > baseRhythm.stepMetrics[2].weight, 'active hihat accent increases the accented step weight');
+assert(accentedRhythm.density > baseRhythm.density, 'active hihat accent contributes a small bounded weight to density');
+assert(accentedRhythm.surpriseTension >= baseRhythm.surpriseTension, 'active offbeat hihat accent can add tension/drive effect');
+assert(
+  /hat (accent|spark)|spark/i.test(accentedRhythm.brainLoop.line),
+  'Brain Loop line surfaces active hat accents in compact copy'
+);
+assert(accentedRhythm.brainLoop.line.length <= 90, 'Brain Loop accent copy stays compact for mobile');
+
+const falsePositiveAccentGrid = accentsAt([]);
+falsePositiveAccentGrid[2] = '0';
+falsePositiveAccentGrid[6] = 'false';
+const falsePositiveRhythm = analyzeRhythm({
+  bpm: 112,
+  swing: 0,
+  pattern: rhythmPattern,
+  stepsPerBar: 16,
+  hihatAccent: falsePositiveAccentGrid,
+});
+assert.strictEqual(falsePositiveRhythm.stepMetrics[2].hihatAccent, undefined, 'string "0" hihat accent value does not expose marker on active hihat');
+assert.strictEqual(falsePositiveRhythm.stepMetrics[6].hihatAccent, undefined, 'string "false" hihat accent value does not expose marker on active hihat');
+assert.strictEqual(falsePositiveRhythm.stepMetrics[2].weight, baseRhythm.stepMetrics[2].weight, 'string "0" hihat accent value does not boost active hihat weight');
+assert.strictEqual(falsePositiveRhythm.stepMetrics[6].weight, baseRhythm.stepMetrics[6].weight, 'string "false" hihat accent value does not boost active hihat weight');
+assert.strictEqual(falsePositiveRhythm.density, baseRhythm.density, 'string falsey hihat accent values do not affect analysis density');
+assert(!/hat (accent|spark)|spark/i.test(falsePositiveRhythm.brainLoop.line), 'string falsey hihat accent values do not surface in Brain Loop copy');
+
+const staleOnlyRhythm = analyzeRhythm({
+  bpm: 112,
+  swing: 0,
+  pattern: rhythmPattern,
+  stepsPerBar: 16,
+  hihatAccent: accentsAt([3, 7]),
+});
+assert.deepStrictEqual(
+  staleOnlyRhythm.stepMetrics.map(metric => metric.hihatAccent),
+  baseRhythm.stepMetrics.map(metric => metric.hihatAccent),
+  'stale accents do not create step markers'
+);
+assert.strictEqual(staleOnlyRhythm.density, baseRhythm.density, 'stale accents do not affect analysis weight');
+assert(!/hat (accent|spark)|spark/i.test(staleOnlyRhythm.brainLoop.line), 'stale accents do not surface in Brain Loop copy');
+
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const renderRhythmIntelligence = extractFunction(main, 'renderRhythmIntelligence');
+const analyzeCurrentRhythm = extractFunction(main, 'analyzeCurrentRhythm');
 assert(/const\s+HHT_ACCENT\s*=\s*State\.createHihatAccentBanks\(\)/.test(main), 'runtime creates accent banks');
 assert(/function\s+getStepHihatVelocity\s*\(\s*step\s*\)/.test(main), 'runtime has per-step hihat velocity helper');
 assert(/State\.getHihatAccent\(HHT_ACCENT\[S\.patt\],\s*step\)/.test(main), 'velocity helper reads hihat accent grid');
@@ -70,6 +160,8 @@ assert(/case\s+['"]hihat['"]:[\s\S]*synthHihat\(t,\s*getStepHihatVelocity\(firin
 assert(!/case\s+['"]hihat['"]:[\s\S]*synthHihat\(t,\s*v,\s*\{\s*\.\.\.tr\.p,\s*open:\s*getStepHihatOpen/.test(main), 'hihat runtime no longer uses track vol as hihat character velocity');
 assert(/previewHihat[\s\S]*synthHihat\(t,\s*HIHAT_NORMAL_VELOCITY/.test(main), 'hihat preview uses stable normal velocity');
 assert(/hihatAccent:\s*HHT_ACCENT/.test(main), 'autosave/export include accent banks');
+assert(/hihatAccent:\s*HHT_ACCENT\[S\.patt\]/.test(renderRhythmIntelligence), 'renderRhythmIntelligence passes current hihat accent grid into analysis');
+assert(/hihatAccent:\s*HHT_ACCENT\[S\.patt\]/.test(analyzeCurrentRhythm), 'analyzeCurrentRhythm passes current hihat accent grid into action/quick analysis');
 assert(/HHT_ACCENT\[i\]\s*=\s*State\.cloneHihatAccentGrid\(d\.hihatAccent\s*&&\s*d\.hihatAccent\[i\]\)/.test(main), 'applyProjectData clones imported accent banks');
 assert(/HHT_ACCENT\[S\.patt\]\s*=\s*State\.createDefaultHihatAccentGrid\(\)/.test(main), 'clear pattern resets accent grid');
 assert(/classList\.add\(['"]hht-accent['"]\)/.test(main), 'UI adds hht-accent marker class');

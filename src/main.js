@@ -1516,6 +1516,7 @@ function renderRhythmIntelligence() {
     pattern: PATTERNS[S.patt],
     ratchets: RATCHETS[S.patt],
     hihatOpenness: HHT_OPENNESS[S.patt],
+    hihatAccent: HHT_ACCENT[S.patt],
     stepsPerBar: 16,
     fx: { comp: FX.comp },
   });
@@ -2016,6 +2017,7 @@ function analyzeCurrentRhythm() {
     pattern: PATTERNS[S.patt],
     ratchets: RATCHETS[S.patt],
     hihatOpenness: HHT_OPENNESS[S.patt],
+    hihatAccent: HHT_ACCENT[S.patt],
     stepsPerBar: 16,
     fx: { comp: FX.comp },
   });
