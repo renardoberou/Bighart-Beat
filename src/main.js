@@ -24,6 +24,7 @@ const HHT_OPENNESS = State.createHihatOpennessBanks();
 const HHT_ACCENT = State.createHihatAccentBanks();
 const SYNTH_NOTES = State.createSynthNotesBanks();
 const PATTERN_FX_SCENES = State.createPatternFxScenes();
+const LAST_HIHAT_TAP_AT = Object.create(null);
 const S = State.createAppState();
 let HHT_PLACE = 0;
 let SYNTH_NOTE_EDIT = false;
@@ -1247,6 +1248,23 @@ function sequencerRows() {
   return rows;
 }
 
+function hihatTapStateKey(rowId, step) {
+  return `${S.patt}:${rowId}:${step}`;
+}
+
+function clearHihatTapState(step) {
+  LAST_HIHAT_TAP_AT[hihatTapStateKey('hihat', step)] = 0;
+  LAST_HIHAT_TAP_AT[hihatTapStateKey(OPEN_HIHAT_ROW_ID, step)] = 0;
+}
+
+function clearHihatStep(step) {
+  PATTERNS[S.patt].hihat[step] = 0;
+  HHT_OPENNESS[S.patt] = State.clearHihatOpenness(HHT_OPENNESS[S.patt], step);
+  HHT_ACCENT[S.patt] = State.clearHihatAccent(HHT_ACCENT[S.patt], step);
+  RATCHETS[S.patt] = State.setRatchetCount(RATCHETS[S.patt], 'hihat', step, 1);
+  clearHihatTapState(step);
+}
+
 function buildSeq() {
   const seq = $('seq');
   seq.innerHTML = '';
@@ -1274,7 +1292,9 @@ function buildSeq() {
       tr.mute = !tr.mute;
       buildSeq(); buildMix();
     });
-    if (trackIndex === S.sel && !isOpenHihatRow) lbl.classList.add('sel');
+    lbl.setAttribute('role', 'tab');
+    lbl.setAttribute('aria-selected', trackIndex === S.sel ? 'true' : 'false');
+    if (trackIndex === S.sel) lbl.classList.add('sel');
     row.appendChild(lbl);
 
     for (let i = 0; i < 16; i++) {
@@ -1346,8 +1366,14 @@ function buildSeq() {
         } else if (tr.id === 'hihat') {
           HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
         }
-        if (tr.id === 'hihat' && !PATTERNS[S.patt][trackId][i]) HHT_ACCENT[S.patt] = State.clearHihatAccent(HHT_ACCENT[S.patt], i);
-        RATCHETS[S.patt] = State.cycleRatchetCount(RATCHETS[S.patt], tr.id, i);
+        if (tr.id === 'hihat' && !PATTERNS[S.patt][trackId][i]) {
+          HHT_OPENNESS[S.patt] = State.clearHihatOpenness(HHT_OPENNESS[S.patt], i);
+          HHT_ACCENT[S.patt] = State.clearHihatAccent(HHT_ACCENT[S.patt], i);
+          RATCHETS[S.patt] = State.setRatchetCount(RATCHETS[S.patt], tr.id, i, 1);
+          clearHihatTapState(i);
+        } else {
+          RATCHETS[S.patt] = State.cycleRatchetCount(RATCHETS[S.patt], tr.id, i);
+        }
         if (tr.id === 'hihat') buildSeq();
         else refreshCell();
         renderRhythmIntelligence();
@@ -1358,11 +1384,23 @@ function buildSeq() {
       c.addEventListener('click', () => {
         if (longPressFired) { longPressFired = false; return; }
         const wasOn = isCellOn();
+        const hihatBackingOn = trackId === 'hihat' && !!PATTERNS[S.patt][trackId][i];
+        const tapAt = Date.now();
+        const hihatTapKey = hihatTapStateKey(rowSpec.rowId, i);
+        if (hihatBackingOn && tapAt - LAST_HIHAT_TAP_AT[hihatTapKey] <= 320) {
+          LAST_HIHAT_TAP_AT[hihatTapKey] = 0;
+          clearHihatStep(i);
+          buildSeq();
+          renderRhythmIntelligence();
+          autosave();
+          return;
+        }
+        LAST_HIHAT_TAP_AT[hihatTapKey] = hihatBackingOn ? tapAt : 0;
         if (isOpenHihatRow) {
           if (!wasOn) {
             PATTERNS[S.patt][trackId][i] = 1;
             HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, 1);
-          } else if (trackId === 'hihat' && wasOn && trackIndex === S.sel) {
+          } else if (trackId === 'hihat' && wasOn) {
             HHT_ACCENT[S.patt] = State.toggleHihatAccent(HHT_ACCENT[S.patt], i);
           } else {
             const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
@@ -1374,7 +1412,7 @@ function buildSeq() {
           buildSeq();
           renderRhythmIntelligence();
           autosave();
-          if (!S.playing && !wasOn) previewHihat(1);
+          if (!S.playing) previewHihat(1);
           return;
         }
         if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT) {
@@ -1388,31 +1426,26 @@ function buildSeq() {
           if (!S.playing) previewSynth();
           return;
         }
-        if (trackId === 'hihat' && PATTERNS[S.patt][trackId][i] && trackIndex === S.sel) {
-          const currentOpen = State.getHihatOpenness(HHT_OPENNESS[S.patt], i);
-          if (currentOpen !== HHT_PLACE) {
-            HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
-            buildSeq();
-            renderRhythmIntelligence();
-            autosave();
-            if (!S.playing) previewHihat(HHT_PLACE);
-            return;
-          }
+        if (trackId === 'hihat' && isCellOn()) {
           HHT_ACCENT[S.patt] = State.toggleHihatAccent(HHT_ACCENT[S.patt], i);
           buildSeq();
           renderRhythmIntelligence();
           autosave();
-          if (!S.playing) previewHihat(HHT_PLACE);
+          if (!S.playing) previewHihat(State.getHihatOpenness(HHT_OPENNESS[S.patt], i));
           return;
         }
         const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);
         PATTERNS[S.patt] = result.pattern;
         RATCHETS[S.patt] = result.ratchets;
         if (trackId === 'hihat') {
-          HHT_OPENNESS[S.patt] = wasOn
-            ? State.clearHihatOpenness(HHT_OPENNESS[S.patt], i)
-            : State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
-          if (wasOn) HHT_ACCENT[S.patt] = State.clearHihatAccent(HHT_ACCENT[S.patt], i);
+          if (trackId === 'hihat' && !PATTERNS[S.patt][trackId][i]) {
+            HHT_OPENNESS[S.patt] = State.clearHihatOpenness(HHT_OPENNESS[S.patt], i);
+            HHT_ACCENT[S.patt] = State.clearHihatAccent(HHT_ACCENT[S.patt], i);
+            RATCHETS[S.patt] = State.setRatchetCount(RATCHETS[S.patt], trackId, i, 1);
+            clearHihatTapState(i);
+          } else if (!wasOn) {
+            HHT_OPENNESS[S.patt] = State.setHihatOpenness(HHT_OPENNESS[S.patt], i, HHT_PLACE);
+          }
         }
         if (tr.id === 'hihat') buildSeq();
         else refreshCell();
@@ -1426,6 +1459,14 @@ function buildSeq() {
           if (trackId === 'input') previewInput();
           if (trackId === 'ether') previewVoice(5, synthEther);
         }
+      });
+      c.addEventListener('dblclick', e => {
+        if (trackId !== 'hihat' || !PATTERNS[S.patt][trackId][i]) return;
+        e.preventDefault();
+        clearHihatStep(i);
+        buildSeq();
+        renderRhythmIntelligence();
+        autosave();
       });
       c.addEventListener('contextmenu', e => {
         e.preventDefault();

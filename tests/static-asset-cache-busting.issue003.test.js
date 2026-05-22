@@ -10,8 +10,8 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const head = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
 
 const STALE_TOKEN = 'v=boost-week-20260521-cachefresh';
-const PREVIOUS_TOKEN = 'v=hihat-accent-20260521';
-const EXPECTED_TOKEN = 'v=hihat-idm-spark-20260522';
+const PREVIOUS_TOKEN = 'v=hihat-idm-spark-20260522';
+const EXPECTED_TOKEN = 'v=hihat-accent-20260522-ux';
 const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl) {
@@ -24,7 +24,7 @@ function assertExactlyOneCurrentToken(assetUrl) {
   assert.deepStrictEqual(
     tokenMatches,
     [`?${EXPECTED_TOKEN}`],
-    `${assetUrl} has exactly one current SYN pitch cap cache token`,
+    `${assetUrl} has exactly one current hihat accent UX cache token`,
   );
 }
 
@@ -38,7 +38,7 @@ const localStylesheets = stylesheetHrefs.filter((href) => href.startsWith('style
 assert.deepStrictEqual(
   localStylesheets,
   [`styles/main.css?${EXPECTED_TOKEN}`],
-  'index.html loads local stylesheet with the current SYN pitch cap cache token',
+  'index.html loads local stylesheet with the current hihat accent UX cache token',
 );
 localStylesheets.forEach(assertExactlyOneCurrentToken);
 
@@ -83,7 +83,7 @@ const expectedScriptSrcs = [
 assert.deepStrictEqual(
   scriptSrcs,
   expectedScriptSrcs,
-  'cache busting preserves static script execution order and gives every local script exactly one current SYN pitch cap token',
+  'cache busting preserves static script execution order and gives every local script exactly one current hihat accent UX cache token',
 );
 scriptSrcs.forEach(assertExactlyOneCurrentToken);
 

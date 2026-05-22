@@ -13,6 +13,7 @@ assert(/PLACE OPEN/i.test(main), 'open-hihat hint keeps the place-open action vi
 assert(/ENGINE BUTTONS/i.test(main), 'open-hihat hint reminds players that engine buttons change the hat sound');
 assert(/hat-discovery/i.test(main), 'hihat discovery hint has a dedicated class for mobile styling');
 assert(/seq-hint[\s\S]*OHH[\s\S]*OPEN/i.test(index), 'always-visible sequencer hint identifies OHH as the open hihat row');
+assert(/seq-hint[\s\S]*DOUBLE[\s\S]*CLEAR/i.test(index), 'always-visible sequencer hint documents double-tap hihat clear');
 assert(/seq-hint[\s\S]*ENGINE[\s\S]*KIT/i.test(index), 'always-visible sequencer hint connects engine buttons to kit sound changes');
 assert(/\.hat-discovery\b/.test(css), 'hihat discovery hint has CSS styling');
 

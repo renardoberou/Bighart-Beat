@@ -18,21 +18,24 @@ assert.throws(() => State.cycleHihatOpenness(openness, 16), /Step index/, 'cycli
 
 const clickStart = main.indexOf("c.addEventListener('click', () => {");
 assert(clickStart >= 0, 'sequencer cells define click handler');
-const clickEnd = main.indexOf('});', clickStart);
+const clickEnd = main.indexOf("c.addEventListener('contextmenu'", clickStart);
 assert(clickEnd > clickStart, 'sequencer click handler block can be inspected');
-const clickBlock = main.slice(clickStart, clickEnd + 3);
+const clickBlock = main.slice(clickStart, clickEnd);
 
 assert(
-  /const\s+currentOpen\s*=\s*State\.getHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)/.test(clickBlock),
-  'selected active hihat clicks inspect the current openness before deciding whether to edit or delete'
+  /if \(trackId === ['"]hihat['"] && isCellOn\(\)\) \{[\s\S]*State\.toggleHihatAccent\(HHT_ACCENT\[S\.patt\],\s*i\)[\s\S]*return;[\s\S]*\}/.test(clickBlock),
+  'selected active hihat clicks use the active-hat accent toggle path'
 );
 assert(
-  /if\s*\(\s*currentOpen\s*!==\s*HHT_PLACE\s*\)[\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)[\s\S]*return;[\s\S]*State\.toggleStep\(PATTERNS\[S\.patt\],\s*tr\.id,\s*i,\s*RATCHETS\[S\.patt\]\)/.test(clickBlock),
-  'tapping an already-on hihat with different openness changes it to selected placement before any toggle'
+  !/currentOpen\s*!==\s*HHT_PLACE[\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)[\s\S]*return;/.test(clickBlock),
+  'tapping an already-on hihat no longer changes it to selected placement before accent toggle'
 );
+const normalBranchStart = clickBlock.indexOf('const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);');
+assert(normalBranchStart >= 0, 'normal hihat toggle branch exists');
+const normalBranch = clickBlock.slice(normalBranchStart);
 assert(
-  /State\.toggleStep\(PATTERNS\[S\.patt\],\s*tr\.id,\s*i,\s*RATCHETS\[S\.patt\]\)[\s\S]*wasOn[\s\S]*State\.clearHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)[\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)/.test(clickBlock),
-  'tapping an already-on hihat that already matches the selected placement toggles it off and clears openness; off cells still use selected placement'
+  /const result = State\.toggleStep\(PATTERNS\[S\.patt\],\s*tr\.id,\s*i,\s*RATCHETS\[S\.patt\]\)[\s\S]*if \(trackId === ['"]hihat['"]\) \{[\s\S]*State\.clearHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)[\s\S]*else if \(!wasOn\)[\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)/.test(normalBranch),
+  'off cells still use selected placement, and intentional hihat removal clears openness'
 );
 assert(
   !/State\.cycleHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)/.test(clickBlock),

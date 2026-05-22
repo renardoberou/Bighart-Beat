@@ -27,30 +27,31 @@ assert(
   'OHH click previews open hihat only while stopped, after build/render/autosave and before return'
 );
 assert(
-  /buildSeq\(\)[\s\S]*renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*&&\s*!wasOn\s*\)\s*previewHihat\(\s*1\s*\)[\s\S]*return;/.test(openBranch),
-  'OHH click audition is result-aware: only OFF→ON open-hihat placement previews, ON→OFF removal stays silent'
+  /else\s+if \(trackId === ['"]hihat['"] && wasOn\) \{[\s\S]*?State\.toggleHihatAccent\(HHT_ACCENT\[S\.patt\],\s*i\)[\s\S]*?\}/.test(openBranch) &&
+    /buildSeq\(\)[\s\S]*renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*\)\s*previewHihat\(\s*1\s*\)[\s\S]*return;/.test(openBranch),
+  'OHH active accent taps and OFF→ON placements preview open hihat while stopped; clear remains explicit double-tap'
 );
 
-const placementBranchStart = clickBlock.indexOf("if (trackId === 'hihat' && PATTERNS[S.patt][trackId][i] && trackIndex === S.sel) {");
-assert(placementBranchStart >= 0, 'click handler has selected active HHT placement-change branch');
-const placementBranchEnd = clickBlock.indexOf('return;', placementBranchStart);
-assert(placementBranchEnd > placementBranchStart, 'selected active HHT placement-change branch returns');
-const placementBranch = clickBlock.slice(placementBranchStart, placementBranchEnd + 'return;'.length);
+const activeAccentBranchStart = clickBlock.indexOf("if (trackId === 'hihat' && isCellOn()) {");
+assert(activeAccentBranchStart >= 0, 'click handler has active HHT accent branch');
+const activeAccentBranchEnd = clickBlock.indexOf('return;', activeAccentBranchStart);
+assert(activeAccentBranchEnd > activeAccentBranchStart, 'active HHT accent branch returns');
+const activeAccentBranch = clickBlock.slice(activeAccentBranchStart, activeAccentBranchEnd + 'return;'.length);
 assert(
-  /HHT_OPENNESS\[S\.patt\]\s*=\s*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)/.test(placementBranch),
-  'HHT placement-change branch applies HHT_PLACE before previewing'
+  /HHT_ACCENT\[S\.patt\]\s*=\s*State\.toggleHihatAccent\(HHT_ACCENT\[S\.patt\],\s*i\)/.test(activeAccentBranch),
+  'active HHT branch toggles accent instead of changing selected placement'
 );
 assert(
-  /buildSeq\(\)[\s\S]*renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*\)\s*previewHihat\(\s*HHT_PLACE\s*\)[\s\S]*return;/.test(placementBranch),
-  'HHT placement-change previews selected openness only while stopped, after mutation/build/autosave and before return'
+  /buildSeq\(\)[\s\S]*renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*!S\.playing\s*\)\s*previewHihat\(\s*State\.getHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)\s*\)[\s\S]*return;/.test(activeAccentBranch),
+  'active HHT accent previews stored openness only while stopped, after mutation/build/autosave and before return'
 );
 
 const normalBranchStart = clickBlock.indexOf('const result = State.toggleStep(PATTERNS[S.patt], tr.id, i, RATCHETS[S.patt]);');
 assert(normalBranchStart >= 0, 'click handler has normal toggle branch');
 const normalBranch = clickBlock.slice(normalBranchStart);
 assert(
-  /if \(trackId === 'hihat'\) \{[\s\S]*HHT_OPENNESS\[S\.patt\]\s*=\s*wasOn[\s\S]*State\.clearHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)[\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)[\s\S]*\}/.test(normalBranch),
-  'normal HHT toggle preserves clear/set openness semantics'
+  /if \(trackId === 'hihat'\) \{[\s\S]*!PATTERNS\[S\.patt\]\[trackId\]\[i\][\s\S]*State\.clearHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)[\s\S]*else if \(!wasOn\)[\s\S]*State\.setHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i,\s*HHT_PLACE\)[\s\S]*\}/.test(normalBranch),
+  'normal HHT toggle preserves off-clear/on-set openness semantics'
 );
 assert(
   /renderRhythmIntelligence\(\)[\s\S]*autosave\(\)[\s\S]*if\s*\(\s*trackId\s*===\s*['"]hihat['"]\s*&&\s*!S\.playing\s*(?:&&\s*!wasOn\s*)?\)\s*previewHihat\(\s*State\.getHihatOpenness\(HHT_OPENNESS\[S\.patt\],\s*i\)\s*\)/.test(normalBranch),
