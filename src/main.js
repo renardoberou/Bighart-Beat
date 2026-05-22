@@ -961,8 +961,12 @@ function getStepHihatOpen(step) {
   return State.getHihatOpenness(HHT_OPENNESS[S.patt], step);
 }
 
+function getHihatAccentVelocity(accented) {
+  return accented ? HIHAT_ACCENT_VELOCITY : HIHAT_NORMAL_VELOCITY;
+}
+
 function getStepHihatVelocity(step) {
-  return State.getHihatAccent(HHT_ACCENT[S.patt], step) ? HIHAT_ACCENT_VELOCITY : HIHAT_NORMAL_VELOCITY;
+  return getHihatAccentVelocity(State.getHihatAccent(HHT_ACCENT[S.patt], step));
 }
 
 function getStepSynthRatio(step) {
