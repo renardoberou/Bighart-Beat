@@ -1662,7 +1662,8 @@ function buildVE() {
     hatTest.innerHTML = `<div class="hat-help">
         <div class="hat-help-engine">ENGINE: ${S.engine.toUpperCase()}</div>
         <div>HAT TEST USES SELECTED ENGINE</div>
-        <div>PLACE THEN TAP/HOLD HHT STEPS</div>
+        <div>OPENNESS IS PER STEP: PLACE/OHH ROW</div>
+        <div>HHT/OHH: TAP ACTIVE = ACC · DOUBLE-TAP CLEAR · HOLD = RATCHET</div>
         <div class="hat-discovery">TRY OHH ROW: PLACE OPEN, TAP A FEW OFFBEATS, THEN FLIP ENGINE BUTTONS</div>
       </div>
       <div class="ve-lbl">HAT TEST</div>
@@ -1687,7 +1688,6 @@ function buildVE() {
     syncHihatPlacementControls();
     mkRow('FREQ',  4000, 14000, 100, tr.p.freq, x=>`${(x/1000).toFixed(1)} kHz`, v=>tr.p.freq=v, c);
     mkRow('DECAY', 2, 40, 1, Math.round(tr.p.decay*1000), x=>`${x} ms`, v=>tr.p.decay=v/1000, c);
-    mkRow('OPEN',  0, 100, 1, Math.round(tr.p.open*100), x=>`${x}%`, v=>tr.p.open=v/100, c);
     mkRow('METAL', 0, 100, 1, Math.round(tr.p.metal*100), x=>`${x}%`, v=>tr.p.metal=v/100, c);
   } else if (tr.id === 'clap') {
     const clpTest = document.createElement('div');

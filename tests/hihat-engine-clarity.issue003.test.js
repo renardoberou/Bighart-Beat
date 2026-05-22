@@ -16,7 +16,8 @@ const hihatBranch = main.slice(hihatBranchStart, hihatBranchEnd);
 assert(/hat-help/.test(hihatBranch), 'hihat editor renders a compact engine/help readout');
 assert(/ENGINE:\s*\$\{S\.engine\.toUpperCase\(\)\}/.test(hihatBranch), 'hihat readout shows the currently selected engine');
 assert(/HAT TEST USES SELECTED ENGINE/.test(hihatBranch), 'hihat readout explains auditions use the selected engine');
-assert(/PLACE THEN TAP\/HOLD HHT STEPS/.test(hihatBranch), 'hihat readout explains the place then tap/hold workflow');
+assert(/OPENNESS IS PER STEP:\s*PLACE\/OHH ROW/.test(hihatBranch), 'hihat readout explains per-step openness placement via PLACE/OHH row');
+assert(/HHT\/OHH:\s*TAP ACTIVE = ACC\s*·\s*DOUBLE-TAP CLEAR\s*·\s*HOLD = RATCHET/.test(hihatBranch), 'hihat readout explains active HHT/OHH tap/hold workflow');
 assert(/data-open="0"/.test(hihatBranch) && /data-open="\.45"/.test(hihatBranch) && /data-open="1"/.test(hihatBranch), 'hihat audition closed/tight/open buttons remain present');
 assert(/PLACE CLOSED/.test(hihatBranch) && /PLACE TIGHT/.test(hihatBranch) && /PLACE OPEN/.test(hihatBranch), 'hihat placement closed/tight/open buttons remain present');
 
