@@ -40,6 +40,27 @@
     return clamp(closedTau + (interpolatedTau - closedTau) * openTransitionSoftness, closedTau, openTau);
   }
 
+  function selectBudgetedOscillatorFrequencies(frequencies, maxMetallicSources) {
+    const source = Array.isArray(frequencies) ? frequencies.filter(Number.isFinite) : [];
+    const count = source.length;
+    const cap = clamp(Math.floor(finiteOr(maxMetallicSources, count)), 0, count);
+    if (cap >= count) return source.slice();
+    if (cap <= 0) return [];
+    if (cap === 1) return [source[0]];
+
+    const selected = [];
+    const used = Object.create(null);
+    for (let i = 0; i < cap; i += 1) {
+      const rawIndex = Math.round(i * (count - 1) / (cap - 1));
+      let index = rawIndex;
+      while (used[index] && index < count - 1) index += 1;
+      while (used[index] && index > 0) index -= 1;
+      used[index] = true;
+      selected.push(source[index]);
+    }
+    return selected;
+  }
+
   function resolveHihatRenderBudget(spec, options) {
     const s = spec || {};
     const opts = options || {};
@@ -51,9 +72,24 @@
       useIdmSpark: finiteOr(s.idmSparkGain, 0) > 0.001,
       useGlitch: !!s.glitchWillFire && finiteOr(s.glitchGain, 0) > 0.001,
     };
+    const oscillatorFrequencies = Array.isArray(s.oscillatorFrequencies) ? s.oscillatorFrequencies.filter(Number.isFinite) : [];
+    const metalAudible = finiteOr(s.metalGain, finiteOr(s.metalLevel, 0)) > 0.001 && oscillatorFrequencies.length > 0;
+    const availableMetallicSourceCount = metalAudible ? oscillatorFrequencies.length : 0;
     const availableOptionalSourceCount = Object.keys(audible).reduce((sum, key) => sum + (audible[key] ? 1 : 0), 0);
     const fallbackCap = opts.mobile || opts.denseRatchet ? 3 : availableOptionalSourceCount;
     const maxOptionalSources = clamp(Math.floor(finiteOr(opts.maxOptionalSources, fallbackCap)), 0, availableOptionalSourceCount);
+    const metallicFallbackCap = opts.mobile && opts.denseRatchet
+      ? 3
+      : (opts.mobile || opts.denseRatchet ? 4 : availableMetallicSourceCount);
+    const minimumAudibleMetallicSources = metalAudible ? Math.min(2, availableMetallicSourceCount) : 0;
+    const requestedMetallicCap = clamp(Math.floor(finiteOr(opts.maxMetallicSources, metallicFallbackCap)), 0, availableMetallicSourceCount);
+    const maxMetallicSources = metalAudible
+      ? clamp(Math.max(requestedMetallicCap, minimumAudibleMetallicSources), minimumAudibleMetallicSources, availableMetallicSourceCount)
+      : 0;
+    const budgetedOscillatorFrequencies = metalAudible
+      ? selectBudgetedOscillatorFrequencies(oscillatorFrequencies, maxMetallicSources)
+      : [];
+    const metallicSourceCount = budgetedOscillatorFrequencies.length;
     const engine = typeof s.engine === 'string' ? s.engine : '';
     const priority = engine === 'reznor'
       ? ['useGhostTick', 'useOpenFlutter', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
@@ -79,6 +115,11 @@
       maxOptionalSources,
       optionalSourceCount,
       availableOptionalSourceCount,
+      maxMetallicSources,
+      metallicSourceCount,
+      availableMetallicSourceCount,
+      budgetedOscillatorFrequencies,
+      totalSourceEstimate: 1 + optionalSourceCount + metallicSourceCount,
       mobile: !!opts.mobile,
       denseRatchet: !!opts.denseRatchet,
     };

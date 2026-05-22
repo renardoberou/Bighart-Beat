@@ -625,6 +625,7 @@ function synthHihat(t, v, p) {
     mobile: typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''),
     denseRatchet: !!(p && p.denseRatchet),
   });
+  const metallicFrequencies = hihatBudget.budgetedOscillatorFrequencies || spec.oscillatorFrequencies || [];
   const hihatTailSec = Math.max(
     spec.noiseTailSec + spec.tailReleaseTau * 4,
     hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
@@ -718,7 +719,7 @@ function synthHihat(t, v, p) {
     ghostTick.start(t); ghostTick.stop(t + spec.ghostTickTailSec + spec.tailReleaseTau);
   }
   // metallic tone mix — only if metal > 0
-  if (spec.metalGain > 0.001) {
+  if (spec.metalGain > 0.001 && metallicFrequencies.length) {
     const mg = A.createGain();
     mg.gain.setValueAtTime(0, t);
     mg.gain.linearRampToValueAtTime(clamp(v * spec.metalGain * spec.tailHeadroomTrim, 0, .34), t + Math.max(.0008, spec.attackSec * .8));
@@ -726,10 +727,11 @@ function synthHihat(t, v, p) {
     mg.gain.exponentialRampToValueAtTime(.001, t + spec.metalTailSec);
     const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = spec.metalHighpassHz;
     mg.connect(hp); hp.connect(choke);
-    for (const frequency of spec.oscillatorFrequencies) {
+    const metallicOscillatorGain = clamp(spec.oscillatorGain * (spec.oscillatorFrequencies.length / metallicFrequencies.length), 0, .25);
+    for (const frequency of metallicFrequencies) {
       const o = A.createOscillator(); o.type = spec.oscType;
       o.frequency.value = frequency;
-      const og = A.createGain(); og.gain.value = spec.oscillatorGain;
+      const og = A.createGain(); og.gain.value = metallicOscillatorGain;
       o.connect(og); og.connect(mg);
       o.start(t); o.stop(t + spec.metalTailSec + .025);
     }
