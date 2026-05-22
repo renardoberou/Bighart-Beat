@@ -631,6 +631,7 @@ function synthHihat(t, v, p) {
     hihatBudget.useOpenBody && spec.openBodyGain > 0.001 ? spec.openBodyTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useOpenFlutter && spec.openFlutterGain > 0.001 ? spec.openFlutterTailSec + spec.tailReleaseTau : 0,
     hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau : 0,
+    hihatBudget.useGhostTick && spec.ghostTickGain > 0.001 ? spec.ghostTickTailSec + spec.tailReleaseTau : 0,
     spec.metalGain > 0.001 ? spec.metalTailSec + .025 : 0,
     hihatBudget.useGlitch && spec.glitchWillFire ? .010 : 0
   );
@@ -703,6 +704,18 @@ function synthHihat(t, v, p) {
     sparkGain.gain.exponentialRampToValueAtTime(.001, t + spec.idmSparkTailSec);
     spark.connect(sparkFilter); sparkFilter.connect(sparkGain); sparkGain.connect(choke);
     spark.start(t); spark.stop(t + spec.idmSparkTailSec + spec.tailReleaseTau);
+  }
+  if (hihatBudget.useGhostTick && spec.ghostTickGain > 0.001) {
+    const ghostTick = A.createBufferSource(); ghostTick.buffer = nz; ghostTick.loop = true;
+    const ghostFilter = A.createBiquadFilter(); ghostFilter.type = 'bandpass';
+    ghostFilter.frequency.value = spec.ghostTickHz;
+    ghostFilter.Q.value = spec.ghostTickQ;
+    const ghostGain = A.createGain();
+    ghostGain.gain.setValueAtTime(0, t);
+    ghostGain.gain.linearRampToValueAtTime(clamp(v * spec.ghostTickGain, 0, .04), t + Math.min(.0012, spec.attackSec));
+    ghostGain.gain.exponentialRampToValueAtTime(.001, t + spec.ghostTickTailSec);
+    ghostTick.connect(ghostFilter); ghostFilter.connect(ghostGain); ghostGain.connect(choke);
+    ghostTick.start(t); ghostTick.stop(t + spec.ghostTickTailSec + spec.tailReleaseTau);
   }
   // metallic tone mix — only if metal > 0
   if (spec.metalGain > 0.001) {

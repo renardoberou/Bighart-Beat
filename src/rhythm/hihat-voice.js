@@ -44,6 +44,7 @@
     const s = spec || {};
     const opts = options || {};
     const audible = {
+      useGhostTick: finiteOr(s.ghostTickGain, 0) > 0.001,
       useOpenShimmer: finiteOr(s.openShimmerGain, 0) > 0.001,
       useOpenBody: finiteOr(s.openBodyGain, 0) > 0.001,
       useOpenFlutter: finiteOr(s.openFlutterGain, 0) > 0.001,
@@ -55,11 +56,12 @@
     const maxOptionalSources = clamp(Math.floor(finiteOr(opts.maxOptionalSources, fallbackCap)), 0, availableOptionalSourceCount);
     const engine = typeof s.engine === 'string' ? s.engine : '';
     const priority = engine === 'reznor'
-      ? ['useOpenFlutter', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
+      ? ['useGhostTick', 'useOpenFlutter', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
       : engine === 'aphex'
-        ? ['useIdmSpark', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
-        : ['useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'];
+        ? ['useGhostTick', 'useIdmSpark', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
+        : ['useGhostTick', 'useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'];
     const selected = {
+      useGhostTick: false,
       useOpenShimmer: false,
       useOpenBody: false,
       useOpenFlutter: false,
@@ -151,6 +153,13 @@
     const openFlutterTailSec = clamp((0.018 + open * 0.048 + instability * 0.60) * (1 - accentedHit * 0.04), 0.004, 0.16);
     const openFlutterHz = clamp(7200 * profile.bright * (1 + open * 0.14 + accentedHit * 0.06) * jitter(rand, instability * 0.8), 5200, 16000);
     const openFlutterQ = clamp(3.2 + openFlutterEnergy * 3.2 + instability * 45, 2.5, 10);
+    const ghostClosedness = Math.pow(clamp((0.72 - open) / 0.72, 0, 1), 1.35);
+    const ghostVelocityLift = smoothstep01(softHit);
+    const ghostTickEnergy = clamp(ghostClosedness * (0.16 + ghostVelocityLift * 0.84) * (0.78 + metal * 0.18 + profile.tone * 0.08), 0, 1);
+    const ghostTickGain = clamp(ghostTickEnergy * 0.034 * characterTransient * jitter(rand, instability * 0.45), 0, 0.04);
+    const ghostTickTailSec = clamp(0.0042 + ghostClosedness * 0.0062 + ghostVelocityLift * 0.0020 + instability * 0.035, 0.003, 0.018);
+    const ghostTickHz = clamp(freq * (1.02 + profile.tone * 0.14 - open * 0.08) * profile.bright * (1 - softHit * 0.03) * jitter(rand, instability * 0.5), 6500, 16000);
+    const ghostTickQ = clamp(3.4 + ghostTickEnergy * 2.6 + profile.tone * 1.0 + instability * 20, 2.5, 9);
 
     return {
       engine,
@@ -186,6 +195,10 @@
       openFlutterTailSec,
       openFlutterHz,
       openFlutterQ,
+      ghostTickGain,
+      ghostTickTailSec,
+      ghostTickHz,
+      ghostTickQ,
       idmSparkGain,
       idmSparkTailSec,
       idmSparkHz,
