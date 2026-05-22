@@ -12,16 +12,24 @@ const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 function extractFunction(source, name) {
   const start = source.indexOf(`function ${name}(`);
   assert(start >= 0, `${name} exists`);
-  let depth = 0;
-  let seenBody = false;
-  for (let i = start; i < source.length; i++) {
-    if (source[i] === '{') {
-      depth += 1;
-      seenBody = true;
-    } else if (source[i] === '}') {
-      depth -= 1;
-      if (seenBody && depth === 0) return source.slice(start, i + 1);
+  let paramDepth = 0;
+  let paramsEnd = -1;
+  for (let i = source.indexOf('(', start); i < source.length; i += 1) {
+    if (source[i] === '(') paramDepth += 1;
+    else if (source[i] === ')') paramDepth -= 1;
+    if (paramDepth === 0) {
+      paramsEnd = i;
+      break;
     }
+  }
+  assert(paramsEnd >= 0, `${name} params close`);
+  const bodyStart = source.indexOf('{', paramsEnd);
+  assert(bodyStart >= 0, `${name} body opens`);
+  let depth = 0;
+  for (let i = bodyStart; i < source.length; i++) {
+    if (source[i] === '{') depth += 1;
+    else if (source[i] === '}') depth -= 1;
+    if (depth === 0) return source.slice(start, i + 1);
   }
   throw new Error(`${name} body not found`);
 }
@@ -49,6 +57,14 @@ const previewVoiceBody = extractFunction(main, 'previewVoice');
 const previewSynthBody = extractFunction(main, 'previewSynth');
 const previewEngineKitBody = extractFunction(main, 'previewEngineKit');
 const routeVoiceBody = extractFunction(main, 'routeVoice');
+const nonHihatSynthBodies = [
+  ['kick', extractFunction(main, 'synthKick')],
+  ['snare', extractFunction(main, 'synthSnare')],
+  ['clap', extractFunction(main, 'synthClap')],
+  ['input', extractFunction(main, 'synthInput')],
+  ['ether', extractFunction(main, 'synthEther')],
+  ['synth', extractFunction(main, 'synthSynth')],
+];
 
 assert(/function\s+getTrackVoiceVelocity\s*\(\s*trackIndex\s*\)/.test(main), 'runtime exposes stable non-hihat voice excitation helper');
 assert(!/const\s+v\s*=\s*tr\.vol/.test(fireBody), 'fire no longer aliases mixer fader volume as synth velocity');
@@ -66,6 +82,14 @@ for (const [id, fn] of [
 }
 assert(/case\s+['"]hihat['"]:[\s\S]*synthHihat\(t,\s*getStepHihatVelocity\(firingStep\),/.test(fireBody), 'hihat still uses per-step accent velocity');
 assert(/out\.gain\.value\s*=\s*tr\.vol/.test(routeVoiceBody), 'routeVoice keeps mixer fader as post-voice trim before dry/delay/reverb/WRECK sends');
+for (const [id, body] of nonHihatSynthBodies) {
+  assert(!/tr\.vol/.test(body), `${id} synth body does not read mixer fader volume for excitation/envelopes`);
+  assert(/routeVoice\(\s*t\s*,/.test(body), `${id} synth body routes through routeVoice for the single post-voice trim`);
+}
+assert(/out\.connect\(N\.bus\)/.test(routeVoiceBody), 'routeVoice sends already-trimmed voices to dry bus');
+assert(/out\.connect\(ds\);\s*ds\.connect\(N\.dlyLine\)/.test(routeVoiceBody), 'routeVoice feeds delay send after post-voice trim');
+assert(/out\.connect\(rs\);\s*rs\.connect\(N\.revSend\)/.test(routeVoiceBody), 'routeVoice feeds reverb send after post-voice trim');
+assert(/out\.connect\(ws\);\s*ws\.connect\(N\.wreckIn\)/.test(routeVoiceBody), 'routeVoice feeds WRECK send after post-voice trim');
 assert(/synthFn\(\s*t\s*,\s*getTrackVoiceVelocity\(\s*trackIndex\s*\)\s*,\s*tr\.p\s*\)/.test(previewVoiceBody), 'non-hihat voice preview uses stable voice excitation, not mixer fader');
 assert(/synthSynth\(t,\s*getTrackVoiceVelocity\(\s*6\s*\),/.test(previewSynthBody), 'synth note preview uses stable synth excitation, not mixer fader');
 assert(/synthKick\(t,\s*getTrackVoiceVelocity\(\s*0\s*\),/.test(previewEngineKitBody), 'engine kit kick preview uses stable excitation');
