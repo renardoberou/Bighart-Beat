@@ -65,6 +65,8 @@ const SYNTH_OSC_SAFETY_MIN_HZ = 1;
 const SYNTH_OSC_SAFETY_MAX_HZ = 20000;
 const hihatChokeState = { gain: null, open: 0 };
 const synthVoiceState = { gain: null, pitchHz: null, triggerTime: null };
+const VOICE_EDIT_AUDITION_DEBOUNCE_MS = 140;
+let voiceEditAuditionTimer = null;
 const REV_IR_REBUILD_DEBOUNCE_MS = 50;
 let revIRRebuildTimer = null;
 let lastRevIRParams = null;
@@ -1022,6 +1024,25 @@ function previewSynth() {
   synthSynth(t, getTrackVoiceVelocity(6), { ...tr.p, pitch: getStepSynthPitch(LAST_SYNTH_NOTE_STEP) }, { audition: true });
 }
 
+function scheduleVoiceEditAudition(trackId) {
+  if (S.playing) return;
+  clearTimeout(voiceEditAuditionTimer);
+  voiceEditAuditionTimer = setTimeout(() => {
+    voiceEditAuditionTimer = null;
+    if (S.playing) return;
+    switch (trackId) {
+      case 'kick': previewVoice(0, synthKick); break;
+      case 'snare': previewVoice(1, synthSnare); break;
+      case 'hihat': previewHihat(HHT_PLACE); break;
+      case 'clap': previewVoice(3, synthClap); break;
+      case 'input': previewInput(); break;
+      case 'ether': previewVoice(5, synthEther); break;
+      case 'synth': previewSynth(); break;
+      default: break;
+    }
+  }, VOICE_EDIT_AUDITION_DEBOUNCE_MS);
+}
+
 function getStepHihatOpen(step) {
   return State.getHihatOpenness(HHT_OPENNESS[S.patt], step);
 }
@@ -1699,6 +1720,8 @@ function buildVE() {
       apply();
       onChange(parseFloat(f.value));
       autosave();
+      initAudio();
+      scheduleVoiceEditAudition(tr.id);
     });
     pn.appendChild(row);
   };
