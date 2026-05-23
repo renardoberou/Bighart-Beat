@@ -858,6 +858,13 @@ function synthInput(t, v, p) {
   src.stop(stopAt);
 }
 
+function createUnipolarModulationCurve(size = 256) {
+  const curve = new Float32Array(size);
+  const last = Math.max(1, size - 1);
+  for (let i = 0; i < size; i++) curve[i] = i / last;
+  return curve;
+}
+
 // ── ETHER ── EM-field interference (preserved from v3)
 function synthEther(t, v, p) {
   const etherTailSec = Math.max(0, p.decay + .06);
@@ -926,8 +933,9 @@ function synthEther(t, v, p) {
       bf.frequency.value = b.fc; bf.Q.value = b.q;
       const am = A.createOscillator(); am.type = 'square';
       am.frequency.value = 120 + Math.random() * 200;
+      const amUni = A.createWaveShaper(); amUni.curve = createUnipolarModulationCurve();
       const amG = A.createGain(); amG.gain.value = .28;
-      am.connect(amG);
+      am.connect(amUni); amUni.connect(amG);
       const env = A.createGain();
       env.gain.setValueAtTime(b.l * .5, t);
       env.gain.exponentialRampToValueAtTime(.001, t + p.decay * .9);
