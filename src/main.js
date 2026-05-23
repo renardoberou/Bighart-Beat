@@ -64,7 +64,7 @@ const SYNTH_ROOT_MAX_HZ = State.SYNTH_ROOT_MAX_HZ || SynthVoice.SYNTH_ROOT_MAX_H
 const SYNTH_OSC_SAFETY_MIN_HZ = 1;
 const SYNTH_OSC_SAFETY_MAX_HZ = 20000;
 const hihatChokeState = { gain: null, open: 0 };
-const synthVoiceState = { gain: null, pitchHz: null, triggerTime: null };
+const synthVoiceState = { gain: null, cleanup: null, pitchHz: null, triggerTime: null };
 const VOICE_EDIT_AUDITION_DEBOUNCE_MS = 140;
 let voiceEditAuditionTimer = null;
 const REV_IR_REBUILD_DEBOUNCE_MS = 50;
@@ -939,14 +939,42 @@ function synthEther(t, v, p) {
   }
 }
 
-function triggerSynthChoke(t, voiceGain, spec) {
+function createSynthVoiceCleanupHandle(nodes) {
+  let cleaned = false;
+  return function cleanupSynthVoice(stopAt) {
+    if (cleaned) return;
+    cleaned = true;
+    const safeStopAt = Number.isFinite(stopAt) ? stopAt : (A.currentTime || 0);
+    nodes.forEach((node) => {
+      if (!node) return;
+      if (typeof node.stop === 'function') {
+        try { node.stop(safeStopAt); } catch (err) { /* source may already be stopped */ }
+      }
+    });
+    const disconnectDelayMs = Math.max(0, Math.ceil((safeStopAt - (A.currentTime || 0)) * 1000) + 25);
+    setTimeout(() => {
+      nodes.forEach((node) => {
+        if (!node || typeof node.disconnect !== 'function') return;
+        try { node.disconnect(); } catch (err) { /* node may already be disconnected */ }
+      });
+    }, disconnectDelayMs);
+  };
+}
+
+function triggerSynthChoke(t, voiceGain, spec, cleanup) {
   const previous = synthVoiceState.gain;
+  const previousCleanup = synthVoiceState.cleanup;
   if (previous && previous.gain) {
     const g = previous.gain;
     cancelAndHoldOrSmoothParam(g, t, { floor: .0008, smoothTime: .003, fallbackValue: .0008 });
     g.setTargetAtTime(.0008, t, spec.chokeTau);
   }
+  if (previousCleanup) {
+    const cleanupAt = t + Math.max(.02, Math.min(.18, spec.chokeTau * 6));
+    previousCleanup(cleanupAt);
+  }
   synthVoiceState.gain = voiceGain;
+  synthVoiceState.cleanup = cleanup;
 }
 
 function applySynthGlideFrequency(frequencyParam, targetHz, t, spec, shouldGlide, previousTargetHz) {
@@ -962,13 +990,11 @@ function synthSynth(t, v, p, options = {}) {
   const spec = SynthVoice.resolveSynthVoiceSpec(S.engine, p);
   const dest = routeVoice(t, 6, spec.stopSec);
   const voiceGain = A.createGain();
+  const synthCleanupNodes = [voiceGain];
   voiceGain.gain.setValueAtTime(0, t);
   voiceGain.gain.linearRampToValueAtTime(clamp(v * spec.bodyGain, 0, .7), t + spec.attackSec);
   voiceGain.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec);
   voiceGain.connect(dest);
-  if (!audition) {
-    triggerSynthChoke(t, voiceGain, spec);
-  }
 
   const osc = A.createOscillator();
   osc.type = spec.oscType;
@@ -992,6 +1018,7 @@ function synthSynth(t, v, p, options = {}) {
   filter.Q.setValueAtTime(spec.filterQ, t);
   const sat = A.createWaveShaper(); sat.curve = mkSatCurve(spec.driveAmount); sat.oversample = '2x';
   osc.connect(filter); filter.connect(sat); sat.connect(voiceGain);
+  synthCleanupNodes.push(osc, filter, sat);
   osc.start(t); osc.stop(t + spec.stopSec);
 
   if (spec.modIndex > 0) {
@@ -1001,6 +1028,7 @@ function synthSynth(t, v, p, options = {}) {
     modGain.gain.setValueAtTime(spec.modIndex, t);
     modGain.gain.exponentialRampToValueAtTime(.001, t + Math.min(spec.decaySec, .65));
     mod.connect(modGain); modGain.connect(osc.frequency);
+    synthCleanupNodes.push(mod, modGain);
     mod.start(t); mod.stop(t + spec.stopSec);
   }
 
@@ -1012,6 +1040,7 @@ function synthSynth(t, v, p, options = {}) {
     sg.gain.linearRampToValueAtTime(clamp(v * spec.subGain, 0, .35), t + spec.attackSec * 1.3);
     sg.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec * .9);
     sub.connect(sg); sg.connect(voiceGain);
+    synthCleanupNodes.push(sub, sg);
     sub.start(t); sub.stop(t + spec.stopSec);
   }
 
@@ -1022,7 +1051,11 @@ function synthSynth(t, v, p, options = {}) {
     ng.gain.setValueAtTime(clamp(v * spec.noiseGain, 0, .16), t);
     ng.gain.exponentialRampToValueAtTime(.001, t + Math.min(.16, spec.decaySec));
     ns.connect(nf); nf.connect(ng); ng.connect(voiceGain);
+    synthCleanupNodes.push(ns, nf, ng);
     ns.start(t); ns.stop(t + Math.min(.22, spec.stopSec));
+  }
+  if (!audition) {
+    triggerSynthChoke(t, voiceGain, spec, createSynthVoiceCleanupHandle(synthCleanupNodes));
   }
 }
 
