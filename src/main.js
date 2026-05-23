@@ -1557,6 +1557,10 @@ function buildSeq() {
           if (trackId === 'clap') previewVoice(3, synthClap);
           if (trackId === 'input') previewInput();
           if (trackId === 'ether') previewVoice(5, synthEther);
+          if (trackId === 'synth') {
+            setLastSynthNoteStep(i);
+            previewSynth();
+          }
         }
       });
       c.addEventListener('dblclick', e => {

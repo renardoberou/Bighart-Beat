@@ -50,12 +50,12 @@ assert(
 );
 
 assert(
-  !/trackId\s*===\s*['"]synth['"][\s\S]{0,160}preview(Synth|Voice|Input|Hihat)\s*\(/.test(normalBranch),
-  'normal SYN cell toggles do not gain new default audition behavior'
+  /if\s*\(\s*!S\.playing\s*&&\s*!wasOn\s*\)\s*\{[\s\S]*if\s*\(\s*trackId\s*===\s*['"]synth['"]\s*\)\s*\{[\s\S]*setLastSynthNoteStep\s*\(\s*i\s*\)[\s\S]*previewSynth\s*\(\s*\)[\s\S]*\}[\s\S]*\}/.test(normalBranch),
+  'normal stopped SYN OFF→ON cell toggles set LAST_SYNTH_NOTE_STEP to the toggled step and audition previewSynth()'
 );
 assert(
   !/if\s*\(\s*S\.playing\s*\)\s*\{[\s\S]*preview(?:Voice|Input|Hihat|Synth)\s*\(/.test(normalBranch),
   'normal cell audition is not gated to fire while transport is running'
 );
 
-console.log('Issue 003 stopped non-hihat cell audition static checks passed.');
+console.log('Issue 003 stopped non-hihat/SYN cell audition static checks passed.');
