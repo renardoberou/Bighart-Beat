@@ -211,7 +211,8 @@ function buildGraph() {
   N.wreckDownsample.wreckHoldCounter = 0;
   N.wreckDownsample.onaudioprocess = processWreckDownsample;
   N.wreckCrusher = A.createWaveShaper();
-  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate, FX.wreck.threshold);
+  N.wreckCurveKey = null;
+  updateWreckCurveIfNeeded();
   N.wreckCrusher.oversample = 'none';
   N.wreckTone = A.createBiquadFilter(); N.wreckTone.type = 'lowpass';
   N.wreckTone.frequency.value = wreckToneHz(FX.wreck.tone);
@@ -324,6 +325,14 @@ function updateWreckProcessorFeed(active) {
     try { N.wreckWet.disconnect(N.wreckOut); } catch (_) {}
     N.wreckProcessorChainConnected = false;
   }
+}
+
+function updateWreckCurveIfNeeded() {
+  if (!N || !N.wreckCrusher) return;
+  const key = [FX.wreck.bits, FX.wreck.curve, FX.wreck.rate, FX.wreck.threshold].join('|');
+  if (N.wreckCurveKey === key) return;
+  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate, FX.wreck.threshold);
+  N.wreckCurveKey = key;
 }
 
 function mkWreckCurve(bits, mode, rate, thresholdDb) {
@@ -1913,7 +1922,7 @@ function applyFXState() {
   N.mstComp.knee.setTargetAtTime(FX.comp.detector === 'peak' ? 6 : 12, A.currentTime, .02);
   N.compMakeup.gain.setTargetAtTime(dbToGain(autoMakeupGainDb(FX.comp)), A.currentTime, .02);
   // digital destruction
-  N.wreckCrusher.curve = mkWreckCurve(FX.wreck.bits, FX.wreck.curve, FX.wreck.rate, FX.wreck.threshold);
+  updateWreckCurveIfNeeded();
   N.wreckDownsample.wreckRate = FX.wreck.rate;
   updateWreckProcessorFeed(shouldFeedWreckProcessor());
   N.wreckTone.frequency.setTargetAtTime(wreckToneHz(FX.wreck.tone), A.currentTime, .02);

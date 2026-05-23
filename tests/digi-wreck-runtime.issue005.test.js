@@ -28,6 +28,8 @@ assert(/N\.wreckWet\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master graph cre
 assert(/N\.wreckWet\.gain\.value\s*=\s*FX\.wreck\.on\s*\?\s*FX\.wreck\.mix\s*:\s*0/.test(buildGraph), 'buildGraph initializes WRECK wet return from persisted on/mix state before smoothing');
 assert(/N\.wreckDownsample\s*=\s*A\.createScriptProcessor\(/.test(buildGraph), 'master graph creates a real sample-hold/downsample processing stage');
 assert(/N\.wreckCrusher\s*=\s*A\.createWaveShaper\(\)/.test(buildGraph), 'master graph creates bounded bit/curve shaper');
+assert(/N\.wreckCurveKey\s*=\s*null/.test(buildGraph), 'buildGraph invalidates cached DIGI WRECK curve key before first curve install');
+assert(/updateWreckCurveIfNeeded\(\)/.test(buildGraph), 'buildGraph installs initial DIGI WRECK curve through the cache-aware helper');
 assert(/N\.wreckTone\s*=\s*A\.createBiquadFilter\(\)/.test(buildGraph), 'master graph creates DIGI WRECK tone contour filter');
 assert(/N\.wreckOut\s*=\s*A\.createGain\(\)/.test(buildGraph), 'master graph creates DIGI WRECK output trim');
 assert(!/N\.compMakeup\.connect\(N\.wreckIn\)/.test(buildGraph), 'DIGI WRECK is not fed by the full master compressor output');
@@ -71,8 +73,15 @@ assert(/function\s+processWreckDownsample\s*\(/.test(js), 'runtime defines sampl
 assert(/wreckHoldStep\(this\.wreckRate\)/.test(js), 'sample-hold processor reads the RATE-controlled downsample value');
 assert(/function\s+wreckToneHz\s*\(/.test(js), 'runtime defines DIGI WRECK tone mapper');
 
+const updateWreckCurveIfNeeded = extractFunction('updateWreckCurveIfNeeded');
+assert(/const\s+key\s*=\s*\[\s*FX\.wreck\.bits\s*,\s*FX\.wreck\.curve\s*,\s*FX\.wreck\.rate\s*,\s*FX\.wreck\.threshold\s*\]/.test(updateWreckCurveIfNeeded), 'cached DIGI WRECK curve key includes bits, curve, rate, and threshold');
+assert(/N\.wreckCurveKey\s*===\s*key/.test(updateWreckCurveIfNeeded), 'cached DIGI WRECK curve helper skips unchanged sound-shaping state');
+assert(/N\.wreckCrusher\.curve\s*=\s*mkWreckCurve\(FX\.wreck\.bits,\s*FX\.wreck\.curve,\s*FX\.wreck\.rate,\s*FX\.wreck\.threshold\)/.test(updateWreckCurveIfNeeded), 'cached DIGI WRECK curve helper rebuilds the curve when sound-shaping state changes');
+assert(/N\.wreckCurveKey\s*=\s*key/.test(updateWreckCurveIfNeeded), 'cached DIGI WRECK curve helper records the installed curve key');
+
 const applyFXState = extractFunction('applyFXState');
-assert(/N\.wreckCrusher\.curve\s*=\s*mkWreckCurve\(FX\.wreck\.bits,\s*FX\.wreck\.curve,\s*FX\.wreck\.rate,\s*FX\.wreck\.threshold\)/.test(applyFXState), 'applyFXState updates bit depth, transfer mode, rate, and threshold');
+assert(/updateWreckCurveIfNeeded\(\)/.test(applyFXState), 'applyFXState updates bit depth, transfer mode, rate, and threshold through the curve cache');
+assert(!/N\.wreckCrusher\.curve\s*=\s*mkWreckCurve/.test(applyFXState), 'applyFXState does not rebuild the DIGI WRECK curve for unrelated FX updates');
 assert(/N\.wreckDownsample\.wreckRate\s*=\s*FX\.wreck\.rate/.test(applyFXState), 'applyFXState drives the real sample-hold/downsample stage from RATE');
 assert(/updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)/.test(applyFXState), 'applyFXState gates DIGI WRECK processor feed by audible wet-feed state');
 assert(/N\.wreckTone\.frequency\.setTargetAtTime\(wreckToneHz\(FX\.wreck\.tone/.test(applyFXState), 'applyFXState maps DIGI WRECK tone to a filter');
