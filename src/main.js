@@ -637,6 +637,7 @@ function synthHihat(t, v, p) {
     denseRatchet: !!(p && p.denseRatchet),
   });
   const metallicFrequencies = hihatBudget.budgetedOscillatorFrequencies || spec.oscillatorFrequencies || [];
+  const openAccentBloomLift = clamp(1 + spec.openAccentBloom * .18, 1, 1.06);
   const hihatTailSec = Math.max(
     spec.noiseTailSec + spec.tailReleaseTau * 4,
     hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
@@ -675,7 +676,7 @@ function synthHihat(t, v, p) {
     const sf = A.createBiquadFilter(); sf.type = 'bandpass'; sf.frequency.value = spec.openShimmerHz; sf.Q.value = spec.openShimmerQ;
     const sg = A.createGain();
     sg.gain.setValueAtTime(0, t);
-    sg.gain.linearRampToValueAtTime(clamp(v * spec.openShimmerGain, 0, .085), t + spec.attackSec);
+    sg.gain.linearRampToValueAtTime(clamp(v * spec.openShimmerGain * openAccentBloomLift, 0, .085), t + spec.attackSec);
     sg.gain.setTargetAtTime(.001, t + spec.openShimmerTailSec * spec.openTailDamp, spec.tailReleaseTau);
     sg.gain.exponentialRampToValueAtTime(.001, t + spec.openShimmerTailSec);
     shimmer.connect(sf); sf.connect(sg); sg.connect(choke);
@@ -686,7 +687,7 @@ function synthHihat(t, v, p) {
     const bf = A.createBiquadFilter(); bf.type = 'bandpass'; bf.frequency.value = spec.openBodyHz; bf.Q.value = spec.openBodyQ;
     const bg = A.createGain();
     bg.gain.setValueAtTime(0, t);
-    bg.gain.linearRampToValueAtTime(clamp(v * spec.openBodyGain, 0, .11), t + spec.attackSec);
+    bg.gain.linearRampToValueAtTime(clamp(v * spec.openBodyGain * openAccentBloomLift, 0, .11), t + spec.attackSec);
     bg.gain.setTargetAtTime(.001, t + spec.openBodyTailSec * spec.openTailDamp, spec.tailReleaseTau);
     bg.gain.exponentialRampToValueAtTime(.001, t + spec.openBodyTailSec);
     body.connect(bf); bf.connect(bg); bg.connect(choke);

@@ -173,13 +173,14 @@
     const airLowpassHz = clamp(freq * profile.bright * characterAirDamp * (1.35 - open * 0.22) * (1 - softHit * 0.08 + accentedHit * 0.04), 8500, 18000);
     const airLowpassQ = clamp(0.45 + instability * 2, 0.2, 0.9);
     const openShape = smoothstep01(open);
-    const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25), 0, 0.085);
-    const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + accentedHit * 0.08), 0.006, 0.72);
+    const openAccentBloom = clamp(openShape * (0.045 + accentedHit * 0.135 - softHit * 0.035), 0, 0.32);
+    const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25) * (1 + openAccentBloom * 0.22), 0, 0.085);
+    const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + accentedHit * 0.08 + openAccentBloom * 0.05), 0.006, 0.72);
     const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
     const openShimmerQ = clamp(1.6 + open * 1.2 + instability * 10, 1.2, 4.2);
     const openBodyCharacter = engine === '808' ? 0.74 : (engine === '909' ? 1.0 : (isReznor ? 1.12 : 1.24));
-    const openBodyGain = clamp(openShape * (0.034 + profile.tone * 0.035 + metal * 0.012) * openBodyCharacter * (0.72 + accentedHit * 0.38 - softHit * 0.22) * jitter(rand, instability * 0.35), 0, 0.11);
-    const openBodyTailSec = clamp(noiseTailSec * (0.70 + open * 0.12) * (1 + accentedHit * 0.04), 0.004, 0.64);
+    const openBodyGain = clamp(openShape * (0.034 + profile.tone * 0.035 + metal * 0.012) * openBodyCharacter * (0.72 + accentedHit * 0.38 - softHit * 0.22) * (1 + openAccentBloom * 0.28) * jitter(rand, instability * 0.35), 0, 0.11);
+    const openBodyTailSec = clamp(noiseTailSec * (0.70 + open * 0.12) * (1 + accentedHit * 0.04 + openAccentBloom * 0.04), 0.004, 0.64);
     const openBodyHz = clamp(4200 * profile.bright * (0.95 + profile.tone * 0.28) * (1 + open * 0.20) * (1 - softHit * 0.06 + accentedHit * 0.10) * jitter(rand, instability * 0.45), 2600, 12000);
     const openBodyQ = clamp(0.65 + open * 0.55 + profile.tone * 0.75 + instability * 8, 0.45, 2.8);
     const idmSparkCharacter = isAphex ? 1 : (isReznor ? 0.58 : 0);
@@ -224,6 +225,7 @@
       outputTrim,
       airLowpassHz,
       airLowpassQ,
+      openAccentBloom,
       openShimmerGain,
       openShimmerTailSec,
       openShimmerHz,

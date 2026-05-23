@@ -10,6 +10,8 @@ const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 
 const { resolveHihatVoiceSpec, resolveHihatRenderBudget, HIHAT_ENGINE_PROFILES } = hihatVoice;
 
+assert(/openAccentBloom/.test(main), 'runtime consumes resolver openAccentBloom proxy without adding a new source');
+assert(/spec\.openAccentBloom[\s\S]*clamp\(v \* spec\.openBodyGain/.test(main), 'runtime wires open accent bloom into the existing open body layer with clamp protection');
 assert.strictEqual(typeof resolveHihatVoiceSpec, 'function', 'resolveHihatVoiceSpec is exported');
 assert.strictEqual(typeof resolveHihatRenderBudget, 'function', 'resolveHihatRenderBudget is exported');
 assert(HIHAT_ENGINE_PROFILES && HIHAT_ENGINE_PROFILES.aphex, 'engine hihat profiles are exported');
@@ -34,7 +36,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openAccentBloom', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -54,6 +56,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.outputTrim >= 0.62 && spec.outputTrim <= 1, `${label}: output trim is bounded for hihat headroom`);
   assert(spec.airLowpassHz >= 8500 && spec.airLowpassHz <= 18000, `${label}: air lowpass is bright but bounded`);
   assert(spec.airLowpassQ >= 0.2 && spec.airLowpassQ <= 0.9, `${label}: air lowpass Q is gentle and mobile-safe`);
+  assert(spec.openAccentBloom >= 0 && spec.openAccentBloom <= 0.32, `${label}: open accent bloom proxy is bounded/headroom-safe`);
   assert(spec.openShimmerGain >= 0 && spec.openShimmerGain <= 0.085, `${label}: open shimmer gain remains headroom-safe`);
   assert(spec.openShimmerTailSec >= 0.006 && spec.openShimmerTailSec <= 0.72, `${label}: open shimmer tail is bounded/mobile-safe`);
   assert(spec.openShimmerHz >= 6500 && spec.openShimmerHz <= 18000, `${label}: open shimmer frequency is bright but bounded`);
@@ -122,7 +125,14 @@ assertFiniteBounded(normalAphex, 'normal aphex IDM edge hihat');
 assertFiniteBounded(accentedAphex, 'accented aphex IDM edge hihat');
 
 const normalOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
+const softOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.25);
 const accentedOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 1.0);
+assert(softOpen909.openAccentBloom < normalOpen909.openAccentBloom, 'soft open 909 hihat keeps the accent bloom proxy restrained');
+assert(accentedOpen909.openAccentBloom > normalOpen909.openAccentBloom + 0.08, 'accented open 909 hihat exposes an obvious extra bloom proxy versus normal open hit');
+assert(accentedOpen909.openAccentBloom > softOpen909.openAccentBloom * 2, 'accented open 909 hihat has much more bloom proxy than soft open hit');
+assert(accentedOpen909.openAccentBloom <= 0.32, 'accented open 909 hihat bloom proxy remains bounded for headroom');
+assert(accentedOpen909.openBodyGain > softOpen909.openBodyGain * 1.45, 'accented open 909 hihat has clearly stronger body/bloom than soft open hit');
+assert(accentedOpen909.openShimmerGain > softOpen909.openShimmerGain * 1.45, 'accented open 909 hihat has clearly stronger shimmer than soft open hit');
 assert(accentedOpen909.noiseTailSec < normalOpen909.noiseTailSec, 'accented open 909 hihat has a tighter noise tail than normal velocity');
 assert(accentedOpen909.metalTailSec < normalOpen909.metalTailSec, 'accented open 909 hihat has a tighter metallic tail than normal velocity');
 assert(accentedOpen909.tailReleaseTau < normalOpen909.tailReleaseTau, 'accented open 909 hihat has a tighter release tau than normal velocity');
@@ -293,11 +303,11 @@ assert(/ng\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.noiseGain \* spec\.
 assert(/mg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.metalGain \* spec\.tailHeadroomTrim,\s*0,\s*\.34\),\s*t \+ Math\.max\(\.0008,\s*spec\.attackSec \* \.8\)\)/.test(main), 'hihat metallic layer uses resolver tail headroom trim');
 assert(/if \(hihatBudget\.useOpenShimmer && spec\.openShimmerGain > 0\.001\)/.test(main), 'synthHihat gates open-hat shimmer through render budget and resolver gain');
 assert(/sf\.frequency\.value\s*=\s*spec\.openShimmerHz/.test(main), 'hihat shimmer filter uses resolver frequency');
-assert(/sg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openShimmerGain,\s*0,\s*\.085\),\s*t \+ spec\.attackSec\)/.test(main), 'hihat shimmer gain uses resolver gain and headroom cap');
+assert(/sg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openShimmerGain \* openAccentBloomLift,\s*0,\s*\.085\),\s*t \+ spec\.attackSec\)/.test(main), 'hihat shimmer gain uses resolver gain, bounded accent bloom, and headroom cap');
 assert(/shimmer\.connect\(sf\);\s*sf\.connect\(sg\);\s*sg\.connect\(choke\);/.test(main), 'open hihat shimmer routes through hihat choke');
 assert(/if \(hihatBudget\.useOpenBody && spec\.openBodyGain > 0\.001\)/.test(main), 'synthHihat gates open-hat body/bloom through render budget and resolver gain');
 assert(/bf\.frequency\.value\s*=\s*spec\.openBodyHz/.test(main), 'hihat body/bloom filter uses resolver frequency');
-assert(/bg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openBodyGain,\s*0,\s*\.11\),\s*t \+ spec\.attackSec\)/.test(main), 'hihat body/bloom gain uses resolver gain and headroom cap');
+assert(/bg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openBodyGain \* openAccentBloomLift,\s*0,\s*\.11\),\s*t \+ spec\.attackSec\)/.test(main), 'hihat body/bloom gain uses resolver gain, bounded accent bloom, and headroom cap');
 assert(/body\.connect\(bf\);\s*bf\.connect\(bg\);\s*bg\.connect\(choke\);/.test(main), 'open hihat body/bloom routes through hihat choke');
 assert(/Math\.max\([\s\S]*hihatBudget\.useOpenFlutter\s*&&\s*spec\.openFlutterGain\s*>\s*0\.001\s*\?\s*spec\.openFlutterTailSec\s*\+\s*spec\.tailReleaseTau/.test(main), 'hihat tail budget includes open IDM flutter/rattle when budgeted and enabled');
 assert(/if \(hihatBudget\.useOpenFlutter && spec\.openFlutterGain > 0\.001\)/.test(main), 'synthHihat gates open-hat IDM flutter/rattle through render budget and resolver gain');
