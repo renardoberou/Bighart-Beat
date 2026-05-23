@@ -1789,7 +1789,10 @@ function buildVE() {
     hatTest.querySelector('[data-open=".45"]').addEventListener('click', () => previewHihat(.45));
     hatTest.querySelector('[data-open="1"]').addEventListener('click', () => previewHihat(1));
     hatTest.querySelectorAll('[data-place]').forEach(b => {
-      b.addEventListener('click', () => setHihatPlacement(b.dataset.place));
+      b.addEventListener('click', () => {
+        setHihatPlacement(b.dataset.place);
+        previewHihat(parseFloat(b.dataset.place));
+      });
     });
     syncHihatPlacementControls();
     mkRow('FREQ',  4000, 14000, 100, tr.p.freq, x=>`${(x/1000).toFixed(1)} kHz`, v=>tr.p.freq=v, c);
