@@ -82,9 +82,12 @@
       ? 3
       : (opts.mobile || opts.denseRatchet ? 4 : availableMetallicSourceCount);
     const minimumAudibleMetallicSources = metalAudible ? Math.min(2, availableMetallicSourceCount) : 0;
+    const hasExplicitMetallicCap = Number.isFinite(opts.maxMetallicSources);
     const requestedMetallicCap = clamp(Math.floor(finiteOr(opts.maxMetallicSources, metallicFallbackCap)), 0, availableMetallicSourceCount);
     const maxMetallicSources = metalAudible
-      ? clamp(Math.max(requestedMetallicCap, minimumAudibleMetallicSources), minimumAudibleMetallicSources, availableMetallicSourceCount)
+      ? (hasExplicitMetallicCap
+        ? requestedMetallicCap
+        : clamp(Math.max(requestedMetallicCap, minimumAudibleMetallicSources), minimumAudibleMetallicSources, availableMetallicSourceCount))
       : 0;
     const budgetedOscillatorFrequencies = metalAudible
       ? selectBudgetedOscillatorFrequencies(oscillatorFrequencies, maxMetallicSources)
@@ -153,7 +156,14 @@
     const isAphex = engine === 'aphex';
     const isReznor = engine === 'reznor';
     const idmEdge = isAphex ? clamp(0.35 + metal * 0.10 + accentedHit * 0.45 - softHit * 0.25, 0.08, 0.95) : 0;
-    const metalLevel = clamp(baseMetalLevel * (1 + idmEdge * 0.14), 0, 0.34);
+    const needleClosedness = Math.pow(clamp((0.78 - open) / 0.78, 0, 1), 0.70);
+    const needleCharacter = isAphex ? 1 : (isReznor ? 0.38 : 0);
+    const metallicNeedlePinch = clamp(
+      needleClosedness * needleCharacter * (0.16 + metal * 0.22 + accentedHit * 0.54 - softHit * 0.13),
+      0,
+      0.72
+    );
+    const metalLevel = clamp(baseMetalLevel * (1 + idmEdge * 0.14 + metallicNeedlePinch * 0.08), 0, 0.34);
     const ratios = profile.ratios.slice(0, 6).map(r => clamp(r, 0.1, 12));
     const oscillatorFrequencies = ratios.map(r => clamp(205 * r * profile.bright * jitter(rand, instability), 80, 18000));
     const baseGlitchChance = clamp(profile.glitchChance || 0, 0, 0.30);
@@ -169,7 +179,7 @@
     const noiseTailSec = clamp(decaySec * characterTailDamp * (1 + open * 0.08) * velocityTail, 0.006, 0.70);
     const metalTailSec = clamp(decaySec * characterTailDamp * (0.72 + open * 0.08) * velocityTail, 0.004, 0.56);
     const transientGain = clamp((1.12 - open * 0.18 + profile.tone * 0.025) * characterTransient * (1 - softHit * 0.08 + accentedHit * 0.05), 0.8, 1.18);
-    const outputTrim = clamp((1 - open * 0.10 - open * open * 0.16 - instability * 0.20 - accentedHit * 0.08) * characterTrim, 0.62, 1);
+    const outputTrim = clamp((1 - open * 0.10 - open * open * 0.16 - instability * 0.20 - accentedHit * 0.08 - metallicNeedlePinch * 0.025) * characterTrim, 0.62, 1);
     const airLowpassHz = clamp(freq * profile.bright * characterAirDamp * (1.35 - open * 0.22) * (1 - softHit * 0.08 + accentedHit * 0.04), 8500, 18000);
     const airLowpassQ = clamp(0.45 + instability * 2, 0.2, 0.9);
     const openShape = smoothstep01(open);
@@ -187,10 +197,10 @@
     const openBodyQ = clamp(0.65 + open * 0.55 + profile.tone * 0.75 + instability * 8, 0.45, 2.8);
     const idmSparkCharacter = isAphex ? 1 : (isReznor ? 0.58 : 0);
     const idmSparkEnergy = clamp((0.36 + metal * 0.26 + accentedHit * 0.64 - softHit * 0.28) * idmSparkCharacter, 0, 1);
-    const idmSparkGain = clamp(idmSparkEnergy * (isAphex ? 0.052 : 0.034) * jitter(rand, instability * 0.5), 0, 0.065);
-    const idmSparkTailSec = clamp(0.0065 + open * 0.006 + instability * 0.12 - accentedHit * 0.0012, 0.003, 0.045);
-    const idmSparkHz = clamp(freq * (isAphex ? 1.62 : 1.36) * profile.bright * (1 + accentedHit * 0.035) * jitter(rand, instability * 0.7), 9000, 18000);
-    const idmSparkQ = clamp(5.0 + idmSparkEnergy * 4.4 + instability * 38, 3, 14);
+    const idmSparkGain = clamp(idmSparkEnergy * (isAphex ? 0.052 : 0.034) * (1 + metallicNeedlePinch * 0.16) * jitter(rand, instability * 0.5), 0, 0.065);
+    const idmSparkTailSec = clamp(0.0065 + open * 0.006 + instability * 0.12 - accentedHit * 0.0012 - metallicNeedlePinch * 0.0016, 0.003, 0.045);
+    const idmSparkHz = clamp(freq * (isAphex ? 1.62 : 1.36) * profile.bright * (1 + accentedHit * 0.035 + metallicNeedlePinch * 0.018) * jitter(rand, instability * 0.7), 9000, 18000);
+    const idmSparkQ = clamp(5.0 + idmSparkEnergy * 4.4 + metallicNeedlePinch * 1.8 + instability * 38, 3, 14);
     const openFlutterCharacter = isAphex ? 1 : (isReznor ? 0.45 : 0);
     const openFlutterEnergy = clamp(openShape * openFlutterCharacter * (0.42 + metal * 0.28 + accentedHit * 0.48 - softHit * 0.20), 0, 1);
     const openFlutterGain = clamp(openFlutterEnergy * (isAphex ? 0.038 : 0.025) * jitter(rand, instability * 0.55), 0, 0.045);
@@ -257,6 +267,7 @@
       glitchBandpassHz,
       glitchGain: clamp(glitchChance * (0.13 + idmEdge * 0.08), 0, 0.06),
       idmEdge,
+      metallicNeedlePinch,
       chokeClosedTau: clamp(profile.chokeClosedTau, 0.001, 0.099),
       chokeOpenTau: clamp(Math.max(profile.chokeOpenTau, profile.chokeClosedTau + 0.001), 0.002, 0.10),
       metalHighpassHz: clamp(freq * 0.85 * profile.bright, 2200, 17000),

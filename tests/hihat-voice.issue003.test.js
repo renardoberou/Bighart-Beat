@@ -36,7 +36,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openAccentBloom', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openAccentBloom', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'metallicNeedlePinch', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -76,6 +76,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.glitchChance >= 0 && spec.glitchChance <= 0.30, `${label}: glitch chance remains bounded`);
   assert(spec.glitchGain >= 0 && spec.glitchGain <= 0.06, `${label}: glitch gain remains bounded/headroom-safe`);
   assert(spec.idmEdge >= 0 && spec.idmEdge <= 1, `${label}: IDM edge normalized and bounded`);
+  assert(spec.metallicNeedlePinch >= 0 && spec.metallicNeedlePinch <= 0.72, `${label}: metallic needle/pinch proxy normalized and bounded`);
   assert(spec.chokeClosedTau > 0, `${label}: closed choke tau positive`);
   assert(spec.chokeClosedTau < spec.chokeOpenTau, `${label}: closed choke tau is shorter than open`);
   assert(spec.chokeOpenTau <= 0.10, `${label}: open choke tau bounded`);
@@ -120,6 +121,10 @@ assert(softAphex.glitchGain < normalAphex.glitchGain, 'soft aphex hihat has quie
 assert(accentedAphex.glitchGain > normalAphex.glitchGain, 'accented aphex hihat has louder-but-bounded glitch tick than normal velocity');
 assert(softAphex.metalLevel < normalAphex.metalLevel, 'soft aphex hihat has calmer metallic edge than normal velocity');
 assert(accentedAphex.metalLevel > normalAphex.metalLevel, 'accented aphex hihat has stronger metallic edge than normal velocity');
+assert(softAphex.metallicNeedlePinch < normalAphex.metallicNeedlePinch, 'soft closed aphex hihat has less metallic needle/pinch than normal velocity');
+assert(accentedAphex.metallicNeedlePinch > normalAphex.metallicNeedlePinch, 'accented closed aphex hihat has more metallic needle/pinch than normal velocity');
+assert(accentedAphex.idmSparkQ > normalAphex.idmSparkQ, 'accented closed aphex hihat focuses the existing spark layer for a needle-like pinch');
+assert(accentedAphex.idmSparkTailSec <= normalAphex.idmSparkTailSec, 'accented closed aphex hihat keeps the needle/pinch spark short and mobile-safe');
 assertFiniteBounded(softAphex, 'soft aphex IDM edge hihat');
 assertFiniteBounded(normalAphex, 'normal aphex IDM edge hihat');
 assertFiniteBounded(accentedAphex, 'accented aphex IDM edge hihat');
@@ -200,13 +205,21 @@ assert(openAphex.openBodyGain > open.openBodyGain, 'aphex open body/bloom can be
 
 const closedAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5, 0.75);
 const tightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5, 0.75);
+const accentedTightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5, 1.0);
+const softTightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5, 0.25);
 const openReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
+const closedReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5, 0.75);
 const accentedOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 1.0);
 const open909Classic = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
+assert(softTightAphex.metallicNeedlePinch < tightAphex.metallicNeedlePinch, 'soft tight aphex hihat restrains the metallic needle/pinch character');
+assert(accentedTightAphex.metallicNeedlePinch > tightAphex.metallicNeedlePinch, 'accented tight aphex hihat emphasizes the metallic needle/pinch character');
+assert(accentedTightAphex.metallicNeedlePinch > accentedOpenAphex.metallicNeedlePinch * 2 + 0.08, 'accented tight aphex hihat is more needle-biased than accented open aphex');
+assert(accentedOpenAphex.openAccentBloom > accentedTightAphex.openAccentBloom, 'accented open aphex hihat remains about tail/bloom rather than harsh needle');
+assert(closedReznor.metallicNeedlePinch <= closedAphex.metallicNeedlePinch, 'reznor closed hihat needle/pinch stays no stronger than aphex');
 
 function assertFiniteBudget(budget, label) {
   assert(budget && typeof budget === 'object', `${label}: budget object returned`);
-  ['maxOptionalSources', 'optionalSourceCount', 'availableOptionalSourceCount'].forEach(k => {
+  ['maxOptionalSources', 'optionalSourceCount', 'availableOptionalSourceCount', 'maxMetallicSources', 'metallicSourceCount', 'availableMetallicSourceCount', 'totalSourceEstimate'].forEach(k => {
     assert(Number.isFinite(budget[k]), `${label}: ${k} is finite`);
   });
   ['useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'].forEach(k => {
@@ -216,24 +229,47 @@ function assertFiniteBudget(budget, label) {
   assert(budget.optionalSourceCount >= 0, `${label}: optionalSourceCount non-negative`);
   assert(budget.optionalSourceCount <= budget.maxOptionalSources, `${label}: optionalSourceCount respects cap`);
   assert(budget.optionalSourceCount <= budget.availableOptionalSourceCount, `${label}: optionalSourceCount no larger than available`);
+  assert(budget.maxMetallicSources >= 0, `${label}: maxMetallicSources non-negative`);
+  assert(budget.metallicSourceCount >= 0, `${label}: metallicSourceCount non-negative`);
+  assert(budget.metallicSourceCount <= budget.maxMetallicSources, `${label}: metallicSourceCount respects cap`);
+  assert(budget.metallicSourceCount <= budget.availableMetallicSourceCount, `${label}: metallicSourceCount no larger than available`);
+  assert(Array.isArray(budget.budgetedOscillatorFrequencies), `${label}: budgetedOscillatorFrequencies array`);
+  assert.strictEqual(budget.budgetedOscillatorFrequencies.length, budget.metallicSourceCount, `${label}: selected oscillator frequencies match metallicSourceCount`);
+  assert(budget.budgetedOscillatorFrequencies.every(Number.isFinite), `${label}: selected oscillator frequencies are finite`);
+  assert.strictEqual(budget.totalSourceEstimate, 1 + budget.optionalSourceCount + budget.metallicSourceCount, `${label}: totalSourceEstimate includes base noise, optional, and metallic sources`);
 }
 
 const desktopAphexBudget = resolveHihatRenderBudget(openAphex);
 assertFiniteBudget(desktopAphexBudget, 'desktop aphex hihat render budget');
+assert.strictEqual(desktopAphexBudget.availableMetallicSourceCount, openAphex.oscillatorFrequencies.length, 'desktop budget reports all audible metallic oscillators as available');
+assert.strictEqual(desktopAphexBudget.maxMetallicSources, desktopAphexBudget.availableMetallicSourceCount, 'desktop budget defaults to all available metallic oscillators');
+assert.strictEqual(desktopAphexBudget.metallicSourceCount, desktopAphexBudget.maxMetallicSources, 'desktop budget selects all default metallic oscillators');
+assert.deepStrictEqual(desktopAphexBudget.budgetedOscillatorFrequencies, openAphex.oscillatorFrequencies, 'desktop budget preserves finite oscillator frequencies by default');
 assert.strictEqual(desktopAphexBudget.useOpenShimmer, openAphex.openShimmerGain > 0.001, 'desktop budget preserves open shimmer when audible');
 assert.strictEqual(desktopAphexBudget.useOpenBody, openAphex.openBodyGain > 0.001, 'desktop budget preserves open body when audible');
 assert.strictEqual(desktopAphexBudget.useOpenFlutter, openAphex.openFlutterGain > 0.001, 'desktop budget preserves open flutter when audible');
 assert.strictEqual(desktopAphexBudget.useIdmSpark, openAphex.idmSparkGain > 0.001, 'desktop budget preserves IDM spark when audible');
 assert.strictEqual(desktopAphexBudget.useGlitch, openAphex.glitchWillFire, 'desktop budget preserves glitch tick when resolver fires it');
 
-const mobileTightAphexBudget = resolveHihatRenderBudget(accentedOpenAphex, { mobile: true, denseRatchet: true, maxOptionalSources: 1 });
-assertFiniteBudget(mobileTightAphexBudget, 'mobile tight aphex hihat render budget');
-assert.strictEqual(mobileTightAphexBudget.maxOptionalSources, 1, 'explicit tight mobile budget cap is honored');
-assert.strictEqual(mobileTightAphexBudget.optionalSourceCount, 1, 'tight mobile budget keeps exactly one optional character source');
-assert(mobileTightAphexBudget.useIdmSpark || mobileTightAphexBudget.useOpenFlutter, 'tight mobile aphex keeps an IDM character layer');
-assert.strictEqual(mobileTightAphexBudget.useOpenShimmer, false, 'tight mobile aphex sheds open shimmer first');
-assert.strictEqual(mobileTightAphexBudget.useOpenBody, false, 'tight mobile aphex sheds open body/bloom first');
-assert.strictEqual(mobileTightAphexBudget.useGlitch, false, 'tight mobile aphex sheds optional glitch tick under tight cap');
+const mobileTightAccentedOpenAphexBudget = resolveHihatRenderBudget(accentedOpenAphex, { mobile: true, denseRatchet: true, maxOptionalSources: 1 });
+assertFiniteBudget(mobileTightAccentedOpenAphexBudget, 'mobile tight accented open aphex hihat render budget');
+assert.strictEqual(mobileTightAccentedOpenAphexBudget.maxOptionalSources, 1, 'explicit tight mobile budget cap is honored');
+assert.strictEqual(mobileTightAccentedOpenAphexBudget.optionalSourceCount, 1, 'tight mobile budget keeps exactly one optional character source');
+assert(mobileTightAccentedOpenAphexBudget.useIdmSpark || mobileTightAccentedOpenAphexBudget.useOpenFlutter, 'tight mobile accented open aphex keeps an IDM character layer');
+assert.strictEqual(mobileTightAccentedOpenAphexBudget.maxMetallicSources, Math.min(3, mobileTightAccentedOpenAphexBudget.availableMetallicSourceCount), 'mobile dense default metallic budget keeps current fallback cap when explicit cap is omitted');
+assert.strictEqual(mobileTightAccentedOpenAphexBudget.metallicSourceCount, mobileTightAccentedOpenAphexBudget.maxMetallicSources, 'mobile dense default metallic budget selects up to its fallback cap');
+assert.strictEqual(mobileTightAccentedOpenAphexBudget.useOpenShimmer, false, 'tight mobile accented open aphex sheds open shimmer first');
+assert.strictEqual(mobileTightAccentedOpenAphexBudget.useOpenBody, false, 'tight mobile accented open aphex sheds open body/bloom first');
+assert.strictEqual(mobileTightAccentedOpenAphexBudget.useGlitch, false, 'tight mobile accented open aphex sheds optional glitch tick under tight cap');
+
+assert(accentedOpenAphex.metalGain > 0.001, 'explicit metallic cap fixture has audible metal');
+assert(accentedOpenAphex.oscillatorFrequencies.length >= 2, 'explicit metallic cap fixture exposes multiple oscillator frequencies');
+const explicitZeroMetallicBudget = resolveHihatRenderBudget(accentedOpenAphex, { maxMetallicSources: 0 });
+assertFiniteBudget(explicitZeroMetallicBudget, 'explicit zero metallic hihat render budget');
+assert.strictEqual(explicitZeroMetallicBudget.availableMetallicSourceCount, accentedOpenAphex.oscillatorFrequencies.length, 'explicit zero metallic budget still reports available audible metallic oscillators');
+assert.strictEqual(explicitZeroMetallicBudget.maxMetallicSources, 0, 'explicit maxMetallicSources: 0 is honored when metal is audible');
+assert.strictEqual(explicitZeroMetallicBudget.metallicSourceCount, 0, 'explicit zero metallic budget selects no metallic oscillators');
+assert.deepStrictEqual(explicitZeroMetallicBudget.budgetedOscillatorFrequencies, [], 'explicit zero metallic budget has no selected oscillator frequencies');
 
 const mobileTightReznorBudget = resolveHihatRenderBudget(openReznor, { mobile: true, denseRatchet: true, maxOptionalSources: 1 });
 assertFiniteBudget(mobileTightReznorBudget, 'mobile tight reznor hihat render budget');
