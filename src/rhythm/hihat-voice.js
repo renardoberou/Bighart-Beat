@@ -214,6 +214,10 @@
     const ghostTickTailSec = clamp(0.0042 + ghostClosedness * 0.0062 + ghostVelocityLift * 0.0020 + instability * 0.035, 0.003, 0.018);
     const ghostTickHz = clamp(freq * (1.02 + profile.tone * 0.14 - open * 0.08) * profile.bright * (1 - softHit * 0.03) * jitter(rand, instability * 0.5), 6500, 16000);
     const ghostTickQ = clamp(3.4 + ghostTickEnergy * 2.6 + profile.tone * 1.0 + instability * 20, 2.5, 9);
+    const baseChokeClosedTau = clamp(profile.chokeClosedTau, 0.001, 0.099);
+    const baseChokeOpenTau = clamp(Math.max(profile.chokeOpenTau, profile.chokeClosedTau + 0.001), 0.002, 0.10);
+    const velocityChokeRelease = 1 + openShape * (softHit * 0.12 - accentedHit * 0.16);
+    const chokeOpenTau = clamp(Math.max(baseChokeOpenTau * velocityChokeRelease, baseChokeClosedTau + 0.001), 0.002, 0.10);
 
     return {
       engine,
@@ -268,8 +272,8 @@
       glitchGain: clamp(glitchChance * (0.13 + idmEdge * 0.08), 0, 0.06),
       idmEdge,
       metallicNeedlePinch,
-      chokeClosedTau: clamp(profile.chokeClosedTau, 0.001, 0.099),
-      chokeOpenTau: clamp(Math.max(profile.chokeOpenTau, profile.chokeClosedTau + 0.001), 0.002, 0.10),
+      chokeClosedTau: baseChokeClosedTau,
+      chokeOpenTau,
       metalHighpassHz: clamp(freq * 0.85 * profile.bright, 2200, 17000),
     };
   }
