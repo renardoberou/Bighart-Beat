@@ -133,6 +133,10 @@ assert(accentedOpen909.openAccentBloom > softOpen909.openAccentBloom * 2, 'accen
 assert(accentedOpen909.openAccentBloom <= 0.32, 'accented open 909 hihat bloom proxy remains bounded for headroom');
 assert(accentedOpen909.openBodyGain > softOpen909.openBodyGain * 1.45, 'accented open 909 hihat has clearly stronger body/bloom than soft open hit');
 assert(accentedOpen909.openShimmerGain > softOpen909.openShimmerGain * 1.45, 'accented open 909 hihat has clearly stronger shimmer than soft open hit');
+assert(softOpen909.openShimmerTailSec > normalOpen909.openShimmerTailSec, 'soft open 909 hihat keeps an airy shimmer tail instead of collapsing shorter than normal');
+assert(softOpen909.openBodyTailSec > accentedOpen909.openBodyTailSec, 'soft open 909 hihat keeps longer body presence than the snappier accented open hit');
+assert(accentedOpen909.openShimmerTailSec <= normalOpen909.openShimmerTailSec * 1.02, 'accented open 909 hihat shimmer stays snappy and does not outgrow normal open tail');
+assert(accentedOpen909.openBodyTailSec < normalOpen909.openBodyTailSec, 'accented open 909 hihat body stays tighter than normal open tail');
 assert(accentedOpen909.noiseTailSec < normalOpen909.noiseTailSec, 'accented open 909 hihat has a tighter noise tail than normal velocity');
 assert(accentedOpen909.metalTailSec < normalOpen909.metalTailSec, 'accented open 909 hihat has a tighter metallic tail than normal velocity');
 assert(accentedOpen909.tailReleaseTau < normalOpen909.tailReleaseTau, 'accented open 909 hihat has a tighter release tau than normal velocity');
