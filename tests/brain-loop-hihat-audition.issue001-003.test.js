@@ -23,12 +23,20 @@ assert(
   'Brain Loop hihat audition uses the exact hihat openness written by the action when available'
 );
 assert(
+  /if\s*\(\s*!S\.playing\s*\)\s*{[\s\S]*previewHihat\(hihatPreviewOpen\)[\s\S]*heard\s+hat[\s\S]*}\s*else\s*{[\s\S]*hat\s+(?:queued|set)/i.test(actionVariationBody),
+  'Brain Loop hihat additions only audition when stopped, and playing transport gets queued/set copy instead'
+);
+assert(
   /previewHihat\(hihatPreviewOpen\)/.test(actionVariationBody),
-  'Brain Loop hihat additions audition through the real hihat preview path'
+  'Brain Loop stopped-state hihat additions audition through the real hihat preview path'
 );
 assert(
   /heard\s+hat/i.test(actionVariationBody),
-  'Brain Loop toast tells mobile players the hihat action was audibly confirmed'
+  'Brain Loop stopped-state toast tells mobile players the hihat action was audibly confirmed'
+);
+assert(
+  /hat\s+(?:queued|set)/i.test(actionVariationBody),
+  'Brain Loop playing-state toast confirms hihat edit without implying a live audition'
 );
 
 console.log('Brain Loop hihat audition issue001/003 checks passed');

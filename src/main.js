@@ -2257,8 +2257,12 @@ function createRhythmActionVariation() {
   let toastMessage = (action.reason || 'RI ACTION') + ' → pattern ' + 'ABCD'[result.targetIndex];
   if (action.edit.trackId === 'hihat' && action.edit.active) {
     const hihatPreviewOpen = action.edit.hihatOpen ?? HHT_PLACE;
-    previewHihat(hihatPreviewOpen);
-    toastMessage += ' · heard hat';
+    if (!S.playing) {
+      previewHihat(hihatPreviewOpen);
+      toastMessage += ' · heard hat';
+    } else {
+      toastMessage += ' · hat queued';
+    }
   }
   toast(toastMessage);
 }
