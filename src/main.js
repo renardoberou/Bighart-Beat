@@ -1075,6 +1075,11 @@ function previewSynth() {
   synthSynth(t, getTrackVoiceVelocity(6), { ...tr.p, pitch: getStepSynthPitch(LAST_SYNTH_NOTE_STEP) }, { audition: true });
 }
 
+function previewSynthNoteEditAudition() {
+  if (S.playing) return;
+  previewSynth();
+}
+
 function scheduleVoiceEditAudition(trackId) {
   if (S.playing) return;
   clearTimeout(voiceEditAuditionTimer);
@@ -1151,7 +1156,7 @@ function moveSelectedSynthNoteStep(delta) {
   setLastSynthNoteStep((LAST_SYNTH_NOTE_STEP + delta + 16) % 16);
   buildSeq();
   updateSynthNoteStatus();
-  previewSynth();
+  previewSynthNoteEditAudition();
   toast(`SYN step ${String(LAST_SYNTH_NOTE_STEP + 1).padStart(2, '0')} selected`);
 }
 
@@ -1160,7 +1165,7 @@ function randomSelectedSynthNoteStep() {
   buildSeq();
   updateSynthNoteStatus();
   autosave();
-  previewSynth();
+  previewSynthNoteEditAudition();
   toast('SYN step harmonic randomized');
 }
 
@@ -1169,7 +1174,7 @@ function cycleSelectedSynthNoteStepBackward() {
   buildSeq();
   updateSynthNoteStatus();
   autosave();
-  previewSynth();
+  previewSynthNoteEditAudition();
   toast('SYN step harmonic down');
 }
 
@@ -1178,7 +1183,7 @@ function cycleSelectedSynthNoteStepForward() {
   buildSeq();
   updateSynthNoteStatus();
   autosave();
-  previewSynth();
+  previewSynthNoteEditAudition();
   toast('SYN step harmonic up');
 }
 
@@ -1187,7 +1192,7 @@ function resetSelectedSynthNoteStepToRoot() {
   buildSeq();
   updateSynthNoteStatus();
   autosave();
-  previewSynth();
+  previewSynthNoteEditAudition();
   toast('SYN step reset to root');
 }
 
@@ -1582,7 +1587,7 @@ function buildSeq() {
           buildVE();
           renderRhythmIntelligence();
           autosave();
-          if (!S.playing) previewSynth();
+          previewSynthNoteEditAudition();
           return;
         }
         if (trackId === 'hihat' && isCellOn()) {
@@ -1959,7 +1964,7 @@ function buildVE() {
       buildSeq();
       updateSynthNoteStatus();
       autosave();
-      previewSynth();
+      previewSynthNoteEditAudition();
       toast('SYN harmonic steps randomized');
     });
     mkRow('PITCH', 40, SYNTH_ROOT_MAX_HZ, 1, Math.min(tr.p.pitch, SYNTH_ROOT_MAX_HZ), x=>`${x|0} Hz`, v=>{ tr.p.pitch=Math.min(v, SYNTH_ROOT_MAX_HZ); updateSynthNoteStatus(); }, c);

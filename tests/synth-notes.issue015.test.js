@@ -166,10 +166,10 @@ assert(mainJs.includes('State.cycleSynthNoteRatioBackward(SYNTH_NOTES[S.patt], L
 assert(mainJs.includes('State.cycleSynthNoteRatio(SYNTH_NOTES[S.patt], LAST_SYNTH_NOTE_STEP)'), 'selected-step next/up harmonic uses the forward cycle helper only');
 assert(/querySelector\('\[data-synth-prev-step\]'\)\.addEventListener\('\s*click\s*'\s*,\s*cycleSelectedSynthNoteStepBackward\s*\)/.test(mainJs), 'selected-step previous/down harmonic button triggers the runtime backward-cycle action');
 assert(/querySelector\('\[data-synth-next-step\]'\)\.addEventListener\('\s*click\s*'\s*,\s*cycleSelectedSynthNoteStepForward\s*\)/.test(mainJs), 'selected-step next/up harmonic button triggers the runtime forward-cycle action');
-assert(/function cycleSelectedSynthNoteStepBackward\(\) \{[\s\S]*?State\.cycleSynthNoteRatioBackward\(SYNTH_NOTES\[S\.patt\], LAST_SYNTH_NOTE_STEP\)[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynth\(\)[\s\S]*?toast\('SYN step harmonic down'\)/.test(mainJs), 'selected-step previous/down harmonic action rebuilds status, saves, previews, and toasts');
-assert(/function cycleSelectedSynthNoteStepForward\(\) \{[\s\S]*?State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], LAST_SYNTH_NOTE_STEP\)[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynth\(\)[\s\S]*?toast\('SYN step harmonic up'\)/.test(mainJs), 'selected-step next/up harmonic action rebuilds status, saves, previews, and toasts');
-assert(mainJs.includes('previewSynth();'), 'selected-step random harmonic previews the selected-step pitch');
-assert(/querySelector\('\[data-synth-rnd-harm\]'\)\.addEventListener\('\s*click\s*'\s*,\s*\(\)\s*=>\s*\{[\s\S]*?State\.randomHarmonicSynthNotes\(SYNTH_NOTES\[S\.patt\],\s*PATTERNS\[S\.patt\]\.synth\)[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynth\(\)[\s\S]*?toast\('SYN harmonic steps randomized'\)/.test(mainJs), 'global RND HARM randomizes, rebuilds status, autosaves, previews selected synth step, and toasts');
+assert(/function cycleSelectedSynthNoteStepBackward\(\) \{[\s\S]*?State\.cycleSynthNoteRatioBackward\(SYNTH_NOTES\[S\.patt\], LAST_SYNTH_NOTE_STEP\)[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynthNoteEditAudition\(\)[\s\S]*?toast\('SYN step harmonic down'\)/.test(mainJs), 'selected-step previous/down harmonic action rebuilds status, saves, auditions, and toasts');
+assert(/function cycleSelectedSynthNoteStepForward\(\) \{[\s\S]*?State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], LAST_SYNTH_NOTE_STEP\)[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynthNoteEditAudition\(\)[\s\S]*?toast\('SYN step harmonic up'\)/.test(mainJs), 'selected-step next/up harmonic action rebuilds status, saves, auditions, and toasts');
+assert(mainJs.includes('previewSynthNoteEditAudition();'), 'selected-step random harmonic auditions the selected-step pitch through the stopped-only helper');
+assert(/querySelector\('\[data-synth-rnd-harm\]'\)\.addEventListener\('\s*click\s*'\s*,\s*\(\)\s*=>\s*\{[\s\S]*?State\.randomHarmonicSynthNotes\(SYNTH_NOTES\[S\.patt\],\s*PATTERNS\[S\.patt\]\.synth\)[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynthNoteEditAudition\(\)[\s\S]*?toast\('SYN harmonic steps randomized'\)/.test(mainJs), 'global RND HARM randomizes, rebuilds status, autosaves, auditions selected synth step, and toasts');
 assert(mainJs.includes('data-synth-note-status'), 'voice editor exposes selected synth note status marker');
 assert(mainJs.includes('data-synth-note-hint'), 'voice editor exposes selected synth note harmonic edit hint marker');
 assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');
@@ -180,13 +180,12 @@ assert(/function updateSynthNoteStatus\(\) \{[\s\S]*?querySelector\('\[data-synt
 const noteEditCellTapBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && SYNTH_NOTE_EDIT\) \{[\s\S]*?\n        \}/);
 assert(noteEditCellTapBranch, 'runtime handles selected SYN NOTE EDIT cell taps');
 assert(
-  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?setLastSynthNoteStep\(i\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)[\s\S]*?if \(!S\.playing\) previewSynth\(\)/.test(noteEditCellTapBranch[0]),
-  'SYN NOTE EDIT cell taps preview the cycled harmonic only after state, editor rebuild, rhythm render, and autosave updates while transport is stopped'
+  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?setLastSynthNoteStep\(i\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynthNoteEditAudition\(\)/.test(noteEditCellTapBranch[0]),
+  'SYN NOTE EDIT cell taps audition the cycled harmonic through the stopped-only helper after state, editor rebuild, rhythm render, and autosave updates'
 );
-const noteEditCellTapBranchWithoutStoppedPreview = noteEditCellTapBranch[0].replace(/if \(!S\.playing\)\s*previewSynth\(\);?/g, '');
 assert(
-  !/previewSynth\(\)/.test(noteEditCellTapBranchWithoutStoppedPreview),
-  'SYN NOTE EDIT cell taps do not include an unconditional preview trigger while transport may be playing'
+  !/previewSynth\(\)/.test(noteEditCellTapBranch[0]),
+  'SYN NOTE EDIT cell taps do not call raw previewSynth() outside the stopped-only helper'
 );
 assert(!mainJs.includes("'×' + ratio.toFixed"), 'runtime does not duplicate inline synth ratio marker formatting');
 assert(mainJs.includes('synthNotes: SYNTH_NOTES'), 'runtime saves/exports synth note banks');
@@ -201,7 +200,7 @@ assert(selectPatternBody, 'runtime exposes the pattern selection helper body');
 assert(/S\.patt\s*=\s*patternIndex[\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?renderRhythmIntelligence\(\)/.test(selectPatternBody[1]), 'pattern switch rebuilds the sequencer and refreshes synth note status/hint for the new pattern bank before rhythm render');
 const moveSelectedSynthNoteStepBody = mainJs.match(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*\{([\s\S]*?)\n\}/);
 assert(moveSelectedSynthNoteStepBody, 'runtime exposes the selected synth-step navigation helper body');
-assert(/buildSeq\(\)[\s\S]*updateSynthNoteStatus\(\)[\s\S]*previewSynth\(\)[\s\S]*toast\(`SYN step \$\{String\(LAST_SYNTH_NOTE_STEP \+ 1\)\.padStart\(2, '0'\)\} selected`\)/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation rebuilds marker/status, previews the newly selected pitch, and toasts the selected step number');
+assert(/buildSeq\(\)[\s\S]*updateSynthNoteStatus\(\)[\s\S]*previewSynthNoteEditAudition\(\)[\s\S]*toast\(`SYN step \$\{String\(LAST_SYNTH_NOTE_STEP \+ 1\)\.padStart\(2, '0'\)\} selected`\)/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation rebuilds marker/status, auditions the newly selected pitch, and toasts the selected step number');
 assert(!/autosave\s*\(/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation does not autosave because selection movement is UI-only');
 assert(!/SYNTH_NOTES\s*\[\s*S\.patt\s*\]\s*=|State\.cycleSynthNoteRatio|State\.randomHarmonicSynthNoteStep|State\.resetSynthNoteStepToRoot/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation does not mutate synth note ratios');
 assert(css.includes('.row[data-id="synth"] .sc.syn-note-selected'), 'CSS defines a selected synth note step marker');
