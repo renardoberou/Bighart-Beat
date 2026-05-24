@@ -1114,6 +1114,10 @@ function getStepSynthPitch(step) {
   return State.synthPitchForStep(TRACKS[6].p.pitch, getStepSynthRatio(step));
 }
 
+function getStepSynthAudiblePitch(step) {
+  return SynthVoice.resolveSynthVoiceSpec(S.engine, { ...TRACKS[6].p, pitch: getStepSynthPitch(step) }).pitchHz;
+}
+
 function setLastSynthNoteStep(step) {
   LAST_SYNTH_NOTE_STEP = clamp(Number.isInteger(step) ? step : 0, 0, 15);
 }
@@ -1126,7 +1130,7 @@ function synthNoteStatusText(step) {
     stepIndex: boundedStep,
     ratio,
     rootHz,
-    pitchHz: State.synthPitchForStep(rootHz, ratio),
+    pitchHz: getStepSynthAudiblePitch(boundedStep),
   });
 }
 
