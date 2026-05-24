@@ -252,6 +252,12 @@ assert(accentedTightAphex.metallicNeedlePinch > tightAphex.metallicNeedlePinch, 
 assert(accentedTightAphex.metallicNeedlePinch > accentedOpenAphex.metallicNeedlePinch * 2 + 0.08, 'accented tight aphex hihat is more needle-biased than accented open aphex');
 assert(accentedOpenAphex.openAccentBloom > accentedTightAphex.openAccentBloom, 'accented open aphex hihat remains about tail/bloom rather than harsh needle');
 assert(closedReznor.metallicNeedlePinch <= closedAphex.metallicNeedlePinch, 'reznor closed hihat needle/pinch stays no stronger than aphex');
+assert(highMetalOpenAphex.airLowpassHz > lowMetalPartOpenAphex.airLowpassHz + 500, 'high-metal fully-open aphex hihat opens a brighter air band than low-metal partly-open aphex');
+assert(highMetalOpenAphex.airLowpassHz > highMetalOpen909.airLowpassHz + 1200, 'high-metal fully-open aphex hihat has clearly brighter air than high-metal classic 909');
+assert(highMetalPartOpenAphex.airLowpassHz > lowMetalPartOpenAphex.airLowpassHz + 600, 'high-metal partly-open aphex hihat gets an obvious bright metallic-air lift versus low-metal aphex');
+assert(highMetalOpenAphex.openShimmerQ > lowMetalPartOpenAphex.openShimmerQ + 0.55, 'high-metal fully-open aphex hihat focuses shimmer more than low-metal partly-open aphex');
+assert(highMetalOpenAphex.openShimmerQ > highMetalOpen909.openShimmerQ + 0.55, 'high-metal fully-open aphex hihat focuses shimmer more than high-metal classic 909');
+assert.strictEqual(highMetalOpen909.openFlutterGain, 0, 'high-metal open 909 hihat keeps flutter/rattle disabled while aphex gains metallic air');
 
 function assertFiniteBudget(budget, label) {
   assert(budget && typeof budget === 'object', `${label}: budget object returned`);
