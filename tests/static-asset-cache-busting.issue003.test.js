@@ -20,8 +20,8 @@ const PREVIOUS_TOKENS = [
   'v=synth-cleanup-20260523',
 ];
 const EXPECTED_TOKEN = 'v=hihat-flutter-20260523';
-const HIHAT_VOICE_TOKEN = 'v=hihat-flutter-velocity-20260524';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-velocity-tail|hihat-place-audition|synth-cleanup|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const HIHAT_VOICE_TOKEN = 'v=hihat-open-decay-20260524';
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-velocity-tail|hihat-place-audition|synth-cleanup|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN) {
   assert(

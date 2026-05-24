@@ -212,6 +212,28 @@ const openAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay
 assert(open808.openBodyGain < open.openBodyGain, '808 open body/bloom stays classic-clean versus 909');
 assert(openAphex.openBodyGain > open.openBodyGain, 'aphex open body/bloom can be a little more characterful than classic engines');
 
+for (const engine of ['909', 'aphex']) {
+  const lowDecayOpen = resolveHihatVoiceSpec(engine, { ...baseParams, open: 1, decay: 0.02 }, () => 0.5, 0.75);
+  const highDecayOpen = resolveHihatVoiceSpec(engine, { ...baseParams, open: 1, decay: 0.40 }, () => 0.5, 0.75);
+  const lowDecayClosed = resolveHihatVoiceSpec(engine, { ...baseParams, open: 0, decay: 0.02 }, () => 0.5, 0.75);
+  const highDecayClosed = resolveHihatVoiceSpec(engine, { ...baseParams, open: 0, decay: 0.40 }, () => 0.5, 0.75);
+  assert(highDecayOpen.openShimmerTailSec > lowDecayOpen.openShimmerTailSec * 1.75, `${engine}: high-decay fully open hihat has a substantially longer open shimmer tail than low decay`);
+  assert(highDecayOpen.openBodyTailSec > lowDecayOpen.openBodyTailSec * 1.75, `${engine}: high-decay fully open hihat has a substantially longer open body tail than low decay`);
+  assert(highDecayOpen.openShimmerGain > lowDecayOpen.openShimmerGain * 1.08, `${engine}: high-decay fully open hihat gains a little more shimmer presence`);
+  assert(highDecayOpen.openBodyGain > lowDecayOpen.openBodyGain * 1.08, `${engine}: high-decay fully open hihat gains a little more body presence`);
+  assert(highDecayOpen.openShimmerGain <= 0.085, `${engine}: high-decay open shimmer gain stays within existing bounds`);
+  assert(highDecayOpen.openBodyGain <= 0.11, `${engine}: high-decay open body gain stays within existing bounds`);
+  assert(highDecayClosed.openShimmerGain <= 0.001, `${engine}: high-decay closed hihat keeps open shimmer silent`);
+  assert(highDecayClosed.openBodyGain <= 0.001, `${engine}: high-decay closed hihat keeps open body silent`);
+  assert(highDecayClosed.noiseTailSec < highDecayOpen.noiseTailSec * 0.55, `${engine}: high-decay closed hihat remains much tighter than high-decay open hihat`);
+  assert(highDecayClosed.openShimmerTailSec < highDecayOpen.openShimmerTailSec * 0.55, `${engine}: high-decay closed hihat does not become an open shimmer wash`);
+  assert(lowDecayClosed.noiseTailSec < highDecayOpen.noiseTailSec * 0.10, `${engine}: low-decay closed hihat remains snappy beside open high-decay hats`);
+  assertFiniteBounded(lowDecayOpen, `${engine} low-decay fully open hihat`);
+  assertFiniteBounded(highDecayOpen, `${engine} high-decay fully open hihat`);
+  assertFiniteBounded(lowDecayClosed, `${engine} low-decay closed hihat`);
+  assertFiniteBounded(highDecayClosed, `${engine} high-decay closed hihat`);
+}
+
 const closedAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5, 0.75);
 const tightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5, 0.75);
 const accentedTightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5, 1.0);
