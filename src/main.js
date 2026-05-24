@@ -283,15 +283,20 @@ function wreckToneHz(v) { // 0..1 → 900 Hz..18 kHz exp; dark settings tame ali
 }
 
 function shouldFeedWreckProcessor() {
-  return !!(FX.wreck.on && FX.wreck.mix > 0 && FX.wreck.out > 0 && hasWreckSend());
+  return !!(FX.wreck.on && FX.wreck.mix > 0 && FX.wreck.out > 0 && hasAudibleWreckSend());
 }
 
 function hasWreckSend() {
   return TRACKS.some(tr => tr.wreckS);
 }
 
+function hasAudibleWreckSend() {
+  return TRACKS.some(tr => tr.wreckS && !tr.mute && tr.vol > 0);
+}
+
 function wreckSendStatusText() {
   if (!hasWreckSend()) return 'W SENDS OFF';
+  if (hasWreckSend() && !hasAudibleWreckSend()) return 'W SENDS SILENT';
   if (!shouldFeedWreckProcessor()) return 'WRECK RETURN OFF';
   return 'WRECK SEND READY';
 }
@@ -301,7 +306,7 @@ function updateWreckSendStatus() {
   if (!el) return;
   const text = wreckSendStatusText();
   el.textContent = text;
-  el.classList.toggle('wreck-send-status--warn', text === 'WRECK RETURN OFF');
+  el.classList.toggle('wreck-send-status--warn', text === 'WRECK RETURN OFF' || text === 'W SENDS SILENT');
   el.classList.toggle('wreck-send-status--active', text === 'WRECK SEND READY');
 }
 
@@ -512,7 +517,7 @@ function routeVoice(t, ti, cleanupTailSec) {
     routeNodes.push(rs);
     triggerGate(t);
   }
-  const wreckSendActive = tr.wreckS && shouldFeedWreckProcessor();
+  const wreckSendActive = tr.wreckS && !tr.mute && tr.vol > 0 && shouldFeedWreckProcessor();
   if (wreckSendActive) {
     const ws = A.createGain(); ws.gain.value = WRECK_SEND_TRIM;
     out.connect(ws); ws.connect(N.wreckIn);
@@ -1765,7 +1770,7 @@ function buildMix() {
         tr[k] = !tr[k];
         b.classList.toggle('on', tr[k]);
         b.setAttribute('aria-pressed', String(!!tr[k]));
-        if (k === 'wreckS') {
+        if (k === 'wreckS' || k === 'mute') {
           updateWreckSendStatus();
           updateWreckProcessorFeed(shouldFeedWreckProcessor());
         }
@@ -1781,6 +1786,8 @@ function buildMix() {
       tr.vol = fdr.value / 100;
       valEl.textContent = fdr.value + '%';
       applyF();
+      updateWreckSendStatus();
+      updateWreckProcessorFeed(shouldFeedWreckProcessor());
       autosave();
     });
     mix.appendChild(row);

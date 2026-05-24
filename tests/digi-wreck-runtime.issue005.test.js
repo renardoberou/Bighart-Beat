@@ -48,7 +48,9 @@ assert(/N\.compMakeup\.connect\(N\.mstSat\)/.test(buildGraph), 'dry master path 
 assert(/function\s+shouldFeedWreckProcessor\s*\(\)\s*\{/.test(js), 'runtime defines a DIGI WRECK wet-feed predicate');
 assert(/function\s+hasWreckSend\s*\(\)\s*\{/.test(js), 'runtime defines a shared active W-send predicate');
 assert(/return\s+TRACKS\.some\([^)]*wreckS/.test(extractFunction('hasWreckSend')), 'active W-send predicate detects at least one enabled W send');
-assert(/return\s+!!\(FX\.wreck\.on\s*&&\s*FX\.wreck\.mix\s*>\s*0\s*&&\s*FX\.wreck\.out\s*>\s*0\s*&&\s*hasWreckSend\(\)\)/.test(js), 'DIGI WRECK only feeds processor when enabled with audible wet mix/output and at least one W send');
+assert(/function\s+hasAudibleWreckSend\s*\(\)\s*\{/.test(js), 'runtime defines an audible W-send predicate');
+assert(/return\s+TRACKS\.some\([^)]*wreckS[\s\S]*!\s*tr\.mute[\s\S]*tr\.vol\s*>\s*0/.test(extractFunction('hasAudibleWreckSend')), 'audible W-send predicate requires enabled W send, unmuted track, and non-zero track volume');
+assert(/return\s+!!\(FX\.wreck\.on\s*&&\s*FX\.wreck\.mix\s*>\s*0\s*&&\s*FX\.wreck\.out\s*>\s*0\s*&&\s*hasAudibleWreckSend\(\)\)/.test(js), 'DIGI WRECK only feeds processor when enabled with audible wet mix/output and at least one audible W send');
 assert(/function\s+updateWreckProcessorFeed\s*\(active\)\s*\{/.test(js), 'runtime defines a gated DIGI WRECK processor-feed helper');
 const updateWreckProcessorFeed = extractFunction('updateWreckProcessorFeed');
 assert(/N\.wreckIn\.connect\(N\.wreckDownsample\)/.test(updateWreckProcessorFeed), 'processor-feed helper reconnects wet input only when DIGI WRECK wet path is audible');
@@ -63,7 +65,7 @@ assert(/N\.wreckTone\.disconnect\(N\.wreckWet\)/.test(updateWreckProcessorFeed),
 assert(/N\.wreckWet\.disconnect\(N\.wreckOut\)/.test(updateWreckProcessorFeed), 'processor-feed helper disconnects wet-to-output chain when DIGI WRECK is bypassed or zero-wet');
 
 const routeVoice = extractFunction('routeVoice');
-assert(/tr\.wreckS\s*&&\s*shouldFeedWreckProcessor\(\)/.test(routeVoice), 'routeVoice gates DIGI WRECK send by per-track W state and audible Wreck state');
+assert(/tr\.wreckS\s*&&\s*!\s*tr\.mute\s*&&\s*tr\.vol\s*>\s*0\s*&&\s*shouldFeedWreckProcessor\(\)/.test(routeVoice), 'routeVoice gates DIGI WRECK send by per-track W state, track audibility, and audible Wreck state');
 assert(/ws\.gain\.value\s*=\s*WRECK_SEND_TRIM/.test(routeVoice), 'routeVoice uses a safe per-track Wreck send trim');
 assert(/out\.connect\(ws\);\s*ws\.connect\(N\.wreckIn\)/.test(routeVoice), 'selected tracks tap into the Wreck input as a send');
 
@@ -91,7 +93,8 @@ assert(/N\.wreckPreCompGain\.gain\.setTargetAtTime\(FX\.wreck\.order\s*===\s*'wr
 assert(/N\.wreckPostCompGain\.gain\.setTargetAtTime\(FX\.wreck\.order\s*===\s*'comp-wreck'\s*\?\s*1\s*:\s*0/.test(applyFXState), 'applyFXState opens post-compressor Wreck return only for comp-wreck order');
 
 const buildMix = extractFunction('buildMix');
-assert(/if\s*\(k\s*===\s*'wreckS'\)\s*\{[\s\S]*updateWreckSendStatus\(\)[\s\S]*updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)[\s\S]*\}/.test(buildMix), 'W button toggles immediately refresh the mobile-costly Wreck processor feed');
+assert(/if\s*\(k\s*===\s*'wreckS'\s*\|\|\s*k\s*===\s*'mute'\)\s*\{[\s\S]*updateWreckSendStatus\(\)[\s\S]*updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)[\s\S]*\}/.test(buildMix), 'W and mute button toggles immediately refresh the mobile-costly Wreck processor feed');
+assert(/tr\.vol\s*=\s*fdr\.value\s*\/\s*100[\s\S]*updateWreckSendStatus\(\)[\s\S]*updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)/.test(buildMix), 'volume changes immediately refresh the mobile-costly Wreck processor feed');
 
 const syncFxControls = extractFunction('syncFxControls');
 ['togWreck','wreckMode','wreckOrderToggle'].forEach(id => assert(syncFxControls.includes(`$('${id}')`), `runtime syncs ${id}`));

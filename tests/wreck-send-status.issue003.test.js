@@ -28,7 +28,9 @@ const status = extractFunction('wreckSendStatusText');
 assert(/function\s+hasWreckSend\s*\(\)\s*\{/.test(js), 'runtime defines a shared active W-send predicate');
 assert(/TRACKS\.some\([^)]*wreckS/.test(extractFunction('hasWreckSend')), 'shared active W-send predicate detects when any track has W enabled');
 assert(/hasWreckSend\(\)/.test(status), 'status helper reuses the shared active W-send predicate');
+assert(/hasAudibleWreckSend\(\)/.test(status), 'status helper distinguishes audible W sends from silent enabled sends');
 assert(/shouldFeedWreckProcessor\(\)/.test(status), 'status helper uses the same audible return predicate as routing');
+assert(/W SENDS SILENT/.test(status), 'status helper reports muted or zero-volume enabled W sends');
 assert(/WRECK RETURN OFF/.test(status), 'status helper warns when W sends are enabled but return is inaudible');
 assert(/WRECK SEND (READY|ACTIVE)/.test(status), 'status helper reports an active/ready state when return is audible');
 assert(/W SENDS OFF/.test(status), 'status helper reports neutral state when no W sends are enabled');
@@ -39,7 +41,8 @@ assert(/wreck-send-status--warn/.test(update), 'runtime applies an obvious warni
 assert(/wreck-send-status--active/.test(update), 'runtime applies an obvious active state class');
 
 const buildMix = extractFunction('buildMix');
-assert(/if\s*\(k\s*===\s*'wreckS'\)\s*\{[\s\S]*updateWreckSendStatus\(\)[\s\S]*updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)[\s\S]*\}/.test(buildMix), 'W button toggles refresh W send status and processor feed immediately');
+assert(/if\s*\(k\s*===\s*'wreckS'\s*\|\|\s*k\s*===\s*'mute'\)\s*\{[\s\S]*updateWreckSendStatus\(\)[\s\S]*updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)[\s\S]*\}/.test(buildMix), 'W and mute button toggles refresh W send status and processor feed immediately');
+assert(/tr\.vol\s*=\s*fdr\.value\s*\/\s*100[\s\S]*updateWreckSendStatus\(\)[\s\S]*updateWreckProcessorFeed\(shouldFeedWreckProcessor\(\)\)/.test(buildMix), 'volume changes refresh W send status and processor feed immediately');
 
 const syncFxControls = extractFunction('syncFxControls');
 assert(/updateWreckSendStatus\(\)/.test(syncFxControls), 'global FX sync refreshes W send status');
