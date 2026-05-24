@@ -22,15 +22,22 @@ const setCall = new RegExp(`setHihatPlacement\\(\\s*${buttonVar}\\.dataset\\.pla
 assert(setCall, 'VOICE-panel HHT PLACE handler still calls setHihatPlacement with the clicked placement');
 
 const previewCall = new RegExp(`previewHihat\\(\\s*parseFloat\\(\\s*${buttonVar}\\.dataset\\.place\\s*\\)\\s*\\)`).exec(placeHandler);
-assert(previewCall, 'VOICE-panel HHT PLACE handler auditions the clicked placement with previewHihat(parseFloat(dataset.place))');
+assert(previewCall, 'VOICE-panel HHT PLACE handler still auditions the clicked placement with previewHihat(parseFloat(dataset.place)) when stopped');
 
 assert(
   setCall.index < previewCall.index,
   'VOICE-panel HHT PLACE handler updates placement before auditioning it, matching the quick HHT placement strip',
 );
 
-const quickStrip = main.match(/function wireQuickHihatPlacement\(\) \{([\s\S]*?)\n\}/);
-assert(quickStrip && /previewHihat\(\s*parseFloat\(\s*\w+\.dataset\.quickHhtPlace\s*\)\s*\)/.test(quickStrip[1]),
-  'quick HHT placement strip remains the parity reference and continues to audition placement changes');
+const guardStart = placeHandler.lastIndexOf('if (!S.playing)', previewCall.index);
+assert(guardStart !== -1, 'VOICE-panel HHT PLACE preview is guarded by !S.playing so transport playback stays silent');
+assert(setCall.index < guardStart, 'VOICE-panel HHT PLACE updates placement/UI before the playback preview guard, so running transport clicks still update state/UI');
+assert(!placeHandler.slice(0, setCall.index).includes('if (!S.playing)'), 'VOICE-panel HHT PLACE placement update is not hidden behind the stopped-state preview guard');
 
-console.log('Issue 003 hihat PLACE audition parity regression checks passed.');
+assert(!/\b(?:play|runSch)\s*\(/.test(placeHandler), 'VOICE-panel HHT PLACE audition must not start the transport or scheduler');
+
+const quickStrip = main.match(/function wireQuickHihatPlacement\(\) \{([\s\S]*?)\n\}/);
+assert(quickStrip && /if \(!S\.playing\)[\s\S]*previewHihat\(\s*parseFloat\(\s*\w+\.dataset\.quickHhtPlace\s*\)\s*\)/.test(quickStrip[1]),
+  'quick HHT placement strip remains the parity reference and only auditions placement changes when stopped');
+
+console.log('Issue 003 hihat PLACE silent-during-playback regression checks passed.');

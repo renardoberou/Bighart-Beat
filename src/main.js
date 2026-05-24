@@ -1858,7 +1858,9 @@ function buildVE() {
     hatTest.querySelectorAll('[data-place]').forEach(b => {
       b.addEventListener('click', () => {
         setHihatPlacement(b.dataset.place);
-        previewHihat(parseFloat(b.dataset.place));
+        if (!S.playing) {
+          previewHihat(parseFloat(b.dataset.place));
+        }
       });
     });
     syncHihatPlacementControls();
