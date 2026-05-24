@@ -703,7 +703,8 @@ function synthHihat(t, v, p) {
     const flutterGain = A.createGain();
     flutterGain.gain.setValueAtTime(0, t);
     flutterGain.gain.linearRampToValueAtTime(clamp(v * spec.openFlutterGain, 0, .045), t + Math.min(.002, spec.attackSec));
-    flutterGain.gain.setTargetAtTime(.001, t + spec.openFlutterTailSec * .42, spec.tailReleaseTau * .45);
+    const openSizzleTailHold = clamp(.42 + spec.openSizzleTailBias * .9, .42, .69);
+    flutterGain.gain.setTargetAtTime(.001, t + spec.openFlutterTailSec * openSizzleTailHold, spec.tailReleaseTau * .45);
     flutterGain.gain.exponentialRampToValueAtTime(.001, t + spec.openFlutterTailSec);
     flutter.connect(flutterFilter); flutterFilter.connect(flutterGain); flutterGain.connect(choke);
     flutter.start(t); flutter.stop(t + spec.openFlutterTailSec + spec.tailReleaseTau);

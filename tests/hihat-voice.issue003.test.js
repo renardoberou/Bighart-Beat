@@ -36,7 +36,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openAccentBloom', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'metallicNeedlePinch', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openAccentBloom', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'openSizzleTailBias', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'metallicNeedlePinch', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -69,6 +69,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.openFlutterTailSec >= 0.004 && spec.openFlutterTailSec <= 0.16, `${label}: open IDM flutter/rattle tail is bounded/mobile-safe`);
   assert(spec.openFlutterHz >= 5200 && spec.openFlutterHz <= 16000, `${label}: open IDM flutter/rattle frequency is metallic but bounded`);
   assert(spec.openFlutterQ >= 2.5 && spec.openFlutterQ <= 10, `${label}: open IDM flutter/rattle Q is focused but bounded`);
+  assert(spec.openSizzleTailBias >= 0 && spec.openSizzleTailBias <= 0.30, `${label}: Aphex/IDM open sizzle tail bias is bounded/headroom-safe`);
   assert(spec.idmSparkGain >= 0 && spec.idmSparkGain <= 0.065, `${label}: IDM spark gain remains headroom-safe`);
   assert(spec.idmSparkTailSec >= 0.003 && spec.idmSparkTailSec <= 0.045, `${label}: IDM spark tail is short/mobile-safe`);
   assert(spec.idmSparkHz >= 9000 && spec.idmSparkHz <= 18000, `${label}: IDM spark frequency is high but bounded`);
@@ -247,6 +248,14 @@ const highMetalPartOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, o
 const highMetalOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
 const highMetalOpenReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
 const highMetalOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
+assert(closedAphex.openSizzleTailBias <= 0.001, 'closed aphex hihat keeps the new open sizzle tail effectively silent/snappy');
+assert(tightAphex.openSizzleTailBias > closedAphex.openSizzleTailBias + 0.015, 'tight aphex hihat introduces a bounded metallic sizzle tail');
+assert(openAphex.openSizzleTailBias > tightAphex.openSizzleTailBias, 'open aphex hihat extends the metallic sizzle tail beyond tight hats');
+assert(openAphex.openSizzleTailBias > open909Classic.openSizzleTailBias + 0.04, 'open aphex hihat has more IDM sizzle-tail personality than classic 909');
+assert(highMetalPartOpenAphex.openSizzleTailBias > lowMetalPartOpenAphex.openSizzleTailBias * 1.6, 'higher metal control clearly increases partly-open aphex sizzle tail');
+assert(softTightAphex.openSizzleTailBias < tightAphex.openSizzleTailBias, 'soft tight aphex hihat restrains sizzle tail');
+assert(accentedTightAphex.openSizzleTailBias > tightAphex.openSizzleTailBias, 'accented tight aphex hihat strengthens the sizzle tail');
+assert(accentedOpenAphex.openFlutterHz > openAphex.openFlutterHz, 'accented open aphex hihat pushes sizzle/flutter brighter');
 assert(softTightAphex.metallicNeedlePinch < tightAphex.metallicNeedlePinch, 'soft tight aphex hihat restrains the metallic needle/pinch character');
 assert(accentedTightAphex.metallicNeedlePinch > tightAphex.metallicNeedlePinch, 'accented tight aphex hihat emphasizes the metallic needle/pinch character');
 assert(accentedTightAphex.metallicNeedlePinch > accentedOpenAphex.metallicNeedlePinch * 2 + 0.08, 'accented tight aphex hihat is more needle-biased than accented open aphex');
@@ -413,6 +422,8 @@ assert(/Math\.max\([\s\S]*hihatBudget\.useOpenFlutter\s*&&\s*spec\.openFlutterGa
 assert(/if \(hihatBudget\.useOpenFlutter && spec\.openFlutterGain > 0\.001\)/.test(main), 'synthHihat gates open-hat IDM flutter/rattle through render budget and resolver gain');
 assert(/flutterFilter\.frequency\.value\s*=\s*spec\.openFlutterHz/.test(main), 'hihat flutter/rattle filter uses resolver frequency');
 assert(/flutterGain\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.openFlutterGain,\s*0,\s*\.045\),\s*t \+ Math\.min\(\.002,\s*spec\.attackSec\)\)/.test(main), 'hihat flutter/rattle gain uses resolver gain and headroom cap');
+assert(/const\s+openSizzleTailHold\s*=\s*clamp\(\.42 \+ spec\.openSizzleTailBias \* \.9,\s*\.42,\s*\.69\)/.test(main), 'runtime converts resolver open sizzle tail bias into a bounded flutter sustain hold');
+assert(/flutterGain\.gain\.setTargetAtTime\(\.001,\s*t \+ spec\.openFlutterTailSec \* openSizzleTailHold,\s*spec\.tailReleaseTau \* \.45\)/.test(main), 'runtime wires open sizzle tail bias into the existing open flutter source without adding sources');
 assert(/flutter\.connect\(flutterFilter\);\s*flutterFilter\.connect\(flutterGain\);\s*flutterGain\.connect\(choke\);/.test(main), 'open hihat flutter/rattle routes through hihat choke');
 assert(/flutter\.stop\(t \+ spec\.openFlutterTailSec \+ spec\.tailReleaseTau\)/.test(main), 'open hihat flutter/rattle stops safely after its bounded tail');
 assert(/if \(hihatBudget\.useIdmSpark && spec\.idmSparkGain > 0\.001\)/.test(main), 'synthHihat gates IDM spark through render budget and resolver gain');
