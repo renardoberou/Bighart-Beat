@@ -20,9 +20,10 @@ const PREVIOUS_TOKENS = [
   'v=synth-cleanup-20260523',
 ];
 const EXPECTED_TOKEN = 'v=hihat-flutter-20260523';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-flutter|hihat-metal-budget|hihat-velocity-tail|hihat-place-audition|synth-cleanup|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const HIHAT_VOICE_TOKEN = 'v=hihat-flutter-velocity-20260524';
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-velocity-tail|hihat-place-audition|synth-cleanup|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
-function assertExactlyOneCurrentToken(assetUrl) {
+function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN) {
   assert(
     !assetUrl.includes(STALE_TOKEN) && PREVIOUS_TOKENS.every((token) => !assetUrl.includes(token)),
     `${assetUrl} must not use stale cache token ${STALE_TOKEN} or previous tokens ${PREVIOUS_TOKENS.join(', ')}`,
@@ -31,8 +32,8 @@ function assertExactlyOneCurrentToken(assetUrl) {
   const tokenMatches = assetUrl.match(localAssetTokenPattern) || [];
   assert.deepStrictEqual(
     tokenMatches,
-    [`?${EXPECTED_TOKEN}`],
-    `${assetUrl} has exactly one current hihat-flutter cache token`,
+    [`?${expectedToken}`],
+    `${assetUrl} has exactly one expected cache token`,
   );
 }
 
@@ -48,7 +49,7 @@ assert.deepStrictEqual(
   [`styles/main.css?${EXPECTED_TOKEN}`],
   'index.html loads local stylesheet with the current hihat-flutter cache token',
 );
-localStylesheets.forEach(assertExactlyOneCurrentToken);
+localStylesheets.forEach((href) => assertExactlyOneCurrentToken(href));
 
 const googleFontHrefs = stylesheetHrefs.filter((href) => href.startsWith('https://fonts.googleapis.com/'));
 assert(
@@ -86,13 +87,16 @@ const expectedScriptSrcs = [
   'src/rhythm/snare-voice.js',
   'src/rhythm/clap-voice.js',
   'src/main.js',
-].map((unversionedPath) => `${unversionedPath}?${EXPECTED_TOKEN}`);
+].map((unversionedPath) => `${unversionedPath}?${unversionedPath === 'src/rhythm/hihat-voice.js' ? HIHAT_VOICE_TOKEN : EXPECTED_TOKEN}`);
 
 assert.deepStrictEqual(
   scriptSrcs,
   expectedScriptSrcs,
-  'cache busting preserves static script execution order and gives every local script exactly one current hihat-flutter cache token',
+  'cache busting preserves static script execution order and gives hihat-voice.js the live deploy marker',
 );
-scriptSrcs.forEach(assertExactlyOneCurrentToken);
+scriptSrcs.forEach((src) => {
+  const expectedToken = src.startsWith('src/rhythm/hihat-voice.js?') ? HIHAT_VOICE_TOKEN : EXPECTED_TOKEN;
+  assertExactlyOneCurrentToken(src, expectedToken);
+});
 
 console.log('Static asset cache-busting checks passed.');

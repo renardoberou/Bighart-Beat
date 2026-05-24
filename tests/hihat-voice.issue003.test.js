@@ -303,6 +303,15 @@ assert(highMetalPartOpenAphex.openFlutterGain > lowMetalPartOpenAphex.openFlutte
 assert(highMetalPartOpenAphex.openFlutterGain >= 0.027, 'high-metal partly-open aphex hihat exposes playable metallic flutter/rattle without needing fully-open hats');
 assert(highMetalOpenAphex.openFlutterGain >= 0.038, 'high-metal open aphex hihat reaches a strong IDM flutter/rattle response');
 assert(highMetalOpenAphex.openFlutterGain > highMetalOpenReznor.openFlutterGain * 4, 'high-metal open aphex hihat is more metallic/fluttery than non-Aphex industrial hats');
+const softHighMetalOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.25);
+const accentedHighMetalOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 1.0);
+const softHighMetalPartOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.65, metal: 0.95, decay: 0.04 }, () => 0.5, 0.25);
+const accentedHighMetalPartOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.65, metal: 0.95, decay: 0.04 }, () => 0.5, 1.0);
+assert(softHighMetalOpenAphex.openFlutterGain <= highMetalOpenAphex.openFlutterGain * 0.72, 'soft high-metal open aphex hihat keeps metallic flutter calmer than normal velocity');
+assert(accentedHighMetalOpenAphex.openFlutterGain > softHighMetalOpenAphex.openFlutterGain * 1.55, 'accented high-metal open aphex hihat has a distinctly stronger playable flutter/rattle than soft hits');
+assert(accentedHighMetalOpenAphex.openFlutterQ > softHighMetalOpenAphex.openFlutterQ + 1.0, 'accented high-metal open aphex hihat focuses flutter/rattle more than soft hits');
+assert(softHighMetalPartOpenAphex.openFlutterGain <= highMetalPartOpenAphex.openFlutterGain * 0.85, 'soft high-metal partly-open aphex hihat restrains metallic flutter/rattle');
+assert(accentedHighMetalPartOpenAphex.openFlutterGain > softHighMetalPartOpenAphex.openFlutterGain * 1.65, 'accented high-metal partly-open aphex hihat makes metallic flutter/rattle clearly playable');
 assert.strictEqual(highMetalOpen909.openFlutterGain, 0, 'high-metal open 909 hihat stays classic-clean with flutter/rattle disabled');
 assert(highMetalPartOpenAphex.openFlutterGain <= 0.045, 'high-metal partly-open aphex flutter/rattle remains headroom-safe');
 assert(highMetalOpenAphex.openFlutterGain <= 0.045, 'high-metal open aphex flutter/rattle remains headroom-safe');
