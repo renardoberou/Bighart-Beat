@@ -1221,6 +1221,19 @@ function scheduledHitTimes(stepStart, stepDuration, count) {
   return ratchetOffsets(stepDuration, count).map(offset => stepStart + offset);
 }
 
+function previewRatchetEditAudition(trackIndex, step, ratchetCount) {
+  if (S.playing) return;
+  if (ratchetCount !== 2 && ratchetCount !== 3) return;
+  initAudio();
+  const hitStart = A.currentTime + .018;
+  const previewStepDuration = Math.min(stepDur(), .14);
+  const previousFiringStep = firingStep;
+  firingStep = step;
+  try {
+    for (const hitT of scheduledHitTimes(hitStart, previewStepDuration, ratchetCount)) fire(trackIndex, hitT, ratchetCount);
+  } finally { firingStep = previousFiringStep; }
+}
+
 function schedStep(step, t) {
   const dur = stepDur();
   const swungT = Groove.swungStepStartSeconds(step, t, dur, S.swing);
@@ -1518,6 +1531,8 @@ function buildSeq() {
         else refreshCell();
         renderRhythmIntelligence();
         autosave();
+        const nextRatchet = State.getRatchetCount(RATCHETS[S.patt], tr.id, i);
+        if (isCellOn() && nextRatchet > 1) previewRatchetEditAudition(trackIndex, i, nextRatchet);
       };
       let pressTimer = null;
       let longPressFired = false;
