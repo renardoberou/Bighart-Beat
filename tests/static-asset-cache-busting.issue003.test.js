@@ -17,8 +17,9 @@ const PREVIOUS_TOKENS = [
   'v=hihat-accent-bloom-20260523',
   'v=hihat-velocity-tail-20260523',
   'v=hihat-place-audition-20260523',
+  'v=synth-cleanup-20260523',
 ];
-const EXPECTED_TOKEN = 'v=synth-cleanup-20260523';
+const EXPECTED_TOKEN = 'v=hihat-flutter-20260523';
 const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-flutter|hihat-metal-budget|hihat-velocity-tail|hihat-place-audition|synth-cleanup|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl) {
@@ -31,7 +32,7 @@ function assertExactlyOneCurrentToken(assetUrl) {
   assert.deepStrictEqual(
     tokenMatches,
     [`?${EXPECTED_TOKEN}`],
-    `${assetUrl} has exactly one current synth-cleanup cache token`,
+    `${assetUrl} has exactly one current hihat-flutter cache token`,
   );
 }
 
@@ -45,7 +46,7 @@ const localStylesheets = stylesheetHrefs.filter((href) => href.startsWith('style
 assert.deepStrictEqual(
   localStylesheets,
   [`styles/main.css?${EXPECTED_TOKEN}`],
-  'index.html loads local stylesheet with the current synth-cleanup cache token',
+  'index.html loads local stylesheet with the current hihat-flutter cache token',
 );
 localStylesheets.forEach(assertExactlyOneCurrentToken);
 
@@ -90,7 +91,7 @@ const expectedScriptSrcs = [
 assert.deepStrictEqual(
   scriptSrcs,
   expectedScriptSrcs,
-  'cache busting preserves static script execution order and gives every local script exactly one current synth-cleanup cache token',
+  'cache busting preserves static script execution order and gives every local script exactly one current hihat-flutter cache token',
 );
 scriptSrcs.forEach(assertExactlyOneCurrentToken);
 

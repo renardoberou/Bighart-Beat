@@ -220,6 +220,11 @@ const openReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, dec
 const closedReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5, 0.75);
 const accentedOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 1.0);
 const open909Classic = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
+const lowMetalPartOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.65, metal: 0.10, decay: 0.04 }, () => 0.5, 0.75);
+const highMetalPartOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.65, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
+const highMetalOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
+const highMetalOpenReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
+const highMetalOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
 assert(softTightAphex.metallicNeedlePinch < tightAphex.metallicNeedlePinch, 'soft tight aphex hihat restrains the metallic needle/pinch character');
 assert(accentedTightAphex.metallicNeedlePinch > tightAphex.metallicNeedlePinch, 'accented tight aphex hihat emphasizes the metallic needle/pinch character');
 assert(accentedTightAphex.metallicNeedlePinch > accentedOpenAphex.metallicNeedlePinch * 2 + 0.08, 'accented tight aphex hihat is more needle-biased than accented open aphex');
@@ -294,6 +299,15 @@ assert(openAphex.openFlutterGain > openReznor.openFlutterGain, 'aphex open flutt
 assert(openReznor.openFlutterGain > 0.001, 'reznor open hihat gets a modest industrial flutter/rattle layer');
 assert.strictEqual(open808.openFlutterGain, 0, '808 open hihat keeps classic-clean flutter/rattle disabled');
 assert.strictEqual(open909Classic.openFlutterGain, 0, '909 open hihat keeps classic-clean flutter/rattle disabled');
+assert(highMetalPartOpenAphex.openFlutterGain > lowMetalPartOpenAphex.openFlutterGain * 1.75, 'high-metal partly-open aphex hihat gets a clearly stronger flutter/rattle response than low-metal aphex');
+assert(highMetalPartOpenAphex.openFlutterGain >= 0.027, 'high-metal partly-open aphex hihat exposes playable metallic flutter/rattle without needing fully-open hats');
+assert(highMetalOpenAphex.openFlutterGain >= 0.038, 'high-metal open aphex hihat reaches a strong IDM flutter/rattle response');
+assert(highMetalOpenAphex.openFlutterGain > highMetalOpenReznor.openFlutterGain * 4, 'high-metal open aphex hihat is more metallic/fluttery than non-Aphex industrial hats');
+assert.strictEqual(highMetalOpen909.openFlutterGain, 0, 'high-metal open 909 hihat stays classic-clean with flutter/rattle disabled');
+assert(highMetalPartOpenAphex.openFlutterGain <= 0.045, 'high-metal partly-open aphex flutter/rattle remains headroom-safe');
+assert(highMetalOpenAphex.openFlutterGain <= 0.045, 'high-metal open aphex flutter/rattle remains headroom-safe');
+assert(highMetalOpenAphex.openFlutterTailSec <= 0.16, 'high-metal open aphex flutter/rattle tail remains bounded/mobile-safe');
+assert(highMetalOpenAphex.openFlutterQ <= 10, 'high-metal open aphex flutter/rattle Q remains bounded/mobile-safe');
 assert(accentedOpenAphex.openFlutterGain > openAphex.openFlutterGain, 'accented open aphex hihat increases flutter/rattle intensity');
 assert(accentedOpenAphex.openFlutterGain <= 0.045, 'accented open aphex flutter/rattle remains headroom-safe');
 assert(accentedOpenAphex.openFlutterTailSec <= 0.16, 'accented open aphex flutter/rattle tail remains bounded/mobile-safe');

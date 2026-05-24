@@ -202,11 +202,12 @@
     const idmSparkHz = clamp(freq * (isAphex ? 1.62 : 1.36) * profile.bright * (1 + accentedHit * 0.035 + metallicNeedlePinch * 0.018) * jitter(rand, instability * 0.7), 9000, 18000);
     const idmSparkQ = clamp(5.0 + idmSparkEnergy * 4.4 + metallicNeedlePinch * 1.8 + instability * 38, 3, 14);
     const openFlutterCharacter = isAphex ? 1 : (isReznor ? 0.45 : 0);
+    const openMetalFlutter = isAphex ? openShape * smoothstep01((metal - 0.55) / 0.45) : 0;
     const openFlutterEnergy = clamp(openShape * openFlutterCharacter * (0.42 + metal * 0.28 + accentedHit * 0.48 - softHit * 0.20), 0, 1);
-    const openFlutterGain = clamp(openFlutterEnergy * (isAphex ? 0.038 : 0.025) * jitter(rand, instability * 0.55), 0, 0.045);
-    const openFlutterTailSec = clamp((0.018 + open * 0.048 + instability * 0.60) * (1 - accentedHit * 0.04), 0.004, 0.16);
-    const openFlutterHz = clamp(7200 * profile.bright * (1 + open * 0.14 + accentedHit * 0.06) * jitter(rand, instability * 0.8), 5200, 16000);
-    const openFlutterQ = clamp(3.2 + openFlutterEnergy * 3.2 + instability * 45, 2.5, 10);
+    const openFlutterGain = clamp(openFlutterEnergy * (isAphex ? 0.038 : 0.025) * (1 + openMetalFlutter * 0.78) * jitter(rand, instability * 0.55), 0, 0.045);
+    const openFlutterTailSec = clamp((0.018 + open * 0.048 + instability * 0.60) * (1 + openMetalFlutter * 0.08 - accentedHit * 0.04), 0.004, 0.16);
+    const openFlutterHz = clamp(7200 * profile.bright * (1 + open * 0.14 + metal * openMetalFlutter * 0.10 + accentedHit * 0.06) * jitter(rand, instability * 0.8), 5200, 16000);
+    const openFlutterQ = clamp(3.2 + openFlutterEnergy * 3.2 + openMetalFlutter * 1.35 + instability * 45, 2.5, 10);
     const ghostClosedness = Math.pow(clamp((0.72 - open) / 0.72, 0, 1), 1.35);
     const ghostVelocityLift = smoothstep01(softHit);
     const ghostTickEnergy = clamp(ghostClosedness * (0.16 + ghostVelocityLift * 0.84) * (0.78 + metal * 0.18 + profile.tone * 0.08), 0, 1);
