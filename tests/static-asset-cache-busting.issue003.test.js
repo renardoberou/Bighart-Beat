@@ -21,7 +21,8 @@ const PREVIOUS_TOKENS = [
 ];
 const EXPECTED_TOKEN = 'v=hihat-flutter-20260523';
 const HIHAT_VOICE_TOKEN = 'v=hihat-open-decay-20260524';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-velocity-tail|hihat-place-audition|synth-cleanup|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const MAIN_JS_TOKEN = 'v=ether-mode-audition-20260524';
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-velocity-tail|hihat-place-audition|ether-mode-audition|synth-cleanup|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN) {
   assert(
@@ -87,7 +88,11 @@ const expectedScriptSrcs = [
   'src/rhythm/snare-voice.js',
   'src/rhythm/clap-voice.js',
   'src/main.js',
-].map((unversionedPath) => `${unversionedPath}?${unversionedPath === 'src/rhythm/hihat-voice.js' ? HIHAT_VOICE_TOKEN : EXPECTED_TOKEN}`);
+].map((unversionedPath) => {
+  if (unversionedPath === 'src/rhythm/hihat-voice.js') return `${unversionedPath}?${HIHAT_VOICE_TOKEN}`;
+  if (unversionedPath === 'src/main.js') return `${unversionedPath}?${MAIN_JS_TOKEN}`;
+  return `${unversionedPath}?${EXPECTED_TOKEN}`;
+});
 
 assert.deepStrictEqual(
   scriptSrcs,
@@ -95,7 +100,9 @@ assert.deepStrictEqual(
   'cache busting preserves static script execution order and gives hihat-voice.js the live deploy marker',
 );
 scriptSrcs.forEach((src) => {
-  const expectedToken = src.startsWith('src/rhythm/hihat-voice.js?') ? HIHAT_VOICE_TOKEN : EXPECTED_TOKEN;
+  let expectedToken = EXPECTED_TOKEN;
+  if (src.startsWith('src/rhythm/hihat-voice.js?')) expectedToken = HIHAT_VOICE_TOKEN;
+  if (src.startsWith('src/main.js?')) expectedToken = MAIN_JS_TOKEN;
   assertExactlyOneCurrentToken(src, expectedToken);
 });
 

@@ -1885,6 +1885,8 @@ function buildVE() {
         em.querySelectorAll('.em-b').forEach(x=>x.classList.remove('on'));
         b.classList.add('on');
         autosave();
+        initAudio();
+        scheduleVoiceEditAudition(tr.id);
       });
     });
     mkRow('FREQ',  20, 400, 1, tr.p.freq, x=>`${x|0} Hz`, v=>tr.p.freq=v, c);
