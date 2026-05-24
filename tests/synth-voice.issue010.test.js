@@ -46,7 +46,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.stopSec > spec.decaySec, `${label}: stopSec leaves release padding`);
   assert(['sine', 'triangle', 'sawtooth', 'square'].includes(spec.oscType), `${label}: oscillator type safe`);
   assert(['lowpass', 'bandpass'].includes(spec.filterType), `${label}: filter type safe`);
-  assert(['ms20-bass', 'mono-fm-glass', 'acid-bass', 'industrial-mono', 'vintage-sh', 'idm-digital-alien'].includes(spec.personality), `${label}: personality known`);
+  assert(['ms20-bass', 'analog-sub-body', 'acid-bass', 'industrial-mono', 'vintage-sh', 'idm-digital-alien'].includes(spec.personality), `${label}: personality known`);
   assert(spec.modRatio >= 0.5 && spec.modRatio <= 8, `${label}: FM/digital mod ratio bounded`);
   assert(spec.modIndex >= 0 && spec.modIndex <= 260, `${label}: FM/digital mod index bounded`);
   assert(spec.detuneCents >= -24 && spec.detuneCents <= 24, `${label}: digital detune bounded`);
@@ -56,26 +56,28 @@ for (const engine of ['808', '909', 'reznor', 'aphex', 'unknown']) {
   assertFiniteBounded(resolveSynthVoiceSpec(engine, { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 }), engine);
 }
 
-const glass808 = resolveSynthVoiceSpec('808', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
+const body808 = resolveSynthVoiceSpec('808', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const acid909 = resolveSynthVoiceSpec('909', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const industrial = resolveSynthVoiceSpec('reznor', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const aphexIdm = resolveSynthVoiceSpec('aphex', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const fallback = resolveSynthVoiceSpec('mystery', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 
-assert.strictEqual(glass808.personality, 'mono-fm-glass', '808 restores the earlier glassy FM personality');
-assert.strictEqual(glass808.oscType, 'sine', '808 restores the sine carrier for FM/glass tone');
-assert.notStrictEqual(glass808.personality, 'ms20-bass', '808 is no longer the MS-20 retune');
-assert.strictEqual(glass808.filterType, 'lowpass', '808 keeps mobile-safe lowpass shaping');
-assert(glass808.driveAmount < 0.25, '808 FM/glass voice is not a heavily driven bass lead');
-assert(glass808.filterQ < 4.0, '808 FM/glass voice keeps resonance moderate');
-assert(glass808.filterEnvAmount >= 0.65 && glass808.filterEnvAmount < 1.0, '808 has a restrained plucky filter envelope');
-assert(glass808.filterEndRatio <= 0.42, '808 trigger filter envelope decays back down after each hit');
-assert(glass808.filterTriggerHz > glass808.filterRestHz * 4, '808 trigger opens the filter for glassy pluck motion');
-assert(glass808.attackSec >= 0.005 && glass808.attackSec <= 0.007, '808 attack restores the earlier FM onset');
-assert(glass808.attackSec > acid909.attackSec, '808 synth attack is softer/slower than the sharper 909 acid voice');
-assert(glass808.modIndex > 100, '808 restores audible glass-FM modulation');
-assert(glass808.modIndex <= 260, '808 FM index remains bounded for mobile-safe synthesis');
-assert(glass808.bodyGain > aphexIdm.bodyGain, '808 carries more bass body than aphex IDM voice');
+assert.strictEqual(body808.personality, 'analog-sub-body', '808 maps to a distinct analog body/sub personality');
+assert.notStrictEqual(body808.personality, 'mono-fm-glass', '808 is no longer the glassy FM personality');
+assert.notStrictEqual(body808.personality, 'ms20-bass', '808 is no longer the MS-20 retune');
+assert.strictEqual(body808.oscType, 'triangle', '808 uses a fuller analog body oscillator instead of a glass-FM sine lane');
+assert.strictEqual(body808.filterType, 'lowpass', '808 keeps mobile-safe lowpass body shaping');
+assert(body808.bodyGain > aphexIdm.bodyGain, '808 carries more bass body than aphex IDM voice');
+assert(body808.subGain > aphexIdm.subGain * 3, '808 carries substantially more sub support than aphex IDM voice');
+assert(body808.modIndex === 0, '808 body voice has no FM modulation overlap with aphex');
+assert(body808.modIndex < aphexIdm.modIndex, '808 has substantially lower FM motion than aphex digital voice');
+assert(body808.driveAmount < acid909.driveAmount && body808.driveAmount < industrial.driveAmount, '808 body voice has less drive than 909/Reznor voices');
+assert(body808.filterQ < acid909.filterQ && body808.filterQ < industrial.filterQ, '808 body voice has less resonance than 909/Reznor voices');
+assert(body808.filterEnvAmount >= 0.35 && body808.filterEnvAmount < 0.8, '808 has a restrained analog body filter envelope');
+assert(body808.filterEndRatio >= 0.35, '808 rests at a warmer lowpass cutoff for body instead of a glassy snap-down');
+assert(body808.filterTriggerHz < aphexIdm.filterTriggerHz, '808 body lowpass opens below aphex glass/digital color');
+assert(body808.attackSec >= 0.007, '808 attack is softer/slower than the sharper 909 acid voice');
+assert(body808.attackSec > acid909.attackSec, '808 synth attack is softer/slower than the sharper 909 acid voice');
 assert.strictEqual(acid909.personality, 'acid-bass', '909 maps to acid bass personality');
 assert.strictEqual(acid909.oscType, 'sawtooth', '909 acid voice keeps the 303-style sawtooth source');
 assert.strictEqual(acid909.filterType, 'lowpass', '909 acid voice keeps the 303-style lowpass filter');
@@ -85,7 +87,7 @@ assert(acid909.filterEnvAmount >= 3.0, '909 acid voice has a hard throaty trigge
 assert(acid909.filterEndRatio <= 0.20, '909 acid voice snaps back to a low cutoff for acid pluck');
 assert(acid909.filterTriggerHz > acid909.filterRestHz * 20, '909 acid sweep opens dramatically from rest cutoff');
 assert(acid909.glideSec >= 0.050, '909 acid voice has audible 303-style glide');
-assert(acid909.filterQ > glass808.filterQ, '909 acid voice has sharper squelchy resonance than 808');
+assert(acid909.filterQ > body808.filterQ, '909 acid voice has sharper squelchy resonance than 808');
 assert(acid909.noiseGain >= 0.020, '909 acid voice has added gritty noise texture');
 assert.strictEqual(industrial.personality, 'industrial-mono', 'reznor maps to industrial mono personality');
 assert.strictEqual(industrial.filterType, 'bandpass', 'reznor uses a bandpass filter for wah-like focus');
@@ -97,7 +99,7 @@ assert.strictEqual(aphexIdm.personality, 'idm-digital-alien', 'aphex maps to an 
 assert.strictEqual(aphexIdm.oscType, 'sine', 'aphex uses a clean sine carrier for glassy digital FM motion');
 assert.strictEqual(aphexIdm.filterType, 'bandpass', 'aphex uses focused bandpass color distinct from 808/909 lowpass voices');
 assert(aphexIdm.modIndex > 45, 'aphex has audible bounded FM/digital motion instead of the old non-FM SH voice');
-assert(aphexIdm.modIndex < glass808.modIndex, 'aphex digital motion is glassy but less 808-sub/FM dominant');
+assert(aphexIdm.modIndex > body808.modIndex, 'aphex keeps the digital/FM lane while 808 stays analog/body');
 assert(aphexIdm.modRatio > 2.5 && aphexIdm.modRatio < 6.5, 'aphex uses inharmonic IDM-style FM ratios within safe bounds');
 assert(aphexIdm.detuneCents !== 0, 'aphex center shape keeps a small alien detune offset');
 assert(aphexIdm.noiseGain >= 0.030, 'aphex adds a bounded digital dust/noise layer');
@@ -110,13 +112,13 @@ assert.strictEqual(fallback.engine, 'aphex', 'unknown engine safely falls back t
 assert.strictEqual(fallback.fallbackEngine, true, 'fallback is documented in spec');
 assert.strictEqual(fallback.personality, 'idm-digital-alien', 'fallback uses the bounded aphex digital/IDM voice');
 assert(fallback.modIndex > 0, 'fallback aphex voice keeps finite digital FM motion');
-assert.notStrictEqual(glass808.pitchHz, acid909.pitchHz, '808 and 909 synth pitch/body character differs');
-assert.notStrictEqual(glass808.filterType, industrial.filterType, '808 remains distinct from reznor bandpass industrial voice');
-assert(glass808.modIndex > aphexIdm.modIndex, '808 FM motion remains stronger than aphex IDM shimmer');
+assert.notStrictEqual(body808.pitchHz, acid909.pitchHz, '808 and 909 synth pitch/body character differs');
+assert.notStrictEqual(body808.filterType, industrial.filterType, '808 remains distinct from reznor bandpass industrial voice');
+assert(body808.modIndex < aphexIdm.modIndex, '808 body voice does not compete with aphex IDM shimmer');
 assert(aphexIdm.filterHz !== acid909.filterHz, 'aphex digital tone differs from 909 acid');
-assert(acid909.filterDecaySec < glass808.filterDecaySec, '909 acid filter closes faster than sustained 808 glass pluck');
+assert(acid909.filterDecaySec < body808.filterDecaySec, '909 acid filter closes faster than sustained 808 body lowpass motion');
 assert(acid909.filterDecaySec < aphexIdm.filterDecaySec, '909 acid filter closes faster than sustained aphex IDM color');
-assert(industrial.filterDecaySec < glass808.filterDecaySec, 'reznor industrial filter closes faster than sustained 808 glass pluck');
+assert(industrial.filterDecaySec < body808.filterDecaySec, 'reznor industrial filter closes faster than sustained 808 body lowpass motion');
 assert(industrial.filterDecaySec < aphexIdm.filterDecaySec, 'reznor industrial filter closes faster than sustained aphex IDM color');
 
 const aphexInvalid = resolveSynthVoiceSpec('aphex', { pitch: NaN, decay: -Infinity, tone: Infinity, shape: -99 });

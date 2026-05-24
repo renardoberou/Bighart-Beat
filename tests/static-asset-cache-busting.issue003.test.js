@@ -27,8 +27,10 @@ const PREVIOUS_TOKENS = [
 const EXPECTED_TOKEN = 'v=hihat-flutter-20260523';
 const HIHAT_SIZZLE_TOKEN = 'v=hihat-sizzle-tail-20260524';
 const HIHAT_VOICE_TOKEN = HIHAT_SIZZLE_TOKEN;
+const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
+const SYNTH_VOICE_TOKEN = SYNTH_808_BODY_TOKEN;
 const MAIN_JS_TOKEN = 'v=brain-loop-hihat-guard-20260524';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|ether-mode-audition|ratchet-edit-audition|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|ether-mode-audition|ratchet-edit-audition|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN) {
   assert(
@@ -96,6 +98,7 @@ const expectedScriptSrcs = [
   'src/main.js',
 ].map((unversionedPath) => {
   if (unversionedPath === 'src/rhythm/hihat-voice.js') return `${unversionedPath}?${HIHAT_VOICE_TOKEN}`;
+  if (unversionedPath === 'src/rhythm/synth-voice.js') return `${unversionedPath}?${SYNTH_VOICE_TOKEN}`;
   if (unversionedPath === 'src/main.js') return `${unversionedPath}?${MAIN_JS_TOKEN}`;
   return `${unversionedPath}?${EXPECTED_TOKEN}`;
 });
@@ -103,11 +106,12 @@ const expectedScriptSrcs = [
 assert.deepStrictEqual(
   scriptSrcs,
   expectedScriptSrcs,
-  'cache busting preserves static script execution order and gives hihat-voice.js the live deploy marker',
+  'cache busting preserves static script execution order and gives hihat-voice.js and synth-voice.js their live deploy markers',
 );
 scriptSrcs.forEach((src) => {
   let expectedToken = EXPECTED_TOKEN;
   if (src.startsWith('src/rhythm/hihat-voice.js?')) expectedToken = HIHAT_VOICE_TOKEN;
+  if (src.startsWith('src/rhythm/synth-voice.js?')) expectedToken = SYNTH_VOICE_TOKEN;
   if (src.startsWith('src/main.js?')) expectedToken = MAIN_JS_TOKEN;
   assertExactlyOneCurrentToken(src, expectedToken);
 });

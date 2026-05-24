@@ -3,10 +3,10 @@
 (function (root) {
   const SYNTH_ENGINE_PROFILES = {
     '808': {
-      personality: 'mono-fm-glass',
-      oscType: 'sine', filterType: 'lowpass', pitch: 1.00, decay: 1.06, tone: 1.30, q: 0.55,
-      drive: 0.16, body: 0.46, sub: 0.12, noise: 0.018, attack: 0.006, release: 0.030, glide: 0.010,
-      filterEnv: 0.65, filterEnd: 0.40, filterSnap: 0.0025, filterDecay: 0.72,
+      personality: 'analog-sub-body',
+      oscType: 'triangle', filterType: 'lowpass', pitch: 0.72, decay: 1.18, tone: 0.82, q: 0.35,
+      drive: 0.22, body: 0.58, sub: 0.28, noise: 0.012, attack: 0.008, release: 0.038, glide: 0.010,
+      filterEnv: 0.45, filterEnd: 0.46, filterSnap: 0.0030, filterDecay: 0.78,
     },
     '909': {
       personality: 'acid-bass',
