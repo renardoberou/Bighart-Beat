@@ -22,12 +22,13 @@ const PREVIOUS_TOKENS = [
   'v=synth-note-edit-audition-20260524',
   'v=hihat-metal-air-20260524',
   'v=hihat-place-silent-20260524',
+  'v=comp-detector-truth-20260524',
 ];
 const EXPECTED_TOKEN = 'v=hihat-flutter-20260523';
 const HIHAT_SIZZLE_TOKEN = 'v=hihat-sizzle-tail-20260524';
 const HIHAT_VOICE_TOKEN = HIHAT_SIZZLE_TOKEN;
-const MAIN_JS_TOKEN = 'v=comp-detector-truth-20260524';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|ether-mode-audition|ratchet-edit-audition|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const MAIN_JS_TOKEN = 'v=brain-loop-hihat-guard-20260524';
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|ether-mode-audition|ratchet-edit-audition|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN) {
   assert(
