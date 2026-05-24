@@ -2460,11 +2460,17 @@ function wire() {
   $('stopBtn').addEventListener('click', stopPlay);
 
   let bpmHold = null;
+  let bpmHoldTimer = null;
   let bpmSuppressClickTarget = null;
   let bpmSuppressClickTimer = null;
+  const BPM_HOLD_DELAY_MS = 360;
   function clearBpmHold() {
     clearInterval(bpmHold);
     bpmHold = null;
+  }
+  function clearBpmHoldTimer() {
+    clearTimeout(bpmHoldTimer);
+    bpmHoldTimer = null;
   }
   function clearBpmClickSuppression() {
     clearTimeout(bpmSuppressClickTimer);
@@ -2495,19 +2501,26 @@ function wire() {
     chgBPM(delta);
     bpmHold = setInterval(() => chgBPM(delta), 110);
   }
+  function startBpmHoldAfterDelay(buttonId, delta) {
+    clearBpmHoldTimer();
+    bpmHoldTimer = setTimeout(() => {
+      bpmHoldTimer = null;
+      suppressNextBpmClick(buttonId);
+      startBpmHold(delta);
+    }, BPM_HOLD_DELAY_MS);
+  }
   function endBpmHold(buttonId) {
+    clearBpmHoldTimer();
     clearBpmHold();
     scheduleBpmClickSuppressionCleanup(buttonId);
   }
   $('bpmUp').addEventListener('click', event => handleBpmClick('bpmUp', 1, event));
   $('bpmDn').addEventListener('click', event => handleBpmClick('bpmDn', -1, event));
   $('bpmUp').addEventListener('pointerdown', event => {
-    suppressNextBpmClick('bpmUp');
-    startBpmHold(2);
+    startBpmHoldAfterDelay('bpmUp', 2);
   });
   $('bpmDn').addEventListener('pointerdown', event => {
-    suppressNextBpmClick('bpmDn');
-    startBpmHold(-2);
+    startBpmHoldAfterDelay('bpmDn', -2);
   });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(e => {
     $('bpmUp').addEventListener(e, () => endBpmHold('bpmUp'));
