@@ -229,6 +229,8 @@
     const baseChokeOpenTau = clamp(Math.max(profile.chokeOpenTau, profile.chokeClosedTau + 0.001), 0.002, 0.10);
     const velocityChokeRelease = 1 + openShape * (softHit * 0.12 - accentedHit * 0.16);
     const chokeOpenTau = clamp(Math.max(baseChokeOpenTau * velocityChokeRelease, baseChokeClosedTau + 0.001), 0.002, 0.10);
+    const openChokeFloorLift = openShape * (0.0012 + softHit * 0.0012 - accentedHit * 0.00055);
+    const chokeFloor = clamp(0.0008 + openChokeFloorLift, 0.0008, 0.004);
 
     return {
       engine,
@@ -286,6 +288,7 @@
       metallicNeedlePinch,
       chokeClosedTau: baseChokeClosedTau,
       chokeOpenTau,
+      chokeFloor,
       metalHighpassHz: clamp(freq * 0.85 * profile.bright, 2200, 17000),
     };
   }

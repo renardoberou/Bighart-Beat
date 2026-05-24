@@ -32,8 +32,8 @@ assert(
   'hihat choke helper compares continuous new hat openness with the previous active tail'
 );
 assert(
-  /if\s*\(\s*previous\s*&&\s*previous\.gain\s*\)\s*\{[\s\S]*cancelAndHoldOrSmoothParam\(g,\s*t,\s*\{\s*floor:\s*\.0008[\s\S]*g\.setTargetAtTime\(\.0008,\s*t,\s*tau\)/.test(main),
-  'hihat choke helper smoothly cancels and ramps the previous tail instead of letting open hats pile up'
+  /function\s+triggerHihatChoke\s*\(\s*t,\s*openAmount,\s*choke,\s*spec\s*\)\s*\{[\s\S]*const\s+hihatChokeFloor\s*=\s*clamp\(Number\.isFinite\(spec\.chokeFloor\)\s*\?\s*spec\.chokeFloor\s*:\s*\.0008,\s*\.0008,\s*\.004\)[\s\S]*if\s*\(\s*previous\s*&&\s*previous\.gain\s*\)\s*\{[\s\S]*cancelAndHoldOrSmoothParam\(g,\s*t,\s*\{\s*floor:\s*hihatChokeFloor,\s*smoothTime:\s*\.003,\s*fallbackValue:\s*hihatChokeFloor\s*\}\)[\s\S]*g\.setTargetAtTime\(hihatChokeFloor,\s*t,\s*tau\)/.test(main),
+  'hihat choke helper smoothly chokes previous tails toward the current hit resolver floor with a bounded .0008 fallback'
 );
 assert(
   /const\s+tau\s*=\s*HihatVoice\.calculateHihatChokeTau\(currentOpen,\s*previousOpen,\s*spec\)/.test(main),

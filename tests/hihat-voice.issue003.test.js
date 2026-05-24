@@ -36,7 +36,7 @@ function seqRand(values) {
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
-  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openAccentBloom', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'openSizzleTailBias', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'metallicNeedlePinch', 'chokeClosedTau', 'chokeOpenTau', 'noiseLevel', 'metalLevel'].forEach(k => {
+  ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openAccentBloom', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'openSizzleTailBias', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'metallicNeedlePinch', 'chokeClosedTau', 'chokeOpenTau', 'chokeFloor', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
   });
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain normalized <= 0.72`);
@@ -81,6 +81,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.chokeClosedTau > 0, `${label}: closed choke tau positive`);
   assert(spec.chokeClosedTau < spec.chokeOpenTau, `${label}: closed choke tau is shorter than open`);
   assert(spec.chokeOpenTau <= 0.10, `${label}: open choke tau bounded`);
+  assert(spec.chokeFloor >= 0.0008 && spec.chokeFloor <= 0.004, `${label}: choke floor is bounded/headroom-safe`);
   assert(Array.isArray(spec.ratios), `${label}: ratios array`);
   assert(spec.ratios.length > 0 && spec.ratios.length <= 6, `${label}: oscillator ratio count bounded`);
   assert(spec.ratios.every(Number.isFinite), `${label}: ratios finite`);
@@ -142,6 +143,15 @@ assert(softPartOpen909.chokeOpenTau > normalPartOpen909.chokeOpenTau, 'soft part
 assert(accentedPartOpen909.chokeOpenTau < normalPartOpen909.chokeOpenTau, 'accented partly-open 909 hihat chokes/releases tighter than normal');
 assert.strictEqual(lowVelocity.chokeOpenTau, normalVelocity.chokeOpenTau, 'soft closed 909 hihat keeps existing choke release unchanged');
 assert.strictEqual(accentedVelocity.chokeOpenTau, normalVelocity.chokeOpenTau, 'accented closed 909 hihat keeps existing choke release unchanged');
+assert(normalVelocity.chokeFloor <= 0.001, 'normal closed 909 hihat keeps the legacy-tight choke floor');
+assert(accentedVelocity.chokeFloor <= 0.001, 'accented closed 909 hihat keeps a tight low choke floor for cleaner choking');
+assert(softOpen909.chokeFloor > normalVelocity.chokeFloor * 2.5, 'soft fully-open 909 hihat exposes a higher choke floor so overlapping tails breathe');
+assert(normalOpen909.chokeFloor > normalVelocity.chokeFloor * 1.8, 'normal fully-open 909 hihat has a higher floor than closed hats');
+assert(accentedOpen909.chokeFloor < normalOpen909.chokeFloor, 'accented fully-open 909 hihat uses a tighter choke floor than normal open hits');
+assert(accentedOpen909.chokeFloor < softOpen909.chokeFloor, 'accented fully-open 909 hihat chokes cleaner than soft open hits');
+assert(accentedOpen909.chokeFloor > accentedVelocity.chokeFloor, 'accented open 909 hihat still breathes more than accented closed hats');
+assert(softPartOpen909.chokeFloor > normalVelocity.chokeFloor, 'partly-open soft 909 hihat raises the floor above closed hats');
+assert(accentedPartOpen909.chokeFloor < softPartOpen909.chokeFloor, 'partly-open accented 909 hihat has a tighter floor than soft partly-open hats');
 assert(softOpen909.openAccentBloom < normalOpen909.openAccentBloom, 'soft open 909 hihat keeps the accent bloom proxy restrained');
 assert(accentedOpen909.openAccentBloom > normalOpen909.openAccentBloom + 0.08, 'accented open 909 hihat exposes an obvious extra bloom proxy versus normal open hit');
 assert(accentedOpen909.openAccentBloom > softOpen909.openAccentBloom * 2, 'accented open 909 hihat has much more bloom proxy than soft open hit');
@@ -410,7 +420,10 @@ assert(/hatPolish\.gain\.setValueAtTime\(spec\.outputTrim,\s*t\)/.test(main), 'h
 assert(/const\s+hatAir\s*=\s*A\.createBiquadFilter\(\)/.test(main) && /hatAir\.type\s*=\s*'lowpass'/.test(main), 'synthHihat adds a gentle post-choke air lowpass');
 assert(/hatAir\.frequency\.value\s*=\s*spec\.airLowpassHz/.test(main), 'hihat air lowpass uses resolver frequency');
 assert(/choke\.connect\(hatPolish\);\s*hatPolish\.connect\(hatAir\);\s*hatAir\.connect\(dest\);/.test(main), 'all hihat layers pass through choke, polish, and air filter before routeVoice destination');
-assert(/choke\.gain\.setTargetAtTime\(\.0008,\s*t\s*\+\s*spec\.noiseTailSec,\s*spec\.tailReleaseTau\)/.test(main), 'hihat choke release uses resolver tailReleaseTau');
+assert(/function\s+synthHihat\s*\(\s*t,\s*v,\s*p\s*\)\s*\{[\s\S]*const\s+hihatChokeFloor\s*=\s*clamp\(Number\.isFinite\(spec\.chokeFloor\) \? spec\.chokeFloor : \.0008,\s*\.0008,\s*\.004\)[\s\S]*choke\.gain\.setTargetAtTime\(hihatChokeFloor,\s*t\s*\+\s*spec\.noiseTailSec,\s*spec\.tailReleaseTau\)/.test(main), 'synthHihat resolves bounded choke floor with legacy fallback and applies it to its own release envelope');
+assert(/choke\.gain\.setTargetAtTime\(hihatChokeFloor,\s*t\s*\+\s*spec\.noiseTailSec,\s*spec\.tailReleaseTau\)/.test(main), 'hihat choke release uses resolver choke floor and tailReleaseTau');
+assert(/cancelAndHoldOrSmoothParam\(g,\s*t,\s*\{ floor: hihatChokeFloor,\s*smoothTime: \.003,\s*fallbackValue: hihatChokeFloor \}\)/.test(main), 'hihat inter-hit choke smoothing uses resolver choke floor with fallback');
+assert(/g\.setTargetAtTime\(hihatChokeFloor,\s*t,\s*tau\)/.test(main), 'previous hihat voices choke toward resolver floor instead of a fixed constant');
 assert(/ng\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.noiseGain \* spec\.transientGain,\s*0,\s*\.72\),\s*t \+ spec\.attackSec\);\s*ng\.gain\.setTargetAtTime\(\.001,\s*t \+ spec\.noiseTailSec \* spec\.openTailDamp,\s*spec\.tailReleaseTau\)/.test(main), 'hihat noise tail uses resolver damping and release tau');
 assert(/mg\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.metalGain \* spec\.tailHeadroomTrim,\s*0,\s*\.34\),\s*t \+ Math\.max\(\.0008,\s*spec\.attackSec \* \.8\)\)/.test(main), 'hihat metallic layer uses resolver tail headroom trim');
 assert(/if \(hihatBudget\.useOpenShimmer && spec\.openShimmerGain > 0\.001\)/.test(main), 'synthHihat gates open-hat shimmer through render budget and resolver gain');

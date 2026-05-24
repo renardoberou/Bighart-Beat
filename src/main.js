@@ -638,14 +638,16 @@ function synthSnare(t, v, p) {
 }
 
 function triggerHihatChoke(t, openAmount, choke, spec) {
+  spec = spec || {};
   const previous = hihatChokeState.gain;
   const previousOpen = hihatChokeState.open;
   const currentOpen = clamp(openAmount, 0, 1);
+  const hihatChokeFloor = clamp(Number.isFinite(spec.chokeFloor) ? spec.chokeFloor : .0008, .0008, .004);
   if (previous && previous.gain) {
     const g = previous.gain;
-    cancelAndHoldOrSmoothParam(g, t, { floor: .0008, smoothTime: .003, fallbackValue: .0008 });
+    cancelAndHoldOrSmoothParam(g, t, { floor: hihatChokeFloor, smoothTime: .003, fallbackValue: hihatChokeFloor });
     const tau = HihatVoice.calculateHihatChokeTau(currentOpen, previousOpen, spec);
-    g.setTargetAtTime(.0008, t, tau);
+    g.setTargetAtTime(hihatChokeFloor, t, tau);
   }
   hihatChokeState.gain = choke;
   hihatChokeState.open = currentOpen;
@@ -672,9 +674,10 @@ function synthHihat(t, v, p) {
   );
   const dest = routeVoice(t, 2, hihatTailSec);
   const choke = A.createGain();
+  const hihatChokeFloor = clamp(Number.isFinite(spec.chokeFloor) ? spec.chokeFloor : .0008, .0008, .004);
   choke.gain.setValueAtTime(0, t);
   choke.gain.linearRampToValueAtTime(1, t + spec.attackSec);
-  choke.gain.setTargetAtTime(.0008, t + spec.noiseTailSec, spec.tailReleaseTau);
+  choke.gain.setTargetAtTime(hihatChokeFloor, t + spec.noiseTailSec, spec.tailReleaseTau);
   const hatPolish = A.createGain();
   hatPolish.gain.setValueAtTime(spec.outputTrim, t);
   const hatAir = A.createBiquadFilter(); hatAir.type = 'lowpass';
