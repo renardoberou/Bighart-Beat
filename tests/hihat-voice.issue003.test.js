@@ -245,6 +245,7 @@ const accentedOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 
 const open909Classic = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, decay: 0.04 }, () => 0.5, 0.75);
 const lowMetalPartOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.65, metal: 0.10, decay: 0.04 }, () => 0.5, 0.75);
 const highMetalPartOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.65, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
+const normalMetalOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, metal: 0.55, decay: 0.04 }, () => 0.5, 0.75);
 const highMetalOpenAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
 const highMetalOpenReznor = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
 const highMetalOpen909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 1, metal: 0.95, decay: 0.04 }, () => 0.5, 0.75);
@@ -266,6 +267,8 @@ assert(highMetalOpenAphex.airLowpassHz > highMetalOpen909.airLowpassHz + 1200, '
 assert(highMetalPartOpenAphex.airLowpassHz > lowMetalPartOpenAphex.airLowpassHz + 600, 'high-metal partly-open aphex hihat gets an obvious bright metallic-air lift versus low-metal aphex');
 assert(highMetalOpenAphex.openShimmerQ > lowMetalPartOpenAphex.openShimmerQ + 0.55, 'high-metal fully-open aphex hihat focuses shimmer more than low-metal partly-open aphex');
 assert(highMetalOpenAphex.openShimmerQ > highMetalOpen909.openShimmerQ + 0.55, 'high-metal fully-open aphex hihat focuses shimmer more than high-metal classic 909');
+assert(highMetalOpenAphex.openShimmerGain > normalMetalOpenAphex.openShimmerGain * 1.35, 'high-metal fully-open aphex hihat has a clearer playable shimmer-air lift than normal-metal aphex');
+assert(highMetalOpenAphex.openShimmerGain > highMetalOpen909.openShimmerGain * 1.35, 'high-metal fully-open aphex hihat has more metallic shimmer-air than high-metal classic 909');
 assert.strictEqual(highMetalOpen909.openFlutterGain, 0, 'high-metal open 909 hihat keeps flutter/rattle disabled while aphex gains metallic air');
 
 function assertFiniteBudget(budget, label) {
