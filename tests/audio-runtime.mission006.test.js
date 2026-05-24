@@ -59,12 +59,25 @@ assert(/N\.mstComp\.connect\(N\.compMakeup\)/.test(buildGraph), 'compressor feed
 assert(/N\.compMakeup\.connect\(N\.(?:wreckIn|mstSat)\)/.test(buildGraph), 'auto-makeup feeds the next pre-master stage');
 assert(!/N\.mstComp\.connect\(N\.mstSat\)/.test(buildGraph), 'compressor no longer bypasses auto-makeup node');
 
+const compDetectorSettings = extractFunction('compDetectorSettings');
+assert(/const\s+mode\s*=\s*comp\.detector\s*===\s*['"]peak['"]\s*\?\s*['"]peak['"]\s*:\s*['"]rms['"]/.test(compDetectorSettings), 'detector helper normalizes detector mode to peak/rms');
+assert(/mode\s*===\s*['"]peak['"][\s\S]*?knee:\s*6[\s\S]*?attack:[\s\S]*?0\.[1-8][\s\S]*?release:[\s\S]*?0\.[6-9]/.test(compDetectorSettings), 'peak detector is harder, faster, and tighter than the fader base');
+assert(/mode\s*===\s*['"]rms['"][\s\S]*?knee:\s*12[\s\S]*?attack:[\s\S]*?1\.[2-9][\s\S]*?release:[\s\S]*?1\.[1-9]/.test(compDetectorSettings), 'rms detector is softer, slower, and smoother than peak');
+assert(/clamp\(\s*\(comp\.attack\s*\/\s*1000\)\s*\*\s*profile\.attack/.test(compDetectorSettings), 'detector helper scales attack from user fader base and clamps it');
+assert(/clamp\(\s*\(comp\.release\s*\/\s*1000\)\s*\*\s*profile\.release/.test(compDetectorSettings), 'detector helper scales release from user fader base and clamps it');
+
+assert(/const\s+detectorSettings\s*=\s*compDetectorSettings\(FX\.comp\)/.test(buildGraph), 'buildGraph derives initial compressor detector settings through helper');
+assert(/N\.mstComp\.knee\.value\s*=\s*detectorSettings\.knee/.test(buildGraph), 'buildGraph applies helper knee');
+assert(/N\.mstComp\.attack\.value\s*=\s*detectorSettings\.attack/.test(buildGraph), 'buildGraph applies helper attack');
+assert(/N\.mstComp\.release\.value\s*=\s*detectorSettings\.release/.test(buildGraph), 'buildGraph applies helper release');
+
 const applyFXState = extractFunction('applyFXState');
 assert(/N\.mstComp\.threshold\.setTargetAtTime\(FX\.comp\.on\s*\?\s*FX\.comp\.threshold\s*:\s*0/.test(applyFXState), 'compressor threshold follows enabled state');
 assert(/N\.mstComp\.ratio\.setTargetAtTime\(FX\.comp\.on\s*\?\s*FX\.comp\.ratio\s*:\s*1/.test(applyFXState), 'compressor ratio follows enabled state');
-assert(/N\.mstComp\.attack\.setTargetAtTime\(FX\.comp\.attack\s*\/\s*1000/.test(applyFXState), 'compressor attack maps ms to seconds');
-assert(/N\.mstComp\.release\.setTargetAtTime\(FX\.comp\.release\s*\/\s*1000/.test(applyFXState), 'compressor release maps ms to seconds for pump');
-assert(/N\.mstComp\.knee\.setTargetAtTime\(FX\.comp\.detector\s*===\s*['"]peak['"]\s*\?\s*6\s*:\s*12/.test(applyFXState), 'detector mode is represented as peak/rms knee response');
+assert(/const\s+detectorSettings\s*=\s*compDetectorSettings\(FX\.comp\)/.test(applyFXState), 'applyFXState derives runtime compressor detector settings through helper');
+assert(/N\.mstComp\.attack\.setTargetAtTime\(detectorSettings\.attack/.test(applyFXState), 'compressor attack applies detector-scaled seconds');
+assert(/N\.mstComp\.release\.setTargetAtTime\(detectorSettings\.release/.test(applyFXState), 'compressor release applies detector-scaled seconds for pump');
+assert(/N\.mstComp\.knee\.setTargetAtTime\(detectorSettings\.knee/.test(applyFXState), 'detector mode is represented by helper knee response');
 assert(/N\.compMakeup\.gain\.setTargetAtTime\(dbToGain\(autoMakeupGainDb\(FX\.comp\)\)/.test(applyFXState), 'auto makeup gain is applied after compressor');
 
 const fire = extractFunction('fire');

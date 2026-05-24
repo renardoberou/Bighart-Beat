@@ -194,11 +194,12 @@ function buildGraph() {
   // No manual output/makeup gain is exposed; makeup is computed from threshold/ratio and clamped safe.
   N.compGate = A.createGain(); N.compGate.gain.value = FX.comp.gateOn ? 0 : 1;
   N.mstComp = A.createDynamicsCompressor();
+  const detectorSettings = compDetectorSettings(FX.comp);
   N.mstComp.threshold.value = FX.comp.on ? FX.comp.threshold : 0;
-  N.mstComp.knee.value      = FX.comp.detector === 'peak' ? 6 : 12;
+  N.mstComp.knee.value      = detectorSettings.knee;
   N.mstComp.ratio.value     = FX.comp.on ? FX.comp.ratio : 1;
-  N.mstComp.attack.value    = FX.comp.attack / 1000;
-  N.mstComp.release.value   = FX.comp.release / 1000;
+  N.mstComp.attack.value    = detectorSettings.attack;
+  N.mstComp.release.value   = detectorSettings.release;
   N.compMakeup = A.createGain(); N.compMakeup.gain.value = dbToGain(autoMakeupGainDb(FX.comp));
   N.mstSum.connect(N.compGate);
   N.compGate.connect(N.mstComp);
@@ -413,6 +414,20 @@ function autoMakeupGainDb(comp) {
   const thresholdAbs = Math.abs(Math.min(0, comp.threshold));
   const ratio = Math.max(1, comp.ratio || 1);
   return clamp(thresholdAbs * (1 - 1 / ratio) * 0.45, 0, 12);
+}
+
+function compDetectorSettings(comp) {
+  const mode = comp.detector === 'peak' ? 'peak' : 'rms';
+  const profile = mode === 'peak'
+    ? { knee: 6, attack: 0.55, release: 0.85 }
+    : mode === 'rms'
+      ? { knee: 12, attack: 1.45, release: 1.25 }
+      : { knee: 12, attack: 1.45, release: 1.25 };
+  return {
+    knee: profile.knee,
+    attack: clamp((comp.attack / 1000) * profile.attack, 0.001, 1),
+    release: clamp((comp.release / 1000) * profile.release, 0.01, 2),
+  };
 }
 
 function dlyTimeSec() {
@@ -1995,11 +2010,12 @@ function applyFXState() {
   N.revWet.gain.setTargetAtTime(FX.rev.on ? FX.rev.wet : 0, A.currentTime, .04);
   // compressor / gate
   N.compGate.gain.setTargetAtTime(FX.comp.gateOn ? dbToGain(FX.comp.gateThreshold) : 1, A.currentTime, .02);
+  const detectorSettings = compDetectorSettings(FX.comp);
   N.mstComp.threshold.setTargetAtTime(FX.comp.on ? FX.comp.threshold : 0, A.currentTime, .02);
   N.mstComp.ratio.setTargetAtTime(FX.comp.on ? FX.comp.ratio : 1, A.currentTime, .02);
-  N.mstComp.attack.setTargetAtTime(FX.comp.attack / 1000, A.currentTime, .02);
-  N.mstComp.release.setTargetAtTime(FX.comp.release / 1000, A.currentTime, .02);
-  N.mstComp.knee.setTargetAtTime(FX.comp.detector === 'peak' ? 6 : 12, A.currentTime, .02);
+  N.mstComp.attack.setTargetAtTime(detectorSettings.attack, A.currentTime, .02);
+  N.mstComp.release.setTargetAtTime(detectorSettings.release, A.currentTime, .02);
+  N.mstComp.knee.setTargetAtTime(detectorSettings.knee, A.currentTime, .02);
   N.compMakeup.gain.setTargetAtTime(dbToGain(autoMakeupGainDb(FX.comp)), A.currentTime, .02);
   // digital destruction
   updateWreckCurveIfNeeded();
