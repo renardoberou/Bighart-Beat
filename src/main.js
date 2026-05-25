@@ -680,6 +680,7 @@ function synthHihat(t, v, p) {
   const openAccentBloomLift = clamp(1 + spec.openAccentBloom * .18, 1, 1.06);
   const hihatTailSec = Math.max(
     spec.noiseTailSec + spec.tailReleaseTau * 4,
+    hihatBudget.useOpenSplash && spec.openSplashGain > 0.001 ? spec.openSplashTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useOpenBody && spec.openBodyGain > 0.001 ? spec.openBodyTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useOpenFlutter && spec.openFlutterGain > 0.001 ? spec.openFlutterTailSec + spec.tailReleaseTau : 0,
@@ -720,6 +721,18 @@ function synthHihat(t, v, p) {
     sg.gain.setTargetAtTime(.001, t + spec.openShimmerTailSec * spec.openTailDamp, spec.tailReleaseTau);
     shimmer.connect(sf); sf.connect(sg); sg.connect(choke);
     shimmer.start(t); shimmer.stop(t + spec.openShimmerTailSec + spec.tailReleaseTau * 4);
+  }
+  if (hihatBudget.useOpenSplash && spec.openSplashGain > 0.001) {
+    const splash = A.createBufferSource(); splash.buffer = nz; splash.loop = true;
+    const splashFilter = A.createBiquadFilter(); splashFilter.type = 'bandpass';
+    splashFilter.frequency.value = spec.openSplashHz;
+    splashFilter.Q.value = spec.openSplashQ;
+    const splashGain = A.createGain();
+    splashGain.gain.setValueAtTime(0, t);
+    splashGain.gain.linearRampToValueAtTime(clamp(v * spec.openSplashGain, 0, .055), t + Math.min(.0025, spec.attackSec));
+    splashGain.gain.setTargetAtTime(.001, t + spec.openSplashTailSec * spec.openSplashHold, spec.tailReleaseTau);
+    splash.connect(splashFilter); splashFilter.connect(splashGain); splashGain.connect(choke);
+    splash.start(t); splash.stop(t + spec.openSplashTailSec + spec.tailReleaseTau * 4);
   }
   if (hihatBudget.useOpenBody && spec.openBodyGain > 0.001) {
     const body = A.createBufferSource(); body.buffer = nz; body.loop = true;

@@ -66,6 +66,7 @@
     const opts = options || {};
     const audible = {
       useGhostTick: finiteOr(s.ghostTickGain, 0) > 0.001,
+      useOpenSplash: finiteOr(s.openSplashGain, 0) > 0.001,
       useOpenShimmer: finiteOr(s.openShimmerGain, 0) > 0.001,
       useOpenBody: finiteOr(s.openBodyGain, 0) > 0.001,
       useOpenFlutter: finiteOr(s.openFlutterGain, 0) > 0.001,
@@ -95,12 +96,13 @@
     const metallicSourceCount = budgetedOscillatorFrequencies.length;
     const engine = typeof s.engine === 'string' ? s.engine : '';
     const priority = engine === 'reznor'
-      ? ['useGhostTick', 'useOpenFlutter', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
+      ? ['useGhostTick', 'useOpenFlutter', 'useOpenSplash', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
       : engine === 'aphex'
-        ? ['useGhostTick', 'useIdmSpark', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
-        : ['useGhostTick', 'useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'];
+        ? ['useGhostTick', 'useIdmSpark', 'useOpenSplash', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
+        : ['useGhostTick', 'useOpenSplash', 'useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'];
     const selected = {
       useGhostTick: false,
+      useOpenSplash: false,
       useOpenShimmer: false,
       useOpenBody: false,
       useOpenFlutter: false,
@@ -193,6 +195,14 @@
     const openDecayPresenceLift = 1 + openShape * decayOpenShape * 0.12;
     const softOpenAirTailLift = openShape * softHit;
     const accentedOpenSnap = openShape * accentedHit;
+    const openSplashCharacter = isAphex ? 1 : (isReznor ? 0.82 : (engine === '909' ? 0.30 : 0.18));
+    const openSplashEngineTail = isReznor ? 1.24 : (isAphex ? 0.88 : (engine === '909' ? 0.72 : 0.78));
+    const openSplashEngineHz = isReznor ? 0.72 : (isAphex ? 1.38 : (engine === '909' ? 1.12 : 0.92));
+    const openSplashGain = clamp(openShape * openSplashCharacter * (0.020 + metal * 0.016 + accentedHit * 0.026 - softHit * 0.006) * (1 + openAccentBloom * 0.18) * jitter(rand, instability * 0.45), 0, 0.055);
+    const openSplashTailSec = clamp((0.030 + open * 0.060 + open * open * 0.050 + instability * 0.42) * openSplashEngineTail * (1 + softOpenAirTailLift * 0.36 - accentedOpenSnap * 0.18), 0.006, 0.20);
+    const openSplashHz = clamp(freq * profile.bright * openSplashEngineHz * (1 - softHit * 0.06 + accentedHit * 0.08) * jitter(rand, instability * 0.55), 4500, 18000);
+    const openSplashQ = clamp(1.0 + open * 0.70 + (isAphex ? 1.60 : (isReznor ? 0.55 : 0.25)) + accentedHit * 0.45 - softHit * 0.22 + instability * 18, 0.7, 4.8);
+    const openSplashHold = clamp(0.50 + open * 0.13 + (isReznor ? 0.10 : (isAphex ? 0.03 : 0)) + softOpenAirTailLift * 0.10 - accentedOpenSnap * 0.08, 0.42, 0.78);
     const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25) * (1 + openAccentBloom * 0.22) * openDecayPresenceLift * (1 + openAphexMetalAir * 0.32), 0, 0.085);
     const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + softOpenAirTailLift * 0.36 + openAccentBloom * 0.05 - accentedOpenSnap * 0.09) * (1 + openAphexMetalAir * 0.18), 0.006, 0.72);
     const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
@@ -259,6 +269,11 @@
       airLowpassHz,
       airLowpassQ,
       openAccentBloom,
+      openSplashGain,
+      openSplashTailSec,
+      openSplashHz,
+      openSplashQ,
+      openSplashHold,
       openShimmerGain,
       openShimmerTailSec,
       openShimmerHz,
