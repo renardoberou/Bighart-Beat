@@ -95,10 +95,16 @@
       : [];
     const metallicSourceCount = budgetedOscillatorFrequencies.length;
     const engine = typeof s.engine === 'string' ? s.engine : '';
+    const strongAphexGlitchGesture = engine === 'aphex'
+      && audible.useGlitch
+      && (finiteOr(s.glitchGain, 0) >= 0.050 || finiteOr(s.glitchChance, 0) >= 0.24 || finiteOr(s.idmEdge, 0) >= 0.82);
     const priority = engine === 'reznor'
       ? ['useGhostTick', 'useOpenFlutter', 'useOpenSplash', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
       : engine === 'aphex'
-        ? ['useGhostTick', 'useIdmSpark', 'useOpenSplash', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
+        ? (strongAphexGlitchGesture
+          // Promote signature Aphex glitches above splash so they survive the mobile three-source cap.
+          ? ['useGhostTick', 'useIdmSpark', 'useGlitch', 'useOpenSplash', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody']
+          : ['useGhostTick', 'useIdmSpark', 'useOpenSplash', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch'])
         : ['useGhostTick', 'useOpenSplash', 'useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'];
     const selected = {
       useGhostTick: false,
@@ -160,7 +166,8 @@
     const baseMetalLevel = clamp(metal * (0.14 + profile.tone * 0.18), 0, 0.34);
     const isAphex = engine === 'aphex';
     const isReznor = engine === 'reznor';
-    const idmEdge = isAphex ? clamp(0.35 + metal * 0.10 + accentedHit * 0.45 - softHit * 0.25, 0.08, 0.95) : 0;
+    const openShape = smoothstep01(open);
+    const idmEdge = isAphex ? clamp(0.22 + metal * 0.18 + openShape * 0.12 + accentedHit * 0.43 - softHit * 0.30, 0.04, 0.95) : 0;
     const needleClosedness = Math.pow(clamp((0.78 - open) / 0.78, 0, 1), 0.70);
     const needleCharacter = isAphex ? 1 : (isReznor ? 0.38 : 0);
     const closedAccentNeedleFocus = needleClosedness * needleCharacter * accentedHit;
@@ -173,11 +180,11 @@
     const ratios = profile.ratios.slice(0, 6).map(r => clamp(r, 0.1, 12));
     const oscillatorFrequencies = ratios.map(r => clamp(205 * r * profile.bright * jitter(rand, instability), 80, 18000));
     const baseGlitchChance = clamp(profile.glitchChance || 0, 0, 0.30);
-    const glitchChance = clamp(baseGlitchChance * (isAphex ? (0.65 + idmEdge * 0.75) : 1), 0, 0.30);
+    const aphexGlitchGesture = clamp(0.25 + idmEdge * 0.70 + openShape * 0.32 + metal * accentedHit * 0.20 - softHit * 0.06, 0, 1.36);
+    const glitchChance = clamp(baseGlitchChance * (isAphex ? aphexGlitchGesture : 1), 0, 0.30);
     const glitchWillFire = glitchChance > 0 && rand01(rand) < glitchChance;
     const glitchBandpassHz = clamp(7000 * (1 + idmEdge * 0.12) * jitter(rand, 0.4), 3500, 14000);
     const attackSec = clamp(0.0009 + open * 0.0024 + instability * 0.004, 0.0008, 0.004);
-    const openShape = smoothstep01(open);
     const accentedOpenTailTighten = accentedHit * openShape;
     const tailReleaseTau = clamp((0.014 + open * 0.062 + open * open * 0.036 + instability * 0.20) * (1 - accentedOpenTailTighten * 0.10), 0.010, 0.16);
     const openTailDamp = clamp(1 - open * 0.10 - open * open * 0.16, 0.68, 1);
