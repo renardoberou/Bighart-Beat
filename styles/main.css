@@ -500,9 +500,10 @@ body.running #ss  { display: none; }
   cursor: pointer;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 640px), (pointer: coarse) {
   .hht-place-b {
-    min-height: 40px;
+    min-height: 44px;
+    min-width: 44px;
     touch-action: manipulation;
   }
 }
@@ -1049,6 +1050,14 @@ body.running #ss  { display: none; }
 .hat-place-b:active,
 .hat-place-b.on { background: var(--amber); color: var(--bg); }
 .hat-place-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+@media (max-width: 640px), (pointer: coarse) {
+  .hat-test-b,
+  .hat-place-b {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+}
 .voice-test {
   margin: 0 0 8px;
 }
