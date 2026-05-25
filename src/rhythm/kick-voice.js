@@ -29,6 +29,9 @@
     const drive = clamp(finiteOr(p.drive, 0.4), 0, 1);
     const pitchMul = clamp(profile.pitch, 0.5, 1.6);
     const decayMul = clamp(profile.decay, 0.45, 1.35);
+    const bodyMul = clamp(profile.body, 0.55, 1.15);
+    const subMul = clamp(profile.sub, 0.45, 1.15);
+    const outputTrim = clamp(profile.outputTrim, 0.70, 1.0);
     const clickHighpassHz = clamp(1800 * clamp(profile.clickHp, 0.5, 3.4), 900, 6000);
 
     const bodyDecaySec = clamp(decay * decayMul, 0.035, 1.6);
@@ -48,8 +51,9 @@
       driveAmount: clamp(drive * clamp(profile.drive, 0, 2.0), 0, 1),
       clickGain: clamp(v * click * clamp(profile.click, 0, 1.65) * 0.42, 0, 0.9),
       clickHighpassHz,
-      bodyPeakGain: clamp(v * 0.85, 0, 0.85),
-      subPeakGain: clamp(v * 0.28, 0, 0.32),
+      outputTrim,
+      bodyPeakGain: clamp(v * 0.85 * bodyMul * outputTrim, 0, 0.85),
+      subPeakGain: clamp(v * 0.28 * subMul * outputTrim, 0, 0.32),
     };
   }
 
