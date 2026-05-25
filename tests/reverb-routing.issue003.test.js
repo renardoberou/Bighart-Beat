@@ -22,6 +22,7 @@ function extractFunction(name) {
 
 const buildGraph = extractFunction('buildGraph');
 const routeVoice = extractFunction('routeVoice');
+const resolveReverbGateTailHoldSec = extractFunction('resolveReverbGateTailHoldSec');
 
 assert(/N\.bus\.connect\(N\.mstSum\)/.test(buildGraph), 'dry bus still feeds the master sum');
 assert(!/N\.bus\.connect\(N\.revSend\)/.test(buildGraph), 'full dry bus must not feed the reverb send');
@@ -30,7 +31,10 @@ assert(!/N\.bus\.connect\(N\.conv\)/.test(buildGraph), 'full dry bus must never 
 assert(/N\.revSend\.connect\(N\.revGate\)/.test(buildGraph), 'reverb send remains the only intentional input to the gated convolver path');
 assert(/Reverb input is per-track only/.test(buildGraph), 'code documents intentional per-track-only reverb routing');
 assert(/const\s+reverbSendActive\s*=\s*tr\.revS\s*&&\s*FX\.rev\.on\s*&&\s*FX\.rev\.wet\s*>\s*0/.test(routeVoice), 'routeVoice blocks fresh reverb injection when global reverb is off or wet is zero');
-assert(/if\s*\(reverbSendActive\)\s*\{[\s\S]*?out\.connect\(rs\);\s*rs\.connect\(N\.revSend\);[\s\S]*?triggerGate\(t\);[\s\S]*?\}/.test(routeVoice), 'routeVoice injects new reverb signal only when track/global reverb is live, through the attenuated revSend');
+assert(/sourceTailAware/.test(resolveReverbGateTailHoldSec) && /cleanupTailSec/.test(resolveReverbGateTailHoldSec), 'reverb gate tail hold resolver remains source-tail-aware');
+assert(/const\s+reverbTailHoldSec\s*=\s*(?:typeof\s+resolveReverbGateTailHoldSec\s*===\s*['"]function['"]\s*\?\s*)?resolveReverbGateTailHoldSec\(tr,\s*cleanupTailSec\)(?:\s*:\s*0)?/.test(routeVoice), 'routeVoice resolves the source-tail reverb gate hold from the track and cleanup tail');
+assert(/if\s*\(reverbSendActive\)\s*\{[\s\S]*?out\.connect\(rs\);\s*rs\.connect\(N\.revSend\);[\s\S]*?triggerGate\(t,\s*reverbTailHoldSec\);[\s\S]*?\}/.test(routeVoice), 'routeVoice injects new reverb signal only when track/global reverb is live, through the attenuated revSend, and passes the source-tail hold to the gate');
+assert(!/triggerGate\(t\);/.test(routeVoice.replace(/\/\/.*$/gm, '')), 'routeVoice should not use the stale bare triggerGate(t) call');
 assert(!/rs\.connect\(N\.revGate\)/.test(routeVoice), 'per-hit reverb sends should not bypass revSend attenuation');
 assert(/out\.connect\(N\.bus\)/.test(routeVoice), 'voices still feed the dry bus regardless of reverb send');
 

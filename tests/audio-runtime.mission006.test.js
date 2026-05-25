@@ -6,6 +6,12 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const js = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 
+function stripJsComments(source) {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
 function extractFunction(name) {
   const marker = `function ${name}(`;
   const start = js.indexOf(marker);
@@ -21,9 +27,9 @@ function extractFunction(name) {
   throw new Error(`${name} function body did not close`);
 }
 
-const routeVoice = extractFunction('routeVoice');
+const routeVoice = stripJsComments(extractFunction('routeVoice'));
 assert(
-  /const\s+reverbSendActive\s*=\s*tr\.revS\s*&&\s*FX\.rev\.on\s*&&\s*FX\.rev\.wet\s*>\s*0[\s\S]*?if\s*\(reverbSendActive\)\s*\{[\s\S]*?out\.connect\(rs\);\s*rs\.connect\(N\.revSend\);[\s\S]*?triggerGate\(t\);[\s\S]*?\}/.test(routeVoice),
+  /const\s+reverbSendActive\s*=\s*tr\.revS\s*&&\s*FX\.rev\.on\s*&&\s*FX\.rev\.wet\s*>\s*0[\s\S]*?if\s*\(reverbSendActive\)\s*\{[\s\S]*?out\.connect\(rs\);\s*rs\.connect\(N\.revSend\);[\s\S]*?const\s+reverbTailHoldSec\s*=[\s\S]*?resolveReverbGateTailHoldSec\(tr,\s*cleanupTailSec\)[\s\S]*?triggerGate\(t,\s*reverbTailHoldSec\);[\s\S]*?\}/.test(routeVoice),
   'live track reverb sends must feed N.revSend so send attenuation is preserved before the gated reverb path',
 );
 assert(

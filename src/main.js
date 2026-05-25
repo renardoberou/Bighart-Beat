@@ -44,6 +44,8 @@ const DLY_SEND_TRIM = 0.55;
 const REV_SEND_TRIM = 0.5;
 const WRECK_SEND_TRIM = 0.7;
 const ROUTE_VOICE_DEFAULT_CLEANUP_TAIL_SEC = 3;
+const REV_GATE_SOURCE_TAIL_MAX_EXTRA_SEC = 0.35;
+const REV_GATE_SOURCE_TAIL_MAX_TOTAL_SEC = 0.75;
 const GATE_ANALOG_JITTER_MS = 6;
 const GATE_ANALOG_CLOSED_DB = 3;
 const ENGINE_PROFILES = EngineProfiles.ENGINE_PROFILES;
@@ -497,6 +499,14 @@ function scheduleRouteVoiceCleanup(nodes, t, cleanupTailSec) {
   }, delaySec * 1000);
 }
 
+function resolveReverbGateTailHoldSec(tr, cleanupTailSec) {
+  const id = tr && tr.id;
+  const name = tr && tr.n;
+  const sourceTailAware = id === 'hihat' || id === 'synth' || id === 'hht' || id === 'syn' || name === 'HHT' || name === 'SYN';
+  if (!sourceTailAware || !Number.isFinite(cleanupTailSec)) return 0;
+  return clamp(cleanupTailSec, 0, REV_GATE_SOURCE_TAIL_MAX_EXTRA_SEC);
+}
+
 function routeVoice(t, ti, cleanupTailSec) {
   // create a per-hit gain so we can split to bus, delaySend, revSend at track-level
   const tr = TRACKS[ti];
@@ -515,7 +525,9 @@ function routeVoice(t, ti, cleanupTailSec) {
     const rs = A.createGain(); rs.gain.value = REV_SEND_TRIM;
     out.connect(rs); rs.connect(N.revSend);
     routeNodes.push(rs);
-    triggerGate(t);
+    // Keep the send path unchanged while passing an optional source-tail hold to the reverb gate.
+    const reverbTailHoldSec = typeof resolveReverbGateTailHoldSec === 'function' ? resolveReverbGateTailHoldSec(tr, cleanupTailSec) : 0;
+    triggerGate(t, reverbTailHoldSec);
   }
   const wreckSendActive = tr.wreckS && !tr.mute && tr.vol > 0 && shouldFeedWreckProcessor();
   if (wreckSendActive) {
@@ -527,10 +539,14 @@ function routeVoice(t, ti, cleanupTailSec) {
   return out;
 }
 
-function triggerGate(t) {
+function triggerGate(t, sourceTailHoldSec = 0) {
   if (!FX.rev.on) return;
   const g = N.revGate.gain;
-  const atk = .003, hold = FX.rev.gate / 1000, rel = .020;
+  const atk = .003, rel = .020;
+  const rawBaseHold = Number.isFinite(FX.rev.gate) ? FX.rev.gate / 1000 : 0;
+  const baseHold = Math.min(REV_GATE_SOURCE_TAIL_MAX_TOTAL_SEC, Math.max(0, rawBaseHold));
+  const extraHold = Number.isFinite(sourceTailHoldSec) ? Math.max(0, sourceTailHoldSec) : 0;
+  const hold = Math.min(REV_GATE_SOURCE_TAIL_MAX_TOTAL_SEC, baseHold + extraHold);
   cancelAndHoldOrSmoothParam(g, t, { floor: 0, smoothTime: .003, fallbackValue: 0 });
   g.linearRampToValueAtTime(1, t + atk);
   g.setValueAtTime(1, t + atk + hold);
