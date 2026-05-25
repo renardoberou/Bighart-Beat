@@ -667,8 +667,8 @@ function synthHihat(t, v, p) {
     hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useOpenBody && spec.openBodyGain > 0.001 ? spec.openBodyTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useOpenFlutter && spec.openFlutterGain > 0.001 ? spec.openFlutterTailSec + spec.tailReleaseTau : 0,
-    hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau : 0,
-    hihatBudget.useGhostTick && spec.ghostTickGain > 0.001 ? spec.ghostTickTailSec + spec.tailReleaseTau : 0,
+    hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau * 4 : 0,
+    hihatBudget.useGhostTick && spec.ghostTickGain > 0.001 ? spec.ghostTickTailSec + spec.tailReleaseTau * 4 : 0,
     spec.metalGain > 0.001 ? spec.metalTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useGlitch && spec.glitchWillFire ? .010 : 0
   );
@@ -736,9 +736,9 @@ function synthHihat(t, v, p) {
     const sparkGain = A.createGain();
     sparkGain.gain.setValueAtTime(0, t);
     sparkGain.gain.linearRampToValueAtTime(clamp(v * spec.idmSparkGain, 0, .065), t + Math.min(.0015, spec.attackSec));
-    sparkGain.gain.exponentialRampToValueAtTime(.001, t + spec.idmSparkTailSec);
+    sparkGain.gain.setTargetAtTime(.001, t + spec.idmSparkTailSec, spec.tailReleaseTau);
     spark.connect(sparkFilter); sparkFilter.connect(sparkGain); sparkGain.connect(choke);
-    spark.start(t); spark.stop(t + spec.idmSparkTailSec + spec.tailReleaseTau);
+    spark.start(t); spark.stop(t + spec.idmSparkTailSec + spec.tailReleaseTau * 4);
   }
   if (hihatBudget.useGhostTick && spec.ghostTickGain > 0.001) {
     const ghostTick = A.createBufferSource(); ghostTick.buffer = nz; ghostTick.loop = true;
@@ -748,9 +748,9 @@ function synthHihat(t, v, p) {
     const ghostGain = A.createGain();
     ghostGain.gain.setValueAtTime(0, t);
     ghostGain.gain.linearRampToValueAtTime(clamp(v * spec.ghostTickGain, 0, .04), t + Math.min(.0012, spec.attackSec));
-    ghostGain.gain.exponentialRampToValueAtTime(.001, t + spec.ghostTickTailSec);
+    ghostGain.gain.setTargetAtTime(.001, t + spec.ghostTickTailSec, spec.tailReleaseTau);
     ghostTick.connect(ghostFilter); ghostFilter.connect(ghostGain); ghostGain.connect(choke);
-    ghostTick.start(t); ghostTick.stop(t + spec.ghostTickTailSec + spec.tailReleaseTau);
+    ghostTick.start(t); ghostTick.stop(t + spec.ghostTickTailSec + spec.tailReleaseTau * 4);
   }
   // metallic tone mix — only if metal > 0
   if (spec.metalGain > 0.001 && metallicFrequencies.length) {

@@ -66,7 +66,8 @@ assert(/if \(hihatBudget\.useGhostTick && spec\.ghostTickGain > 0\.001\)/.test(m
 assert(/ghostFilter\.frequency\.value\s*=\s*spec\.ghostTickHz/.test(main), 'ghost tick filter uses resolver frequency');
 assert(/ghostFilter\.Q\.value\s*=\s*spec\.ghostTickQ/.test(main), 'ghost tick filter uses resolver Q');
 assert(/ghostGain\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.ghostTickGain,\s*0,\s*\.04\),\s*t \+ Math\.min\(\.0012,\s*spec\.attackSec\)\)/.test(main), 'ghost tick gain uses velocity, resolver gain, and headroom cap');
+assert(/ghostGain\.gain\.setTargetAtTime\(\.001,\s*t \+ spec\.ghostTickTailSec,\s*spec\.tailReleaseTau\)/.test(main), 'ghost tick tail uses resolver tail and release tau');
 assert(/ghostTick\.connect\(ghostFilter\);\s*ghostFilter\.connect\(ghostGain\);\s*ghostGain\.connect\(choke\);/.test(main), 'ghost tick routes through the shared hihat choke/polish path');
-assert(/ghostTick\.stop\(t \+ spec\.ghostTickTailSec \+ spec\.tailReleaseTau\)/.test(main), 'ghost tick stops after its bounded short tail');
+assert(/ghostTick\.stop\(t \+ spec\.ghostTickTailSec \+ spec\.tailReleaseTau \* 4\)/.test(main), 'ghost tick stops after its full bounded resolver release tail');
 
 console.log('Issue 003 hihat ghost tick checks passed.');
