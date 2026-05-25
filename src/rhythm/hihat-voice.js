@@ -180,7 +180,7 @@
     const openTailDamp = clamp(1 - open * 0.10 - open * open * 0.16, 0.68, 1);
     const tailHeadroomTrim = clamp(1 - open * 0.08 - open * open * 0.14 - accentedHit * 0.03, 0.70, 1);
     const openSoftAirBloom = openShape * softHit;
-    const velocityTail = clamp(1 - softHit * 0.12 + openSoftAirBloom * 0.22 - accentedOpenTailTighten * 0.10, 0.82, 1.18);
+    const velocityTail = clamp(1 - softHit * 0.06 + openSoftAirBloom * 0.42 - accentedOpenTailTighten * 0.16, 0.78, 1.28);
     const noiseTailSec = clamp(decaySec * characterTailDamp * (1 + open * 0.08) * velocityTail, 0.006, 0.70);
     const metalTailSec = clamp(decaySec * characterTailDamp * (0.72 + open * 0.08) * velocityTail, 0.004, 0.56);
     const transientGain = clamp((1.12 - open * 0.18 + profile.tone * 0.025) * characterTransient * (1 - softHit * 0.08 + accentedHit * 0.05), 0.8, 1.18);
@@ -193,12 +193,12 @@
     const softOpenAirTailLift = openShape * softHit;
     const accentedOpenSnap = openShape * accentedHit;
     const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25) * (1 + openAccentBloom * 0.22) * openDecayPresenceLift * (1 + openAphexMetalAir * 0.32), 0, 0.085);
-    const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + softOpenAirTailLift * 0.22 + openAccentBloom * 0.05 - accentedOpenSnap * 0.04) * (1 + openAphexMetalAir * 0.18), 0.006, 0.72);
+    const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + softOpenAirTailLift * 0.36 + openAccentBloom * 0.05 - accentedOpenSnap * 0.09) * (1 + openAphexMetalAir * 0.18), 0.006, 0.72);
     const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
-    const openShimmerQ = clamp(1.6 + open * 1.2 + instability * 10 + openAphexMetalAir * 0.72, 1.2, 4.2);
+    const openShimmerQ = clamp(1.6 + open * 1.2 + instability * 10 + openAphexMetalAir * 0.72 + accentedOpenSnap * 0.32 - softOpenAirTailLift * 0.18, 1.2, 4.2);
     const openBodyCharacter = engine === '808' ? 0.74 : (engine === '909' ? 1.0 : (isReznor ? 1.12 : 1.24));
     const openBodyGain = clamp(openShape * (0.034 + profile.tone * 0.035 + metal * 0.012) * openBodyCharacter * (0.72 + accentedHit * 0.38 - softHit * 0.22) * (1 + openAccentBloom * 0.28) * openDecayPresenceLift * jitter(rand, instability * 0.35), 0, 0.11);
-    const openBodyTailSec = clamp(noiseTailSec * (0.70 + open * 0.12) * (1 + softOpenAirTailLift * 0.12 + openAccentBloom * 0.04 - accentedOpenSnap * 0.05), 0.004, 0.64);
+    const openBodyTailSec = clamp(noiseTailSec * (0.70 + open * 0.12) * (1 + softOpenAirTailLift * 0.18 + openAccentBloom * 0.04 - accentedOpenSnap * 0.08), 0.004, 0.64);
     const openBodyHz = clamp(4200 * profile.bright * (0.95 + profile.tone * 0.28) * (1 + open * 0.20) * (1 - softHit * 0.06 + accentedHit * 0.10) * jitter(rand, instability * 0.45), 2600, 12000);
     const openBodyQ = clamp(0.65 + open * 0.55 + profile.tone * 0.75 + instability * 8, 0.45, 2.8);
     const idmSparkCharacter = isAphex ? 1 : (isReznor ? 0.58 : 0);
@@ -216,7 +216,7 @@
     );
     const openFlutterEnergy = clamp(openShape * openFlutterCharacter * (0.42 + metal * 0.28 + accentedHit * 0.48 - softHit * 0.42), 0, 1);
     const openFlutterGain = clamp(openFlutterEnergy * (isAphex ? 0.038 : 0.025) * (1 + openMetalFlutter * 0.78 + openSizzleTailBias * 0.42) * jitter(rand, instability * 0.55), 0, 0.045);
-    const openFlutterVelocityTail = clamp(1 + softOpenAirTailLift * 0.16 - accentedOpenSnap * 0.09, 0.86, 1.16);
+    const openFlutterVelocityTail = clamp(1 + softOpenAirTailLift * 0.28 - accentedOpenSnap * 0.16, 0.80, 1.24);
     const openFlutterTailSec = clamp((0.018 + open * 0.048 + instability * 0.60) * (1 + openMetalFlutter * 0.08 + openSizzleTailBias * 0.55 - accentedHit * 0.04) * openFlutterVelocityTail, 0.004, 0.16);
     const openFlutterHz = clamp(7200 * profile.bright * (1 + open * 0.14 + metal * openMetalFlutter * 0.10 + accentedHit * 0.06 + openSizzleTailBias * 0.08) * jitter(rand, instability * 0.8), 5200, 16000);
     const openFlutterQ = clamp(3.2 + openFlutterEnergy * 3.2 + openMetalFlutter * 1.35 + openSizzleTailBias * 2.0 + instability * 45, 2.5, 10);
