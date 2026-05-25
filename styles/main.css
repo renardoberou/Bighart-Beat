@@ -236,7 +236,7 @@ body.running #ss  { display: none; }
 
 @media (max-width: 640px) {
   #engineSel .div-b {
-    min-height: 40px;
+    min-height: 44px;
     touch-action: manipulation;
   }
 }
@@ -1208,6 +1208,13 @@ body.running #ss  { display: none; }
 .div-b.on {
   background: var(--sky); color: var(--text);
   border-color: var(--skyLt);
+}
+
+@media (pointer: coarse), (max-width: 640px) {
+  .div-b {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
 }
 
 /* MASTER strip */
