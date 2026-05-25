@@ -161,6 +161,7 @@
     const idmEdge = isAphex ? clamp(0.35 + metal * 0.10 + accentedHit * 0.45 - softHit * 0.25, 0.08, 0.95) : 0;
     const needleClosedness = Math.pow(clamp((0.78 - open) / 0.78, 0, 1), 0.70);
     const needleCharacter = isAphex ? 1 : (isReznor ? 0.38 : 0);
+    const closedAccentNeedleFocus = needleClosedness * needleCharacter * accentedHit;
     const metallicNeedlePinch = clamp(
       needleClosedness * needleCharacter * (0.16 + metal * 0.22 + accentedHit * 0.54 - softHit * 0.13),
       0,
@@ -203,10 +204,11 @@
     const openBodyQ = clamp(0.65 + open * 0.55 + profile.tone * 0.75 + instability * 8, 0.45, 2.8);
     const idmSparkCharacter = isAphex ? 1 : (isReznor ? 0.58 : 0);
     const idmSparkEnergy = clamp((0.36 + metal * 0.26 + accentedHit * 0.64 - softHit * 0.28) * idmSparkCharacter, 0, 1);
-    const idmSparkGain = clamp(idmSparkEnergy * (isAphex ? 0.052 : 0.034) * (1 + metallicNeedlePinch * 0.16) * jitter(rand, instability * 0.5), 0, 0.065);
-    const idmSparkTailSec = clamp(0.0065 + open * 0.006 + instability * 0.12 - accentedHit * 0.0012 - metallicNeedlePinch * 0.0016, 0.003, 0.045);
+    const idmSparkOpenFade = idmSparkCharacter > 0 ? (0.68 + needleClosedness * 0.32) : 1;
+    const idmSparkGain = clamp(idmSparkEnergy * (isAphex ? 0.052 : 0.034) * idmSparkOpenFade * (1 + metallicNeedlePinch * 0.16 + closedAccentNeedleFocus * 0.18) * jitter(rand, instability * 0.5), 0, 0.065);
+    const idmSparkTailSec = clamp(0.0065 + open * 0.006 + instability * 0.12 - accentedHit * 0.0012 - metallicNeedlePinch * 0.0016 - closedAccentNeedleFocus * 0.0011, 0.003, 0.045);
     const idmSparkHz = clamp(freq * (isAphex ? 1.62 : 1.36) * profile.bright * (1 + accentedHit * 0.035 + metallicNeedlePinch * 0.018) * jitter(rand, instability * 0.7), 9000, 18000);
-    const idmSparkQ = clamp(5.0 + idmSparkEnergy * 4.4 + metallicNeedlePinch * 1.8 + instability * 38, 3, 14);
+    const idmSparkQ = clamp(5.0 + idmSparkEnergy * 4.4 + metallicNeedlePinch * 1.8 + closedAccentNeedleFocus * 0.9 + instability * 38, 3, 14);
     const openFlutterCharacter = isAphex ? 1 : (isReznor ? 0.45 : 0);
     const openMetalFlutter = isAphex ? openShape * smoothstep01((metal - 0.55) / 0.45) : 0;
     const openSizzleTailBias = clamp(
