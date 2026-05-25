@@ -56,12 +56,16 @@ assert(
   'synthHihat applies resolver transientGain and attackSec to the noise attack'
 );
 assert(
-  /ng\.gain\.exponentialRampToValueAtTime\(\.001,\s*t\s*\+\s*spec\.noiseTailSec\)/.test(main),
-  'synthHihat uses resolver-provided noiseTailSec instead of a hard-coded decay tail'
+  /ng\.gain\.setTargetAtTime\(\.001,\s*t\s*\+\s*spec\.noiseTailSec\s*\*\s*spec\.openTailDamp,\s*spec\.tailReleaseTau\)/.test(main),
+  'synthHihat uses resolver-provided noiseTailSec/openTailDamp/releaseTau for one coherent noise tail path'
 );
 assert(
-  /mg\.gain\.exponentialRampToValueAtTime\(\.001,\s*t\s*\+\s*spec\.metalTailSec\)/.test(main),
-  'synthHihat uses resolver-provided metalTailSec for metallic hihat tail shaping'
+  /mg\.gain\.setTargetAtTime\(\.001,\s*t\s*\+\s*spec\.metalTailSec\s*\*\s*spec\.openTailDamp,\s*spec\.tailReleaseTau\s*\*\s*\.75\)/.test(main),
+  'synthHihat uses resolver-provided metalTailSec/openTailDamp/releaseTau for one coherent metallic hihat tail path'
+);
+assert(
+  /o\.start\(t\);\s*o\.stop\(t\s*\+\s*spec\.metalTailSec\s*\+\s*spec\.tailReleaseTau\s*\*\s*4\)/.test(main),
+  'synthHihat keeps metallic oscillators alive through the resolver release tail instead of cutting at the nominal tail'
 );
 assert(
   /function\s+previewHihat\s*\(\s*openAmount\s*\)\s*\{[\s\S]*const\s+p\s*=\s*\{\s*\.\.\.tr\.p,\s*open:\s*openAmount\s*\}[\s\S]*synthHihat\(t,\s*HIHAT_NORMAL_VELOCITY,\s*p\)/.test(main),

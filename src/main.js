@@ -669,7 +669,7 @@ function synthHihat(t, v, p) {
     hihatBudget.useOpenFlutter && spec.openFlutterGain > 0.001 ? spec.openFlutterTailSec + spec.tailReleaseTau : 0,
     hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau : 0,
     hihatBudget.useGhostTick && spec.ghostTickGain > 0.001 ? spec.ghostTickTailSec + spec.tailReleaseTau : 0,
-    spec.metalGain > 0.001 ? spec.metalTailSec + .025 : 0,
+    spec.metalGain > 0.001 ? spec.metalTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useGlitch && spec.glitchWillFire ? .010 : 0
   );
   const dest = routeVoice(t, 2, hihatTailSec);
@@ -693,7 +693,6 @@ function synthHihat(t, v, p) {
   ng.gain.setValueAtTime(0, t);
   ng.gain.linearRampToValueAtTime(clamp(v * spec.noiseGain * spec.transientGain, 0, .72), t + spec.attackSec);
   ng.gain.setTargetAtTime(.001, t + spec.noiseTailSec * spec.openTailDamp, spec.tailReleaseTau);
-  ng.gain.exponentialRampToValueAtTime(.001, t + spec.noiseTailSec);
   ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(choke);
   ns.start(t); ns.stop(t + spec.noiseTailSec + spec.tailReleaseTau * 4);
   if (hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001) {
@@ -703,7 +702,6 @@ function synthHihat(t, v, p) {
     sg.gain.setValueAtTime(0, t);
     sg.gain.linearRampToValueAtTime(clamp(v * spec.openShimmerGain * openAccentBloomLift, 0, .085), t + spec.attackSec);
     sg.gain.setTargetAtTime(.001, t + spec.openShimmerTailSec * spec.openTailDamp, spec.tailReleaseTau);
-    sg.gain.exponentialRampToValueAtTime(.001, t + spec.openShimmerTailSec);
     shimmer.connect(sf); sf.connect(sg); sg.connect(choke);
     shimmer.start(t); shimmer.stop(t + spec.openShimmerTailSec + spec.tailReleaseTau * 4);
   }
@@ -714,7 +712,6 @@ function synthHihat(t, v, p) {
     bg.gain.setValueAtTime(0, t);
     bg.gain.linearRampToValueAtTime(clamp(v * spec.openBodyGain * openAccentBloomLift, 0, .11), t + spec.attackSec);
     bg.gain.setTargetAtTime(.001, t + spec.openBodyTailSec * spec.openTailDamp, spec.tailReleaseTau);
-    bg.gain.exponentialRampToValueAtTime(.001, t + spec.openBodyTailSec);
     body.connect(bf); bf.connect(bg); bg.connect(choke);
     body.start(t); body.stop(t + spec.openBodyTailSec + spec.tailReleaseTau * 4);
   }
@@ -728,7 +725,6 @@ function synthHihat(t, v, p) {
     flutterGain.gain.linearRampToValueAtTime(clamp(v * spec.openFlutterGain, 0, .045), t + Math.min(.002, spec.attackSec));
     const openSizzleTailHold = clamp(.42 + spec.openSizzleTailBias * .9, .42, .69);
     flutterGain.gain.setTargetAtTime(.001, t + spec.openFlutterTailSec * openSizzleTailHold, spec.tailReleaseTau * .45);
-    flutterGain.gain.exponentialRampToValueAtTime(.001, t + spec.openFlutterTailSec);
     flutter.connect(flutterFilter); flutterFilter.connect(flutterGain); flutterGain.connect(choke);
     flutter.start(t); flutter.stop(t + spec.openFlutterTailSec + spec.tailReleaseTau);
   }
@@ -762,7 +758,6 @@ function synthHihat(t, v, p) {
     mg.gain.setValueAtTime(0, t);
     mg.gain.linearRampToValueAtTime(clamp(v * spec.metalGain * spec.tailHeadroomTrim, 0, .34), t + Math.max(.0008, spec.attackSec * .8));
     mg.gain.setTargetAtTime(.001, t + spec.metalTailSec * spec.openTailDamp, spec.tailReleaseTau * .75);
-    mg.gain.exponentialRampToValueAtTime(.001, t + spec.metalTailSec);
     const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = spec.metalHighpassHz;
     mg.connect(hp); hp.connect(choke);
     const metallicOscillatorGain = clamp(spec.oscillatorGain * (spec.oscillatorFrequencies.length / metallicFrequencies.length), 0, .25);
@@ -771,7 +766,7 @@ function synthHihat(t, v, p) {
       o.frequency.value = frequency;
       const og = A.createGain(); og.gain.value = metallicOscillatorGain;
       o.connect(og); og.connect(mg);
-      o.start(t); o.stop(t + spec.metalTailSec + .025);
+      o.start(t); o.stop(t + spec.metalTailSec + spec.tailReleaseTau * 4);
     }
   }
   if (hihatBudget.useGlitch && spec.glitchWillFire) {
