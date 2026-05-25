@@ -23,14 +23,15 @@ const PREVIOUS_TOKENS = [
   'v=hihat-metal-air-20260524',
   'v=hihat-place-silent-20260524',
   'v=comp-detector-truth-20260524',
+  'v=hihat-sizzle-tail-20260524',
 ];
 const EXPECTED_TOKEN = 'v=hihat-flutter-20260523';
-const HIHAT_SIZZLE_TOKEN = 'v=hihat-sizzle-tail-20260524';
-const HIHAT_VOICE_TOKEN = HIHAT_SIZZLE_TOKEN;
+const HIHAT_OPEN_VELOCITY_TAIL_TOKEN = 'v=hihat-open-velocity-tail-20260524';
+const HIHAT_VOICE_TOKEN = HIHAT_OPEN_VELOCITY_TAIL_TOKEN;
 const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
 const SYNTH_VOICE_TOKEN = SYNTH_808_BODY_TOKEN;
 const MAIN_JS_TOKEN = 'v=wreck-audible-send-20260524-bpm-tap-hold';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|ether-mode-audition|ratchet-edit-audition|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-flutter(?:-velocity)?|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|ether-mode-audition|ratchet-edit-audition|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN) {
   assert(

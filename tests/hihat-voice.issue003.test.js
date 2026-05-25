@@ -115,6 +115,17 @@ assert(accentedVelocity.noiseGain <= normalVelocity.noiseGain, 'accented hihat d
 const softAphex = resolveHihatVoiceSpec('aphex', baseParams, () => 0.5, 0.25);
 const normalAphex = resolveHihatVoiceSpec('aphex', baseParams, () => 0.5, 0.75);
 const accentedAphex = resolveHihatVoiceSpec('aphex', baseParams, () => 0.5, 1.0);
+const musicalOpenParams = { freq: 9000, decay: 0.16, open: 0.8, metal: 0.7 };
+const softMusicalOpenAphex = resolveHihatVoiceSpec('aphex', musicalOpenParams, () => 0.5, 0.35);
+const accentedMusicalOpenAphex = resolveHihatVoiceSpec('aphex', musicalOpenParams, () => 0.5, 1.0);
+assert(softMusicalOpenAphex.openShimmerTailSec > accentedMusicalOpenAphex.openShimmerTailSec * 1.08, 'soft musical open aphex hihat keeps a clearly longer airy shimmer tail than accented open hit');
+assert(softMusicalOpenAphex.openFlutterTailSec > accentedMusicalOpenAphex.openFlutterTailSec * 1.04, 'soft musical open aphex hihat lets IDM flutter air hang longer than the snappier accented open hit');
+assert(softMusicalOpenAphex.transientGain < accentedMusicalOpenAphex.transientGain * 0.94, 'soft musical open aphex hihat has a clearly lower transient than accented open hit');
+assert(accentedMusicalOpenAphex.airLowpassHz > softMusicalOpenAphex.airLowpassHz + 600, 'accented musical open aphex hihat remains brighter than the softer airy hit');
+assert(accentedMusicalOpenAphex.openAccentBloom > softMusicalOpenAphex.openAccentBloom * 3, 'accented musical open aphex hihat keeps a snappier accent bloom proxy');
+assert(accentedMusicalOpenAphex.outputTrim <= softMusicalOpenAphex.outputTrim, 'accented musical open aphex hihat does not spend extra output headroom versus soft open hit');
+assertFiniteBounded(softMusicalOpenAphex, 'soft musical open aphex hihat');
+assertFiniteBounded(accentedMusicalOpenAphex, 'accented musical open aphex hihat');
 assert(softAphex.idmEdge < normalAphex.idmEdge, 'soft aphex hihat has calmer IDM edge than normal velocity');
 assert(accentedAphex.idmEdge > normalAphex.idmEdge, 'accented aphex hihat has stronger IDM edge than normal velocity');
 assert(softAphex.glitchChance < normalAphex.glitchChance, 'soft aphex hihat has lower glitch probability than normal velocity');

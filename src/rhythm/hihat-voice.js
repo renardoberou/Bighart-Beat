@@ -215,7 +215,8 @@
     );
     const openFlutterEnergy = clamp(openShape * openFlutterCharacter * (0.42 + metal * 0.28 + accentedHit * 0.48 - softHit * 0.42), 0, 1);
     const openFlutterGain = clamp(openFlutterEnergy * (isAphex ? 0.038 : 0.025) * (1 + openMetalFlutter * 0.78 + openSizzleTailBias * 0.42) * jitter(rand, instability * 0.55), 0, 0.045);
-    const openFlutterTailSec = clamp((0.018 + open * 0.048 + instability * 0.60) * (1 + openMetalFlutter * 0.08 + openSizzleTailBias * 0.55 - accentedHit * 0.04), 0.004, 0.16);
+    const openFlutterVelocityTail = clamp(1 + softOpenAirTailLift * 0.16 - accentedOpenSnap * 0.09, 0.86, 1.16);
+    const openFlutterTailSec = clamp((0.018 + open * 0.048 + instability * 0.60) * (1 + openMetalFlutter * 0.08 + openSizzleTailBias * 0.55 - accentedHit * 0.04) * openFlutterVelocityTail, 0.004, 0.16);
     const openFlutterHz = clamp(7200 * profile.bright * (1 + open * 0.14 + metal * openMetalFlutter * 0.10 + accentedHit * 0.06 + openSizzleTailBias * 0.08) * jitter(rand, instability * 0.8), 5200, 16000);
     const openFlutterQ = clamp(3.2 + openFlutterEnergy * 3.2 + openMetalFlutter * 1.35 + openSizzleTailBias * 2.0 + instability * 45, 2.5, 10);
     const ghostClosedness = Math.pow(clamp((0.72 - open) / 0.72, 0, 1), 1.35);
