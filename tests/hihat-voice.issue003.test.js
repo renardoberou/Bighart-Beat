@@ -120,6 +120,8 @@ const softMusicalOpenAphex = resolveHihatVoiceSpec('aphex', musicalOpenParams, (
 const accentedMusicalOpenAphex = resolveHihatVoiceSpec('aphex', musicalOpenParams, () => 0.5, 1.0);
 assert(softMusicalOpenAphex.openShimmerTailSec > accentedMusicalOpenAphex.openShimmerTailSec * 1.08, 'soft musical open aphex hihat keeps a clearly longer airy shimmer tail than accented open hit');
 assert(softMusicalOpenAphex.openFlutterTailSec > accentedMusicalOpenAphex.openFlutterTailSec * 1.04, 'soft musical open aphex hihat lets IDM flutter air hang longer than the snappier accented open hit');
+assert(softMusicalOpenAphex.noiseTailSec > accentedMusicalOpenAphex.noiseTailSec * 1.08, 'soft musical open aphex hihat blooms with a clearly longer main noise tail than accented open hit');
+assert(softMusicalOpenAphex.metalTailSec > accentedMusicalOpenAphex.metalTailSec * 1.08, 'soft musical open aphex hihat keeps metallic air lingering longer than accented open hit');
 assert(softMusicalOpenAphex.transientGain < accentedMusicalOpenAphex.transientGain * 0.94, 'soft musical open aphex hihat has a clearly lower transient than accented open hit');
 assert(accentedMusicalOpenAphex.airLowpassHz > softMusicalOpenAphex.airLowpassHz + 600, 'accented musical open aphex hihat remains brighter than the softer airy hit');
 assert(accentedMusicalOpenAphex.openAccentBloom > softMusicalOpenAphex.openAccentBloom * 3, 'accented musical open aphex hihat keeps a snappier accent bloom proxy');
