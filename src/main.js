@@ -684,6 +684,7 @@ function synthHihat(t, v, p) {
     hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001 ? spec.openShimmerTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useOpenBody && spec.openBodyGain > 0.001 ? spec.openBodyTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useOpenFlutter && spec.openFlutterGain > 0.001 ? spec.openFlutterTailSec + spec.tailReleaseTau : 0,
+    hihatBudget.useMetallicRattle && spec.metallicRattleGain > 0.001 ? spec.metallicRattleTailSec + spec.tailReleaseTau * 3 : 0,
     hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001 ? spec.idmSparkTailSec + spec.tailReleaseTau * 4 : 0,
     hihatBudget.useGhostTick && spec.ghostTickGain > 0.001 ? spec.ghostTickTailSec + spec.tailReleaseTau * 4 : 0,
     spec.metalGain > 0.001 ? spec.metalTailSec + spec.tailReleaseTau * 4 : 0,
@@ -756,6 +757,19 @@ function synthHihat(t, v, p) {
     flutterGain.gain.setTargetAtTime(.001, t + spec.openFlutterTailSec * openSizzleTailHold, spec.tailReleaseTau * .45);
     flutter.connect(flutterFilter); flutterFilter.connect(flutterGain); flutterGain.connect(choke);
     flutter.start(t); flutter.stop(t + spec.openFlutterTailSec + spec.tailReleaseTau);
+  }
+  if (hihatBudget.useMetallicRattle && spec.metallicRattleGain > 0.001) {
+    const metallicRattle = A.createBufferSource(); metallicRattle.buffer = nz; metallicRattle.loop = true;
+    const metallicRattleFilter = A.createBiquadFilter(); metallicRattleFilter.type = 'bandpass';
+    metallicRattleFilter.frequency.value = spec.metallicRattleHz;
+    metallicRattleFilter.Q.value = spec.metallicRattleQ;
+    const metallicRattleGain = A.createGain();
+    metallicRattleGain.gain.setValueAtTime(0, t);
+    metallicRattleGain.gain.linearRampToValueAtTime(clamp(v * spec.metallicRattleGain, 0, .052), t + Math.min(.002, spec.attackSec));
+    const metallicRattleHold = clamp(.46 + spec.openSizzleTailBias * .65 + spec.openAccentBloom * .18, .46, .72);
+    metallicRattleGain.gain.setTargetAtTime(.001, t + spec.metallicRattleTailSec * metallicRattleHold, spec.tailReleaseTau * .70);
+    metallicRattle.connect(metallicRattleFilter); metallicRattleFilter.connect(metallicRattleGain); metallicRattleGain.connect(choke);
+    metallicRattle.start(t); metallicRattle.stop(t + spec.metallicRattleTailSec + spec.tailReleaseTau * 3);
   }
   if (hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001) {
     const spark = A.createBufferSource(); spark.buffer = nz; spark.loop = true;

@@ -71,6 +71,7 @@
       useOpenBody: finiteOr(s.openBodyGain, 0) > 0.001,
       useOpenFlutter: finiteOr(s.openFlutterGain, 0) > 0.001,
       useIdmSpark: finiteOr(s.idmSparkGain, 0) > 0.001,
+      useMetallicRattle: finiteOr(s.metallicRattleGain, 0) > 0.001,
       useGlitch: !!s.glitchWillFire && finiteOr(s.glitchGain, 0) > 0.001,
     };
     const oscillatorFrequencies = Array.isArray(s.oscillatorFrequencies) ? s.oscillatorFrequencies.filter(Number.isFinite) : [];
@@ -95,16 +96,31 @@
       : [];
     const metallicSourceCount = budgetedOscillatorFrequencies.length;
     const engine = typeof s.engine === 'string' ? s.engine : '';
+    const metallicRattleGain = finiteOr(s.metallicRattleGain, 0);
+    const openAmount = clamp(finiteOr(s.openAmount, finiteOr(s.open, NaN)), 0, 1);
+    const metalAmount = clamp(finiteOr(s.metalAmount, finiteOr(s.metal, NaN)), 0, 1);
+    const idmEdge = finiteOr(s.idmEdge, 0);
     const strongAphexGlitchGesture = engine === 'aphex'
       && audible.useGlitch
-      && (finiteOr(s.glitchGain, 0) >= 0.050 || finiteOr(s.glitchChance, 0) >= 0.24 || finiteOr(s.idmEdge, 0) >= 0.82);
+      && (finiteOr(s.glitchGain, 0) >= 0.050 || finiteOr(s.glitchChance, 0) >= 0.24 || idmEdge >= 0.82);
+    const strongMetallicRattleGesture = audible.useMetallicRattle
+      && engine === 'aphex'
+      && metallicRattleGain >= 0.026
+      && (openAmount >= 0.82 || metallicRattleGain >= 0.034)
+      && (metalAmount >= 0.82 || idmEdge >= 0.90);
+    const aphexPriority = strongMetallicRattleGesture
+      ? (strongAphexGlitchGesture
+        // Promote signature Aphex glitches and only hero-strength rattles above open-hat layers.
+        ? ['useGhostTick', 'useIdmSpark', 'useGlitch', 'useMetallicRattle', 'useOpenSplash', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody']
+        : ['useGhostTick', 'useIdmSpark', 'useMetallicRattle', 'useOpenSplash', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch'])
+      : (strongAphexGlitchGesture
+        // Low-level rattle must not starve louder open-hat-defining layers under mobile caps.
+        ? ['useGhostTick', 'useIdmSpark', 'useGlitch', 'useOpenSplash', 'useOpenFlutter', 'useMetallicRattle', 'useOpenShimmer', 'useOpenBody']
+        : ['useGhostTick', 'useIdmSpark', 'useOpenSplash', 'useOpenFlutter', 'useMetallicRattle', 'useOpenShimmer', 'useOpenBody', 'useGlitch']);
     const priority = engine === 'reznor'
-      ? ['useGhostTick', 'useOpenFlutter', 'useOpenSplash', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
+      ? ['useGhostTick', 'useOpenFlutter', 'useOpenSplash', 'useMetallicRattle', 'useIdmSpark', 'useOpenShimmer', 'useOpenBody', 'useGlitch']
       : engine === 'aphex'
-        ? (strongAphexGlitchGesture
-          // Promote signature Aphex glitches above splash so they survive the mobile three-source cap.
-          ? ['useGhostTick', 'useIdmSpark', 'useGlitch', 'useOpenSplash', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody']
-          : ['useGhostTick', 'useIdmSpark', 'useOpenSplash', 'useOpenFlutter', 'useOpenShimmer', 'useOpenBody', 'useGlitch'])
+        ? aphexPriority
         : ['useGhostTick', 'useOpenSplash', 'useOpenShimmer', 'useOpenBody', 'useOpenFlutter', 'useIdmSpark', 'useGlitch'];
     const selected = {
       useGhostTick: false,
@@ -113,6 +129,7 @@
       useOpenBody: false,
       useOpenFlutter: false,
       useIdmSpark: false,
+      useMetallicRattle: false,
       useGlitch: false,
     };
     let optionalSourceCount = 0;
@@ -239,6 +256,18 @@
     const openFlutterTailSec = clamp((0.018 + open * 0.048 + instability * 0.60) * (1 + openMetalFlutter * 0.08 + openSizzleTailBias * 0.55 - accentedHit * 0.04) * openFlutterVelocityTail, 0.004, 0.16);
     const openFlutterHz = clamp(7200 * profile.bright * (1 + open * 0.14 + metal * openMetalFlutter * 0.10 + accentedHit * 0.06 + openSizzleTailBias * 0.08) * jitter(rand, instability * 0.8), 5200, 16000);
     const openFlutterQ = clamp(3.2 + openFlutterEnergy * 3.2 + openMetalFlutter * 1.35 + openSizzleTailBias * 2.0 + instability * 45, 2.5, 10);
+    const metallicRattleCharacter = isAphex ? 1 : (isReznor ? 0.34 : 0);
+    const metallicRattleOpen = metallicRattleCharacter > 0 ? smoothstep01((open - 0.54) / 0.46) : 0;
+    const metallicRattleMetal = metallicRattleCharacter > 0 ? smoothstep01((metal - 0.62) / 0.38) : 0;
+    const metallicRattleEnergy = clamp(
+      metallicRattleOpen * metallicRattleMetal * metallicRattleCharacter * (0.36 + accentedHit * 0.44 + idmEdge * 0.22 - softHit * 0.18),
+      0,
+      1
+    );
+    const metallicRattleGain = clamp(metallicRattleEnergy * (isAphex ? 0.052 : 0.032) * (1 + openSizzleTailBias * 0.22) * jitter(rand, instability * 0.65), 0, 0.052);
+    const metallicRattleTailSec = clamp((0.026 + open * 0.072 + open * open * 0.034 + instability * 0.50) * (1 + metallicRattleOpen * 0.16 - accentedOpenSnap * 0.10 + softOpenAirTailLift * 0.12), 0.004, 0.18);
+    const metallicRattleHz = clamp(9800 * profile.bright * (1 + open * 0.18 + metal * 0.10 + accentedHit * 0.08 + idmEdge * 0.06) * jitter(rand, instability * 0.75), 7600, 18000);
+    const metallicRattleQ = clamp(3.0 + metallicRattleEnergy * 4.6 + metallicRattleOpen * 1.8 + metallicRattleMetal * 1.2 + instability * 34, 2.2, 12);
     const ghostClosedness = Math.pow(clamp((0.72 - open) / 0.72, 0, 1), 1.35);
     const ghostVelocityLift = smoothstep01(softHit);
     const ghostTickEnergy = clamp(ghostClosedness * (0.16 + ghostVelocityLift * 0.84) * (0.78 + metal * 0.18 + profile.tone * 0.08), 0, 1);
@@ -257,6 +286,8 @@
       engine,
       requestedEngine: requestedEngine || engine,
       fallbackEngine: engine !== requestedEngine,
+      openAmount: open,
+      metalAmount: metal,
       noiseGain: noiseLevel,
       metalGain: metalLevel,
       noiseLevel,
@@ -294,6 +325,10 @@
       openFlutterHz,
       openFlutterQ,
       openSizzleTailBias,
+      metallicRattleGain,
+      metallicRattleTailSec,
+      metallicRattleHz,
+      metallicRattleQ,
       ghostTickGain,
       ghostTickTailSec,
       ghostTickHz,
