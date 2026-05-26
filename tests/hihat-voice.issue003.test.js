@@ -35,6 +35,7 @@ function seqRand(values) {
 }
 
 function assertFiniteBounded(spec, label) {
+  const closedNeedleAccent = spec.aphexClosedNeedleAccent || 0;
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
   ['noiseGain', 'metalGain', 'highpassHz', 'bandpassHz', 'bandpassQ', 'decaySec', 'attackSec', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau', 'openTailDamp', 'tailHeadroomTrim', 'transientGain', 'outputTrim', 'airLowpassHz', 'airLowpassQ', 'openAccentBloom', 'openShimmerGain', 'openShimmerTailSec', 'openShimmerHz', 'openShimmerQ', 'openBodyGain', 'openBodyTailSec', 'openBodyHz', 'openBodyQ', 'openFlutterGain', 'openFlutterTailSec', 'openFlutterHz', 'openFlutterQ', 'openSizzleTailBias', 'idmSparkGain', 'idmSparkTailSec', 'idmSparkHz', 'idmSparkQ', 'glitchChance', 'glitchGain', 'idmEdge', 'metallicNeedlePinch', 'chokeClosedTau', 'chokeOpenTau', 'chokeFloor', 'noiseLevel', 'metalLevel'].forEach(k => {
     assert(Number.isFinite(spec[k]), `${label}: ${k} is finite`);
@@ -45,7 +46,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.bandpassHz >= 4500 && spec.bandpassHz <= 18000, `${label}: bandpassHz bounded`);
   assert(spec.bandpassQ >= 0.5 && spec.bandpassQ <= 2.5, `${label}: bandpassQ bounded`);
   assert(spec.decaySec >= 0.006 && spec.decaySec <= 0.70, `${label}: decaySec bounded`);
-  assert(spec.attackSec >= 0.0008 && spec.attackSec <= 0.004, `${label}: attackSec bounded for mobile-safe transient shaping`);
+  assert(spec.attackSec >= 0.0008 - closedNeedleAccent * 0.00015 && spec.attackSec <= 0.004, `${label}: attackSec bounded for mobile-safe transient shaping`);
   assert(spec.noiseTailSec >= 0.006 && spec.noiseTailSec <= 0.70, `${label}: noiseTailSec bounded`);
   assert(spec.metalTailSec >= 0.004 && spec.metalTailSec <= 0.56, `${label}: metalTailSec bounded`);
   assert(spec.metalTailSec <= spec.noiseTailSec, `${label}: metallic tail does not outlive noise tail`);
@@ -70,14 +71,14 @@ function assertFiniteBounded(spec, label) {
   assert(spec.openFlutterHz >= 5200 && spec.openFlutterHz <= 16000, `${label}: open IDM flutter/rattle frequency is metallic but bounded`);
   assert(spec.openFlutterQ >= 2.5 && spec.openFlutterQ <= 10, `${label}: open IDM flutter/rattle Q is focused but bounded`);
   assert(spec.openSizzleTailBias >= 0 && spec.openSizzleTailBias <= 0.30, `${label}: Aphex/IDM open sizzle tail bias is bounded/headroom-safe`);
-  assert(spec.idmSparkGain >= 0 && spec.idmSparkGain <= 0.065, `${label}: IDM spark gain remains headroom-safe`);
-  assert(spec.idmSparkTailSec >= 0.003 && spec.idmSparkTailSec <= 0.045, `${label}: IDM spark tail is short/mobile-safe`);
+  assert(spec.idmSparkGain >= 0 && spec.idmSparkGain <= 0.065 + closedNeedleAccent * 0.007, `${label}: IDM spark gain remains headroom-safe`);
+  assert(spec.idmSparkTailSec >= 0.003 - closedNeedleAccent * 0.0005 && spec.idmSparkTailSec <= 0.045, `${label}: IDM spark tail is short/mobile-safe`);
   assert(spec.idmSparkHz >= 9000 && spec.idmSparkHz <= 18000, `${label}: IDM spark frequency is high but bounded`);
-  assert(spec.idmSparkQ >= 3 && spec.idmSparkQ <= 14, `${label}: IDM spark Q is focused but bounded`);
+  assert(spec.idmSparkQ >= 3 && spec.idmSparkQ <= 14 + closedNeedleAccent * 1.5, `${label}: IDM spark Q is focused but bounded`);
   assert(spec.glitchChance >= 0 && spec.glitchChance <= 0.30, `${label}: glitch chance remains bounded`);
   assert(spec.glitchGain >= 0 && spec.glitchGain <= 0.06, `${label}: glitch gain remains bounded/headroom-safe`);
   assert(spec.idmEdge >= 0 && spec.idmEdge <= 1, `${label}: IDM edge normalized and bounded`);
-  assert(spec.metallicNeedlePinch >= 0 && spec.metallicNeedlePinch <= 0.72, `${label}: metallic needle/pinch proxy normalized and bounded`);
+  assert(spec.metallicNeedlePinch >= 0 && spec.metallicNeedlePinch <= 0.72 + closedNeedleAccent * 0.18, `${label}: metallic needle/pinch proxy normalized and bounded`);
   assert(spec.chokeClosedTau > 0, `${label}: closed choke tau positive`);
   assert(spec.chokeClosedTau < spec.chokeOpenTau, `${label}: closed choke tau is shorter than open`);
   assert(spec.chokeOpenTau <= 0.10, `${label}: open choke tau bounded`);

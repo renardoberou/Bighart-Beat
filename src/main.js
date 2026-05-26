@@ -785,7 +785,7 @@ function synthHihat(t, v, p) {
     sparkFilter.Q.value = spec.idmSparkQ;
     const sparkGain = A.createGain();
     sparkGain.gain.setValueAtTime(0, t);
-    sparkGain.gain.linearRampToValueAtTime(clamp(v * spec.idmSparkGain, 0, .065), t + Math.min(.0015, spec.attackSec));
+    sparkGain.gain.linearRampToValueAtTime(clamp(v * spec.idmSparkGain, 0, .065 + (spec.aphexClosedNeedleAccent || 0) * .007), t + Math.min(.0015, spec.attackSec));
     sparkGain.gain.setTargetAtTime(.001, t + spec.idmSparkTailSec, spec.tailReleaseTau);
     spark.connect(sparkFilter); sparkFilter.connect(sparkGain); sparkGain.connect(choke);
     spark.start(t); spark.stop(t + spec.idmSparkTailSec + spec.tailReleaseTau * 4);

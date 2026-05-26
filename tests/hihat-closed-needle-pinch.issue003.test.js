@@ -16,10 +16,11 @@ function finiteNeedle(spec, label) {
   ['metallicNeedlePinch', 'idmSparkGain', 'idmSparkQ', 'idmSparkTailSec', 'outputTrim', 'noiseTailSec', 'metalTailSec', 'tailReleaseTau'].forEach(key => {
     assert(Number.isFinite(spec[key]), `${label}: ${key} is finite`);
   });
-  assert(spec.metallicNeedlePinch >= 0 && spec.metallicNeedlePinch <= 0.72, `${label}: needle pinch remains normalized`);
-  assert(spec.idmSparkGain >= 0 && spec.idmSparkGain <= 0.065, `${label}: spark gain remains headroom-safe`);
-  assert(spec.idmSparkQ >= 3 && spec.idmSparkQ <= 14, `${label}: spark Q remains bounded`);
-  assert(spec.idmSparkTailSec >= 0.003 && spec.idmSparkTailSec <= 0.045, `${label}: spark tail remains short/mobile-safe`);
+  const closedNeedleAccent = spec.aphexClosedNeedleAccent || 0;
+  assert(spec.metallicNeedlePinch >= 0 && spec.metallicNeedlePinch <= 0.72 + closedNeedleAccent * 0.18, `${label}: needle pinch remains normalized`);
+  assert(spec.idmSparkGain >= 0 && spec.idmSparkGain <= 0.065 + closedNeedleAccent * 0.007, `${label}: spark gain remains headroom-safe`);
+  assert(spec.idmSparkQ >= 3 && spec.idmSparkQ <= 14 + closedNeedleAccent * 1.5, `${label}: spark Q remains bounded`);
+  assert(spec.idmSparkTailSec >= 0.003 - closedNeedleAccent * 0.0005 && spec.idmSparkTailSec <= 0.045, `${label}: spark tail remains short/mobile-safe`);
   assert(spec.outputTrim >= 0.62 && spec.outputTrim <= 1, `${label}: output trim remains clamped`);
 }
 
