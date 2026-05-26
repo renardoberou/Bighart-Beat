@@ -13,13 +13,14 @@ const stableRand = () => 0.5;
 const base = { freq: 9400, decay: 0.055 };
 
 function assertFiniteRattle(spec, label) {
-  ['metallicRattleGain', 'metallicRattleTailSec', 'metallicRattleHz', 'metallicRattleQ'].forEach((key) => {
+  ['metallicRattleGain', 'metallicRattleTailSec', 'metallicRattleHz', 'metallicRattleQ', 'metallicRattlePan'].forEach((key) => {
     assert(Number.isFinite(spec[key]), `${label}: ${key} is finite`);
   });
   assert(spec.metallicRattleGain >= 0 && spec.metallicRattleGain <= 0.052, `${label}: metallic rattle gain is bounded/headroom-safe`);
   assert(spec.metallicRattleTailSec >= 0.004 && spec.metallicRattleTailSec <= 0.18, `${label}: metallic rattle tail is bounded/mobile-safe`);
   assert(spec.metallicRattleHz >= 7600 && spec.metallicRattleHz <= 18000, `${label}: metallic rattle frequency stays high and bounded`);
   assert(spec.metallicRattleQ >= 2.2 && spec.metallicRattleQ <= 12, `${label}: metallic rattle Q is focused but bounded`);
+  assert(spec.metallicRattlePan >= -0.18 && spec.metallicRattlePan <= 0.18, `${label}: metallic rattle pan is subtle/bounded`);
 }
 
 const closedHighMetalAphex = resolveHihatVoiceSpec('aphex', { ...base, open: 0.08, metal: 0.96 }, stableRand, 1.0);
@@ -41,8 +42,14 @@ assert(lowMetalOpenAphex.metallicRattleGain <= 0.001, 'low-metal open aphex keep
 assert(closedHighMetalAphex.metallicRattleGain <= 0.001, 'closed aphex keeps metallic rattle effectively silent');
 assert.strictEqual(classic808.metallicRattleGain, 0, '808 does not gain the Aphex/IDM metallic rattle layer');
 assert.strictEqual(classic909.metallicRattleGain, 0, '909 does not gain the Aphex/IDM metallic rattle layer');
+assert.strictEqual(classic808.metallicRattlePan, 0, '808 metallic rattle pan remains centered because no rattle layer is used');
+assert.strictEqual(classic909.metallicRattlePan, 0, '909 metallic rattle pan remains centered because no rattle layer is used');
+assert(Math.abs(heroOpenAphex.metallicRattlePan) >= 0.06, 'hero high-open/high-metal aphex rattle gets an audible but subtle stereo edge');
+assert(Math.abs(heroOpenAphex.metallicRattlePan) <= 0.18, 'hero aphex stereo rattle edge stays headroom-safe/subtle');
 assert(reznorOpen.metallicRattleGain > 0.001, 'reznor may receive a subtle metallic rattle layer');
 assert(reznorOpen.metallicRattleGain < heroOpenAphex.metallicRattleGain * 0.45, 'reznor rattle remains subtler than aphex');
+assert(Math.abs(reznorOpen.metallicRattlePan) > 0, 'reznor may receive a smaller asymmetric metallic rattle edge');
+assert(Math.abs(reznorOpen.metallicRattlePan) < Math.abs(heroOpenAphex.metallicRattlePan), 'reznor metallic rattle pan remains subtler than aphex');
 
 const mobileHeroBudget = resolveHihatRenderBudget(heroOpenAphex, { mobile: true });
 assert.strictEqual(mobileHeroBudget.maxOptionalSources, 3, 'mobile hihat budget still defaults to three optional noise layers');
@@ -75,6 +82,6 @@ const classicBudget = resolveHihatRenderBudget(classic909, { mobile: true });
 assert.strictEqual(classicBudget.useMetallicRattle, false, 'classic hats do not spend mobile budget on metallic rattle');
 
 assert(/Math\.max\([\s\S]*hihatBudget\.useMetallicRattle\s*&&\s*spec\.metallicRattleGain\s*>\s*0\.001\s*\?\s*spec\.metallicRattleTailSec\s*\+\s*spec\.tailReleaseTau/.test(main), 'hihat tail budget includes metallic rattle only when render-budgeted and enabled');
-assert(/if\s*\(\s*hihatBudget\.useMetallicRattle\s*&&\s*spec\.metallicRattleGain\s*>\s*0\.001\s*\)\s*\{[\s\S]*const\s+metallicRattle\s*=\s*A\.createBufferSource\(\)[\s\S]*metallicRattle\.buffer\s*=\s*nz[\s\S]*const\s+metallicRattleFilter\s*=\s*A\.createBiquadFilter\(\)[\s\S]*metallicRattleFilter\.type\s*=\s*'bandpass'[\s\S]*metallicRattleFilter\.frequency\.value\s*=\s*spec\.metallicRattleHz[\s\S]*metallicRattleFilter\.Q\.value\s*=\s*spec\.metallicRattleQ[\s\S]*metallicRattleGain\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.metallicRattleGain,\s*0,\s*\.052\),\s*t \+ Math\.min\(\.002,\s*spec\.attackSec\)\)[\s\S]*metallicRattle\.connect\(metallicRattleFilter\);\s*metallicRattleFilter\.connect\(metallicRattleGain\);\s*metallicRattleGain\.connect\(choke\);[\s\S]*metallicRattle\.stop\(t \+ spec\.metallicRattleTailSec \+ spec\.tailReleaseTau \* 3\)/.test(main), 'synthHihat wires budget-gated metallic rattle through choke/polish path with resolver bandpass, bounded gain, and stop time');
+assert(/if\s*\(\s*hihatBudget\.useMetallicRattle\s*&&\s*spec\.metallicRattleGain\s*>\s*0\.001\s*\)\s*\{[\s\S]*const\s+metallicRattle\s*=\s*A\.createBufferSource\(\)[\s\S]*metallicRattle\.buffer\s*=\s*nz[\s\S]*const\s+metallicRattleFilter\s*=\s*A\.createBiquadFilter\(\)[\s\S]*metallicRattleFilter\.type\s*=\s*'bandpass'[\s\S]*metallicRattleFilter\.frequency\.value\s*=\s*spec\.metallicRattleHz[\s\S]*metallicRattleFilter\.Q\.value\s*=\s*spec\.metallicRattleQ[\s\S]*metallicRattleGain\.gain\.linearRampToValueAtTime\(clamp\(v \* spec\.metallicRattleGain,\s*0,\s*\.052\),\s*t \+ Math\.min\(\.002,\s*spec\.attackSec\)\)[\s\S]*metallicRattle\.connect\(metallicRattleFilter\);\s*metallicRattleFilter\.connect\(metallicRattleGain\);[\s\S]*typeof\s+A\.createStereoPanner\s*===\s*'function'[\s\S]*A\.createStereoPanner\(\)[\s\S]*metallicRattlePan\.pan\.value\s*=\s*spec\.metallicRattlePan[\s\S]*metallicRattleGain\.connect\(metallicRattlePan\);\s*metallicRattlePan\.connect\(choke\);[\s\S]*else\s*\{\s*metallicRattleGain\.connect\(choke\);\s*\}[\s\S]*metallicRattle\.stop\(t \+ spec\.metallicRattleTailSec \+ spec\.tailReleaseTau \* 3\)/.test(main), 'synthHihat wires budget-gated metallic rattle through guarded StereoPanner when available and preserves mono choke fallback');
 
 console.log('Issue 003 hihat open metallic rattle checks passed.');

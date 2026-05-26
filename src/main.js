@@ -768,7 +768,14 @@ function synthHihat(t, v, p) {
     metallicRattleGain.gain.linearRampToValueAtTime(clamp(v * spec.metallicRattleGain, 0, .052), t + Math.min(.002, spec.attackSec));
     const metallicRattleHold = clamp(.46 + spec.openSizzleTailBias * .65 + spec.openAccentBloom * .18, .46, .72);
     metallicRattleGain.gain.setTargetAtTime(.001, t + spec.metallicRattleTailSec * metallicRattleHold, spec.tailReleaseTau * .70);
-    metallicRattle.connect(metallicRattleFilter); metallicRattleFilter.connect(metallicRattleGain); metallicRattleGain.connect(choke);
+    metallicRattle.connect(metallicRattleFilter); metallicRattleFilter.connect(metallicRattleGain);
+    if (typeof A.createStereoPanner === 'function') {
+      const metallicRattlePan = A.createStereoPanner();
+      metallicRattlePan.pan.value = spec.metallicRattlePan;
+      metallicRattleGain.connect(metallicRattlePan); metallicRattlePan.connect(choke);
+    } else {
+      metallicRattleGain.connect(choke);
+    }
     metallicRattle.start(t); metallicRattle.stop(t + spec.metallicRattleTailSec + spec.tailReleaseTau * 3);
   }
   if (hihatBudget.useIdmSpark && spec.idmSparkGain > 0.001) {

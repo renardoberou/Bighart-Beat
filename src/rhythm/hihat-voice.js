@@ -268,6 +268,15 @@
     const metallicRattleTailSec = clamp((0.026 + open * 0.072 + open * open * 0.034 + instability * 0.50) * (1 + metallicRattleOpen * 0.16 - accentedOpenSnap * 0.10 + softOpenAirTailLift * 0.12), 0.004, 0.18);
     const metallicRattleHz = clamp(9800 * profile.bright * (1 + open * 0.18 + metal * 0.10 + accentedHit * 0.08 + idmEdge * 0.06) * jitter(rand, instability * 0.75), 7600, 18000);
     const metallicRattleQ = clamp(3.0 + metallicRattleEnergy * 4.6 + metallicRattleOpen * 1.8 + metallicRattleMetal * 1.2 + instability * 34, 2.2, 12);
+    const metallicRattlePan = metallicRattleGain > 0.001
+      ? clamp(
+        metallicRattleOpen * metallicRattleMetal * (isAphex
+          ? (0.066 + openShape * 0.052 + metal * 0.024 + accentedHit * 0.014)
+          : (isReznor ? (-0.020 - openShape * 0.024 - metal * 0.010) : 0)),
+        -0.18,
+        0.18
+      )
+      : 0;
     const ghostClosedness = Math.pow(clamp((0.72 - open) / 0.72, 0, 1), 1.35);
     const ghostVelocityLift = smoothstep01(softHit);
     const ghostTickEnergy = clamp(ghostClosedness * (0.16 + ghostVelocityLift * 0.84) * (0.78 + metal * 0.18 + profile.tone * 0.08), 0, 1);
@@ -329,6 +338,7 @@
       metallicRattleTailSec,
       metallicRattleHz,
       metallicRattleQ,
+      metallicRattlePan,
       ghostTickGain,
       ghostTickTailSec,
       ghostTickHz,
