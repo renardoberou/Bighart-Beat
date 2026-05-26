@@ -34,16 +34,19 @@
     const filterQ = clamp(1.3 * clamp(profile.q, 0.45, 2.0), 0.5, 3);
     const bodyGain = clamp(profile.body, 0.35, 1.25);
     const tailGain = clamp(profile.tail, 0.35, 1.25);
+    const panWidth = clamp(profile.panWidth, 0.04, 0.20);
+    const panAsym = clamp(profile.panAsym || 0, -0.08, 0.08);
     const velocityGain = v;
 
     const mkGain = gain => clamp(velocityGain * gain * 0.55, 0, 0.55);
+    const mkPan = position => clamp((position * panWidth) + panAsym, -0.20, 0.20);
     const shortDur = clamp(0.014 * clamp(profile.snap, 0.65, 1.5), 0.006, 0.05);
     const tailOffsetSec = clamp(spreadSec * 3.1, 0, 0.19);
     const bursts = [
-      { offsetSec: 0, gain: mkGain(0.48 * bodyGain), durationSec: shortDur },
-      { offsetSec: spreadSec, gain: mkGain(0.42 * bodyGain), durationSec: shortDur },
-      { offsetSec: clamp(spreadSec * 2, 0, 0.12), gain: mkGain(0.38 * bodyGain), durationSec: shortDur },
-      { offsetSec: tailOffsetSec, gain: mkGain(0.82 * tailGain), durationSec: tailDecaySec },
+      { offsetSec: 0, gain: mkGain(0.48 * bodyGain), durationSec: shortDur, pan: mkPan(-0.55) },
+      { offsetSec: spreadSec, gain: mkGain(0.42 * bodyGain), durationSec: shortDur, pan: mkPan(0.45) },
+      { offsetSec: clamp(spreadSec * 2, 0, 0.12), gain: mkGain(0.38 * bodyGain), durationSec: shortDur, pan: mkPan(-0.25) },
+      { offsetSec: tailOffsetSec, gain: mkGain(0.82 * tailGain), durationSec: tailDecaySec, pan: mkPan(0.75) },
     ];
 
     return {

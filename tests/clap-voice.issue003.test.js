@@ -46,11 +46,19 @@ function assertFiniteBounded(spec, label) {
     assert(Number.isFinite(burst.offsetSec), `${label}: burst ${index} offset finite`);
     assert(Number.isFinite(burst.gain), `${label}: burst ${index} gain finite`);
     assert(Number.isFinite(burst.durationSec), `${label}: burst ${index} duration finite`);
+    assert(Number.isFinite(burst.pan), `${label}: burst ${index} pan finite`);
     assert(burst.offsetSec >= 0 && burst.offsetSec <= 0.19, `${label}: burst ${index} offset bounded`);
     assert(burst.gain >= 0 && burst.gain <= 0.55, `${label}: burst ${index} gain leaves headroom`);
     assert(burst.durationSec >= 0.006 && burst.durationSec <= 0.55, `${label}: burst ${index} duration bounded`);
+    assert(burst.pan >= -0.20 && burst.pan <= 0.20, `${label}: burst ${index} pan bounded`);
   });
   assert(spec.bursts[3].durationSec === spec.tailDecaySec, `${label}: final burst is resolved tail`);
+  assert(new Set(spec.bursts.map(b => b.pan)).size >= 2, `${label}: burst pans vary for audible width intent`);
+}
+
+function panWidth(spec) {
+  const pans = spec.bursts.map(b => b.pan);
+  return Math.max(...pans) - Math.min(...pans);
 }
 
 for (const engine of ['808', '909', 'reznor', 'aphex', 'mystery']) {
@@ -71,6 +79,9 @@ assert(reznor.highpassHz < clap909.highpassHz, 'Reznor-inspired clap keeps darke
 assert(reznor.bursts[3].gain > clap808.bursts[3].gain, 'Reznor-inspired clap has stronger bounded tail than 808');
 assert(aphex.toneJitterHz > clap909.toneJitterHz, 'Aphex-inspired clap has more unstable digital tone jitter than 909');
 assert(aphex.spreadSec < clap808.spreadSec, 'Aphex-inspired clap resolves tighter than 808');
+assert(panWidth(clap808) > panWidth(clap909), '808 clap resolves subtly wider than tighter 909');
+assert(panWidth(clap808) > panWidth(aphex), '808 clap resolves subtly wider than tighter Aphex');
+assert(Math.abs(reznor.bursts[3].pan) > Math.abs(reznor.bursts[0].pan), 'Reznor-inspired clap has a subtle asymmetric industrial tail pan');
 
 const quiet = resolveClapVoiceSpec('909', baseParams, -10);
 assert.strictEqual(quiet.velocityGain, 0, 'negative velocity clamps to silence');

@@ -884,7 +884,14 @@ function synthClap(t, v, p) {
     g.gain.setValueAtTime(0, bt);
     g.gain.linearRampToValueAtTime(b.gain, bt + .0008);
     g.gain.exponentialRampToValueAtTime(.001, bt + b.durationSec);
-    ns.connect(bp); bp.connect(hp); hp.connect(g); g.connect(dest);
+    ns.connect(bp); bp.connect(hp); hp.connect(g);
+    if (typeof A.createStereoPanner === 'function') {
+      const pan = A.createStereoPanner();
+      pan.pan.value = b.pan;
+      g.connect(pan); pan.connect(dest);
+    } else {
+      g.connect(dest);
+    }
     ns.start(bt); ns.stop(bt + b.durationSec + spec.stopPaddingSec);
   }
 }

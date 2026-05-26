@@ -62,6 +62,26 @@ assert(
   'synthClap uses resolved burst duration',
 );
 assert(
+  /if\s*\(typeof\s+A\.createStereoPanner\s*===\s*'function'\)/.test(main),
+  'synthClap guards StereoPannerNode usage for static browser compatibility',
+);
+assert(
+  /const\s+pan\s*=\s*A\.createStereoPanner\(\)/.test(main),
+  'synthClap creates a stereo panner when available',
+);
+assert(
+  /pan\.pan\.value\s*=\s*b\.pan/.test(main),
+  'synthClap applies resolved per-burst pan',
+);
+assert(
+  /g\.connect\(pan\);\s*pan\.connect\(dest\)/.test(main),
+  'synthClap inserts stereo panner between burst gain and destination',
+);
+assert(
+  /}\s*else\s*{\s*g\.connect\(dest\);\s*}/.test(main),
+  'synthClap preserves mono fallback when StereoPannerNode is unavailable',
+);
+assert(
   /ns\.stop\(bt \+ b\.durationSec \+ spec\.stopPaddingSec\)/.test(main),
   'synthClap uses resolved stop padding',
 );
