@@ -174,7 +174,10 @@
     const opennessTail = open > 0
       ? (open * 0.05 + open * open * 0.20) * (0.55 + decayOpenShape * 1.25)
       : 0;
-    const openBoost = requestedDecay + opennessTail;
+    const earlySoftOpenBloom = open > 0
+      ? smoothstep01(open) * softHit * 0.056
+      : 0;
+    const openBoost = requestedDecay + opennessTail + earlySoftOpenBloom;
     const decaySec = clamp(openBoost * profile.decay * jitter(rand, instability), 0.006, 0.70);
     const highpassHz = clamp(freq * profile.bright * jitter(rand, instability), 2500, 17000);
     const bandpassHz = clamp(10500 * profile.bright * jitter(rand, instability), 4500, 18000);
@@ -203,7 +206,8 @@
     const glitchBandpassHz = clamp(7000 * (1 + idmEdge * 0.12) * jitter(rand, 0.4), 3500, 14000);
     const attackSec = clamp(0.0009 + open * 0.0024 + instability * 0.004, 0.0008, 0.004);
     const accentedOpenTailTighten = accentedHit * openShape;
-    const tailReleaseTau = clamp((0.014 + open * 0.062 + open * open * 0.036 + instability * 0.20) * (1 - accentedOpenTailTighten * 0.10), 0.010, 0.16);
+    const openSoftReleaseBloom = openShape * softHit;
+    const tailReleaseTau = clamp((0.014 + open * 0.062 + open * open * 0.036 + instability * 0.20) * (1 + openSoftReleaseBloom * 0.12 - accentedOpenTailTighten * 0.10), 0.010, 0.16);
     const openTailDamp = clamp(1 - open * 0.10 - open * open * 0.16, 0.68, 1);
     const tailHeadroomTrim = clamp(1 - open * 0.08 - open * open * 0.14 - accentedHit * 0.03, 0.70, 1);
     const openSoftAirBloom = openShape * softHit;
@@ -286,7 +290,8 @@
     const ghostTickQ = clamp(3.4 + ghostTickEnergy * 2.6 + profile.tone * 1.0 + instability * 20, 2.5, 9);
     const baseChokeClosedTau = clamp(profile.chokeClosedTau, 0.001, 0.099);
     const baseChokeOpenTau = clamp(Math.max(profile.chokeOpenTau, profile.chokeClosedTau + 0.001), 0.002, 0.10);
-    const velocityChokeRelease = 1 + openShape * (softHit * 0.12 - accentedHit * 0.16);
+    const decayChokeBloom = openShape * decayOpenShape * 0.15;
+    const velocityChokeRelease = 1 + openShape * (softHit * 0.12 + decayChokeBloom - accentedHit * 0.16);
     const chokeOpenTau = clamp(Math.max(baseChokeOpenTau * velocityChokeRelease, baseChokeClosedTau + 0.001), 0.002, 0.10);
     const openChokeFloorLift = openShape * (0.0012 + softHit * 0.0012 - accentedHit * 0.00055);
     const chokeFloor = clamp(0.0008 + openChokeFloorLift, 0.0008, 0.004);

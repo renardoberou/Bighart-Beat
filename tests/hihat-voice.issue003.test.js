@@ -8,7 +8,7 @@ const hihatVoice = require(path.join(root, 'src', 'rhythm', 'hihat-voice.js'));
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 
-const { resolveHihatVoiceSpec, resolveHihatRenderBudget, HIHAT_ENGINE_PROFILES } = hihatVoice;
+const { resolveHihatVoiceSpec, resolveHihatRenderBudget, calculateHihatChokeTau, HIHAT_ENGINE_PROFILES } = hihatVoice;
 
 assert(/openAccentBloom/.test(main), 'runtime consumes resolver openAccentBloom proxy without adding a new source');
 assert(/spec\.openAccentBloom[\s\S]*clamp\(v \* spec\.openBodyGain/.test(main), 'runtime wires open accent bloom into the existing open body layer with clamp protection');
@@ -173,6 +173,11 @@ assert(accentedOpen909.openBodyGain > softOpen909.openBodyGain * 1.45, 'accented
 assert(accentedOpen909.openShimmerGain > softOpen909.openShimmerGain * 1.45, 'accented open 909 hihat has clearly stronger shimmer than soft open hit');
 assert(softOpen909.openShimmerTailSec > normalOpen909.openShimmerTailSec, 'soft open 909 hihat keeps an airy shimmer tail instead of collapsing shorter than normal');
 assert(softOpen909.openBodyTailSec > accentedOpen909.openBodyTailSec, 'soft open 909 hihat keeps longer body presence than the snappier accented open hit');
+const softClosed909 = resolveHihatVoiceSpec('909', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5, 0.25);
+assert(softOpen909.noiseTailSec > softClosed909.noiseTailSec * 6, 'soft fully-open 909 hihat keeps a much longer noisy air tail than soft closed hats for low-velocity presence');
+assert(softOpen909.openShimmerTailSec > softClosed909.openShimmerTailSec * 6, 'soft fully-open 909 hihat exposes a clearly longer shimmer-air tail than soft closed hats');
+assert(softOpen909.openBodyTailSec > softClosed909.openBodyTailSec * 6, 'soft fully-open 909 hihat exposes a clearly longer body/bloom tail than soft closed hats');
+assert(softOpen909.tailReleaseTau > softClosed909.tailReleaseTau * 6, 'soft fully-open 909 hihat has a much smoother tail release than soft closed hats');
 assert(accentedOpen909.openShimmerTailSec <= normalOpen909.openShimmerTailSec * 1.02, 'accented open 909 hihat shimmer stays snappy and does not outgrow normal open tail');
 assert(accentedOpen909.openBodyTailSec < normalOpen909.openBodyTailSec, 'accented open 909 hihat body stays tighter than normal open tail');
 assert(accentedOpen909.noiseTailSec < normalOpen909.noiseTailSec, 'accented open 909 hihat has a tighter noise tail than normal velocity');
@@ -251,6 +256,8 @@ for (const engine of ['909', 'aphex']) {
   assert(highDecayClosed.openBodyGain <= 0.001, `${engine}: high-decay closed hihat keeps open body silent`);
   assert(highDecayClosed.noiseTailSec < highDecayOpen.noiseTailSec * 0.55, `${engine}: high-decay closed hihat remains much tighter than high-decay open hihat`);
   assert(highDecayClosed.openShimmerTailSec < highDecayOpen.openShimmerTailSec * 0.55, `${engine}: high-decay closed hihat does not become an open shimmer wash`);
+  assert(highDecayOpen.chokeOpenTau > highDecayClosed.chokeOpenTau * 1.10, `${engine}: high-decay fully-open hihat exposes a longer choke tail than closed hats`);
+  assert(calculateHihatChokeTau(1, 1, highDecayOpen) > calculateHihatChokeTau(1, 1, highDecayClosed) * 1.10, `${engine}: calculateHihatChokeTau makes fully-open high-decay choke feel distinguishable`);
   assert(lowDecayClosed.noiseTailSec < highDecayOpen.noiseTailSec * 0.10, `${engine}: low-decay closed hihat remains snappy beside open high-decay hats`);
   assertFiniteBounded(lowDecayOpen, `${engine} low-decay fully open hihat`);
   assertFiniteBounded(highDecayOpen, `${engine} high-decay fully open hihat`);
