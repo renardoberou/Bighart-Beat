@@ -879,7 +879,10 @@ function synthClap(t, v, p) {
 function synthInput(t, v, p) {
   const tr = TRACKS[4];
   if (!tr.smp) return;
-  const rate = Math.max(.01, Math.abs(p.pitch || 1));
+  const rawPitch = Number(p.pitch);
+  const finitePitch = Number.isFinite(rawPitch) && Math.abs(rawPitch) >= .01 ? rawPitch : 1;
+  const safePitch = Math.sign(finitePitch) * Math.min(Math.abs(finitePitch), 16);
+  const rate = Math.abs(safePitch);
   const sampleDur = tr.smp.duration / rate;
   const dur = p.decay < 1.0 ? sampleDur * p.decay : sampleDur;
   const attackSec = .003;
@@ -889,7 +892,7 @@ function synthInput(t, v, p) {
   const fadeStart = Math.min(stopAt, Math.max(attackEnd, stopAt - releaseSec));
   const dest = routeVoice(t, 4, stopAt - t);
   const src = A.createBufferSource(); src.buffer = tr.smp;
-  src.playbackRate.value = p.pitch;
+  src.playbackRate.value = safePitch;
   const g = A.createGain();
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(v, attackEnd);

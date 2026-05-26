@@ -36,8 +36,8 @@ const HIHAT_APHEX_MICRO_GLITCH_TOKEN = 'v=hihat-aphex-micro-glitch-20260525';
 const HIHAT_VOICE_TOKEN = HIHAT_APHEX_MICRO_GLITCH_TOKEN;
 const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
 const SYNTH_VOICE_TOKEN = SYNTH_808_BODY_TOKEN;
-const MAIN_JS_TOKEN = 'v=hihat-open-splash-runtime-20260525';
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|ether-mode-audition|ratchet-edit-audition|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const MAIN_JS_TOKEN = 'v=input-playback-rate-safety-20260526';
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN, previousTokens = PREVIOUS_TOKENS) {
   assert(
