@@ -35,24 +35,27 @@
     const shellDecaySec = clamp(decay * 0.45 * (0.85 + bodyMul * 0.15), 0.018, 0.45);
     const crackDecaySec = clamp(0.012 * (0.9 + snapMul * 0.08), 0.006, 0.04);
 
+    const outputTrim = clamp(profile.outputTrim, 0.70, 1.00);
+
     return {
       engine,
       requestedEngine: requestedEngine || engine,
       fallbackEngine: engine !== requestedEngine,
       noiseBandpassHz: clamp(2200 * toneMul, 900, 6500),
       noiseHighpassHz: clamp(800 * toneMul, 300, 3000),
-      noisePeakGain: clamp(v * 0.58 * noiseMul, 0, 0.75),
+      noisePeakGain: clamp(v * 0.58 * noiseMul * outputTrim, 0, 0.75),
       noiseDecaySec,
       shellFundHz: clamp(tone * toneMul, 60, 900),
       shellOvertoneHz: clamp(tone * 1.5 * toneMul, 90, 1400),
-      shellPeakGain: clamp(v * body * 0.68 * bodyMul, 0, 0.75),
+      shellPeakGain: clamp(v * body * 0.68 * bodyMul * outputTrim, 0, 0.75),
       shellDecaySec,
       crackHighpassHz: clamp(4500 * toneMul, 2500, 9500),
-      crackPeakGain: clamp(v * snap * 0.55 * snapMul, 0, 0.75),
+      crackPeakGain: clamp(v * snap * 0.55 * snapMul * outputTrim, 0, 0.75),
       crackDecaySec,
       noiseStopSec: clamp(noiseDecaySec + 0.04, 0.04, 0.85),
       shellStopSec: clamp(shellDecaySec + 0.033, 0.02, 0.5),
       crackStopSec: clamp(crackDecaySec + 0.008, 0.01, 0.055),
+      outputTrim,
     };
   }
 
