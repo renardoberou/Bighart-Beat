@@ -241,7 +241,7 @@
       ? (1 + decayOpenShape * openShape * (isAphex ? 0.30 : 0.18))
       : 1;
     const aphexShimmerGainBoost = isAphex ? 1.15 : 1;
-    const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25) * (1 + openAccentBloom * 0.22) * openDecayPresenceLift * (1 + openAphexMetalAir * 0.32) * (1 + aphexShimmerEdgeBoost * 0.27) * aphexShimmerDecayBloom * aphexShimmerGainBoost, 0, aphexShimmerGainMax);
+    const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25) * (1 + openAccentBloom * 0.30) * openDecayPresenceLift * (1 + openAphexMetalAir * 0.32) * (1 + aphexShimmerEdgeBoost * 0.27) * aphexShimmerDecayBloom * aphexShimmerGainBoost, 0, aphexShimmerGainMax);
     const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + softOpenAirTailLift * 0.36 + openAccentBloom * 0.05 - accentedOpenSnap * 0.09) * (1 + openAphexMetalAir * 0.18) * (1 + aphexShimmerEdgeBoost * 0.18) * aphexShimmerDecayBloom, 0.006, aphexShimmerTailMax);
     const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * (1 + aphexShimmerEdgeBoost * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
     const openShimmerQ = clamp(1.6 + open * 1.2 + instability * 10 + openAphexMetalAir * 0.72 + accentedOpenSnap * 0.32 - softOpenAirTailLift * 0.18, 1.2, 4.2);
