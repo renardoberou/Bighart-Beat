@@ -266,6 +266,73 @@ for (const engine of ['909', 'aphex']) {
   assertFiniteBounded(highDecayClosed, `${engine} high-decay closed hihat`);
 }
 
+// Issue 003: Aphex high-decay open shimmer air-bloom
+{
+  const aphexLowDecayOpen = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay: 0.02 }, () => 0.5, 0.75);
+  const aphexHighDecayOpen = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay: 0.40 }, () => 0.5, 0.75);
+  const aphexHighDecayOpenAccented = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay: 0.40 }, () => 0.5, 1.0);
+  const aphexHighDecayOpenSoft = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 1, decay: 0.40 }, () => 0.5, 0.25);
+  const aphexLowDecayClosed = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0, decay: 0.02 }, () => 0.5, 0.75);
+  const aphexHighDecayClosed = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0, decay: 0.40 }, () => 0.5, 0.75);
+
+  // Core air-bloom: high-decay aphex open shimmer tail blooms at least 1.75x vs low-decay
+  assert(
+    aphexHighDecayOpen.openShimmerTailSec >= aphexLowDecayOpen.openShimmerTailSec * 1.75,
+    'aphex: high-decay fully-open shimmer tail blooms at least 1.75x vs low-decay'
+  );
+  // The bloom should be clearly audible: high-decay tail is at least 5x low-decay
+  assert(
+    aphexHighDecayOpen.openShimmerTailSec >= aphexLowDecayOpen.openShimmerTailSec * 5.0,
+    'aphex: high-decay fully-open shimmer tail blooms at least 5x vs low-decay for audible air-bloom'
+  );
+  // Shimmer gain also increases with decay for aphex
+  assert(
+    aphexHighDecayOpen.openShimmerGain >= aphexLowDecayOpen.openShimmerGain * 1.35,
+    'aphex: high-decay fully-open shimmer gain is at least 1.35x vs low-decay'
+  );
+  // Gain stays within the aphex cap
+  assert(
+    aphexHighDecayOpen.openShimmerGain <= 0.10,
+    'aphex: high-decay open shimmer gain stays within aphexShimmerGainMax (0.10)'
+  );
+  // Tail stays within the aphex cap
+  assert(
+    aphexHighDecayOpen.openShimmerTailSec <= 0.90,
+    'aphex: high-decay open shimmer tail stays within aphexShimmerTailMax (0.90)'
+  );
+  // Accented high-decay open hat still has a clearly airy shimmer tail
+  assert(
+    aphexHighDecayOpenAccented.openShimmerTailSec >= aphexLowDecayOpen.openShimmerTailSec * 3.0,
+    'aphex: accented high-decay open shimmer tail still blooms at least 3x vs low-decay'
+  );
+  // Soft high-decay open hat keeps an even airier shimmer tail than accented
+  assert(
+    aphexHighDecayOpenSoft.openShimmerTailSec >= aphexHighDecayOpenAccented.openShimmerTailSec,
+    'aphex: soft high-decay open shimmer tail is at least as airy as accented high-decay'
+  );
+  // Closed hats remain tight at the gain level
+  assert(
+    aphexHighDecayClosed.openShimmerGain <= 0.001,
+    'aphex: high-decay closed shimmer gain stays silent'
+  );
+  // Closed shimmer tail does not rival airy open bloom
+  assert(
+    aphexHighDecayClosed.openShimmerTailSec < aphexHighDecayOpen.openShimmerTailSec * 0.6,
+    'aphex: high-decay closed shimmer tail stays well under high-decay open shimmer tail'
+  );
+  // Non-aphex engines do not get the decay bloom boost
+  const reznorHighDecayOpen = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, decay: 0.40 }, () => 0.5, 0.75);
+  const reznorLowDecayOpen = resolveHihatVoiceSpec('reznor', { ...baseParams, open: 1, decay: 0.02 }, () => 0.5, 0.75);
+  assert(
+    reznorHighDecayOpen.openShimmerTailSec < reznorLowDecayOpen.openShimmerTailSec * 4.0,
+    'reznor: shimmer tail ratio stays below 4x (no aphex decay bloom boost)'
+  );
+
+  assertFiniteBounded(aphexHighDecayOpen, 'aphex high-decay fully open hihat air-bloom');
+  assertFiniteBounded(aphexHighDecayOpenAccented, 'aphex accented high-decay fully open hihat air-bloom');
+  assertFiniteBounded(aphexHighDecayOpenSoft, 'aphex soft high-decay fully open hihat air-bloom');
+}
+
 const closedAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0, decay: 0.04 }, () => 0.5, 0.75);
 const tightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5, 0.75);
 const accentedTightAphex = resolveHihatVoiceSpec('aphex', { ...baseParams, open: 0.45, decay: 0.04 }, () => 0.5, 1.0);
