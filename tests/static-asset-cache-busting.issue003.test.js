@@ -27,13 +27,14 @@ const PREVIOUS_TOKENS = [
   'v=hihat-open-velocity-tail-20260524',
   'v=hihat-aphex-micro-glitch-20260525',
   'v=hihat-idm-engine-polish-20260527',
+  'v=hihat-open-tail-extend-20260527',
 ];
 const PREVIOUS_STYLESHEET_TOKENS = [
   ...PREVIOUS_TOKENS,
   'v=hihat-flutter-20260523',
 ];
-const EXPECTED_TOKEN = 'v=hihat-open-tail-extend-20260527';
-const STYLESHEET_TOKEN = 'v=hihat-open-tail-extend-20260527';
+const EXPECTED_TOKEN = 'v=hihat-idm-shimmer-decay-bloom-20260527';
+const STYLESHEET_TOKEN = 'v=hihat-idm-shimmer-decay-bloom-20260527';
 const HIHAT_METALLIC_RATTLE_PAN_TOKEN = 'v=hihat-metallic-rattle-pan-20260526';
 const HIHAT_SOFT_OPEN_TAIL_TOKEN = 'v=hihat-soft-open-tail-20260526';
 const HIHAT_APHEX_CLOSED_NEEDLE_ACCENT_TOKEN = 'v=hihat-aphex-closed-needle-accent-20260526';
@@ -58,7 +59,7 @@ const CLAP_STEREO_WIDTH_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   'v=input-playback-rate-safety-20260526',
 ];
-const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-open-tail-extend|hihat-idm-engine-polish|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-aphex-closed-needle-accent|aphex-shimmer-edge-boost|hihat-metallic-rattle-pan|hihat-soft-open-tail|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|clap-stereo-width|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const localAssetTokenPattern = /[?&]v=(?:boost-week|hihat-open-tail-extend|hihat-idm-shimmer-decay-bloom|hihat-idm-engine-polish|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-aphex-closed-needle-accent|aphex-shimmer-edge-boost|hihat-metallic-rattle-pan|hihat-soft-open-tail|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|clap-stereo-width|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN, previousTokens = PREVIOUS_TOKENS) {
   assert(
     !assetUrl.includes(STALE_TOKEN) && previousTokens.every((token) => !assetUrl.includes(token)),
