@@ -58,8 +58,8 @@ function assertFiniteBounded(spec, label) {
   assert(spec.airLowpassHz >= 8500 && spec.airLowpassHz <= 18000, `${label}: air lowpass is bright but bounded`);
   assert(spec.airLowpassQ >= 0.2 && spec.airLowpassQ <= 0.9, `${label}: air lowpass Q is gentle and mobile-safe`);
   assert(spec.openAccentBloom >= 0 && spec.openAccentBloom <= 0.32, `${label}: open accent bloom proxy is bounded/headroom-safe`);
-  assert(spec.openShimmerGain >= 0 && spec.openShimmerGain <= 0.085, `${label}: open shimmer gain remains headroom-safe`);
-  assert(spec.openShimmerTailSec >= 0.006 && spec.openShimmerTailSec <= 0.72, `${label}: open shimmer tail is bounded/mobile-safe`);
+  assert(spec.openShimmerGain >= 0 && spec.openShimmerGain <= 0.10, `${label}: open shimmer gain remains headroom-safe`);
+  assert(spec.openShimmerTailSec >= 0.006 && spec.openShimmerTailSec <= 0.90, `${label}: open shimmer tail is bounded/mobile-safe`);
   assert(spec.openShimmerHz >= 6500 && spec.openShimmerHz <= 18000, `${label}: open shimmer frequency is bright but bounded`);
   assert(spec.openShimmerQ >= 1.2 && spec.openShimmerQ <= 4.2, `${label}: open shimmer Q is focused but bounded`);
   assert(spec.openBodyGain >= 0 && spec.openBodyGain <= 0.11, `${label}: open body/bloom gain remains headroom-safe`);

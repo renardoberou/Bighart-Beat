@@ -22,11 +22,11 @@ function assertFiniteHeadroom(spec, label) {
 
   assert(spec.noiseGain >= 0 && spec.noiseGain <= 0.72, `${label}: noise gain remains capped`);
   assert(spec.metalGain >= 0 && spec.metalGain <= 0.34, `${label}: metal gain remains capped`);
-  assert(spec.openShimmerGain >= 0 && spec.openShimmerGain <= 0.085, `${label}: shimmer gain remains capped`);
+  assert(spec.openShimmerGain >= 0 && spec.openShimmerGain <= 0.10, `${label}: shimmer gain remains capped`);
   assert(spec.openBodyGain >= 0 && spec.openBodyGain <= 0.11, `${label}: body gain remains capped`);
   assert(spec.openFlutterGain >= 0 && spec.openFlutterGain <= 0.045, `${label}: flutter gain remains capped`);
   assert(spec.idmSparkGain >= 0 && spec.idmSparkGain <= 0.065, `${label}: IDM spark gain remains capped`);
-  assert(spec.openShimmerTailSec <= 0.72, `${label}: shimmer tail remains bounded`);
+  assert(spec.openShimmerTailSec <= 0.90, `${label}: shimmer tail remains bounded`);
   assert(spec.openFlutterTailSec <= 0.16, `${label}: flutter tail remains bounded`);
   assert(spec.tailHeadroomTrim >= 0.70 && spec.tailHeadroomTrim <= 1, `${label}: tail headroom trim remains bounded`);
   assert(spec.outputTrim >= 0.62 && spec.outputTrim <= 1, `${label}: output trim remains bounded`);

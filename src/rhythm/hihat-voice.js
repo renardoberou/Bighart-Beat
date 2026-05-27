@@ -234,9 +234,12 @@
     const openSplashHz = clamp(freq * profile.bright * openSplashEngineHz * (1 - softHit * 0.06 + accentedHit * 0.08) * jitter(rand, instability * 0.55), 4500, 18000);
     const openSplashQ = clamp(1.0 + open * 0.70 + (isAphex ? 1.60 : (isReznor ? 0.55 : 0.25)) + accentedHit * 0.45 - softHit * 0.22 + instability * 18, 0.7, 4.8);
     const openSplashHold = clamp(0.50 + open * 0.13 + (isReznor ? 0.10 : (isAphex ? 0.03 : 0)) + softOpenAirTailLift * 0.10 - accentedOpenSnap * 0.08, 0.42, 0.78);
-    const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25) * (1 + openAccentBloom * 0.22) * openDecayPresenceLift * (1 + openAphexMetalAir * 0.32), 0, 0.085);
-    const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + softOpenAirTailLift * 0.36 + openAccentBloom * 0.05 - accentedOpenSnap * 0.09) * (1 + openAphexMetalAir * 0.18), 0.006, 0.72);
-    const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
+    const aphexShimmerEdgeBoost = isAphex ? clamp((idmEdge - 0.55) / 0.45, 0, 1) : 0;
+    const aphexShimmerGainMax = isAphex ? 0.10 : 0.085;
+    const aphexShimmerTailMax = isAphex ? 0.90 : 0.72;
+    const openShimmerGain = clamp(openShape * (0.018 + profile.tone * 0.028 + metal * 0.018) * (0.85 + accentedHit * 0.35 - softHit * 0.25) * (1 + openAccentBloom * 0.22) * openDecayPresenceLift * (1 + openAphexMetalAir * 0.32) * (1 + aphexShimmerEdgeBoost * 0.27), 0, aphexShimmerGainMax);
+    const openShimmerTailSec = clamp(noiseTailSec * (0.82 + open * 0.22) * (1 + softOpenAirTailLift * 0.36 + openAccentBloom * 0.05 - accentedOpenSnap * 0.09) * (1 + openAphexMetalAir * 0.18) * (1 + aphexShimmerEdgeBoost * 0.18), 0.006, aphexShimmerTailMax);
+    const openShimmerHz = clamp(11500 * profile.bright * (1 + open * 0.18) * (1 - softHit * 0.05 + accentedHit * 0.08) * (1 + aphexShimmerEdgeBoost * 0.08) * jitter(rand, instability * 0.4), 6500, 18000);
     const openShimmerQ = clamp(1.6 + open * 1.2 + instability * 10 + openAphexMetalAir * 0.72 + accentedOpenSnap * 0.32 - softOpenAirTailLift * 0.18, 1.2, 4.2);
     const openBodyCharacter = engine === '808' ? 0.74 : (engine === '909' ? 1.0 : (isReznor ? 1.12 : 1.24));
     const openBodyGain = clamp(openShape * (0.034 + profile.tone * 0.035 + metal * 0.012) * openBodyCharacter * (0.72 + accentedHit * 0.38 - softHit * 0.22) * (1 + openAccentBloom * 0.28) * openDecayPresenceLift * jitter(rand, instability * 0.35), 0, 0.11);
