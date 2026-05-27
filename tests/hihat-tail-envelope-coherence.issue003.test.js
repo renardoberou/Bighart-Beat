@@ -34,7 +34,7 @@ assertSingleCoherentTailPath({
   label: 'noise/open sizzle layer',
   gainName: 'ng',
   tailExpr: 'spec\\.noiseTailSec',
-  expectedTargetTime: 't\\s*\\+\\s*spec\\.noiseTailSec\\s*\\*\\s*spec\\.openTailDamp',
+  expectedTargetTime: 't\\s*\\+\\s*spec\\.noiseTailSec\\s*\\*\\s*spec\\.openTailExtend',
   stopExpr: 'ns',
   blockPattern: /const\s+ng\s*=\s*A\.createGain\(\)[\s\S]*?ns\.start\(t\);\s*ns\.stop\([^;]+\);/,
 });
@@ -43,7 +43,7 @@ assertSingleCoherentTailPath({
   label: 'open shimmer layer',
   gainName: 'sg',
   tailExpr: 'spec\\.openShimmerTailSec',
-  expectedTargetTime: 't\\s*\\+\\s*spec\\.openShimmerTailSec\\s*\\*\\s*spec\\.openTailDamp',
+  expectedTargetTime: 't\\s*\\+\\s*spec\\.openShimmerTailSec\\s*\\*\\s*spec\\.openTailExtend',
   stopExpr: 'shimmer',
   blockPattern: /if\s*\(hihatBudget\.useOpenShimmer[\s\S]*?shimmer\.start\(t\);\s*shimmer\.stop\([^;]+\);\s*\}/,
 });
@@ -52,7 +52,7 @@ assertSingleCoherentTailPath({
   label: 'open body layer',
   gainName: 'bg',
   tailExpr: 'spec\\.openBodyTailSec',
-  expectedTargetTime: 't\\s*\\+\\s*spec\\.openBodyTailSec\\s*\\*\\s*spec\\.openTailDamp',
+  expectedTargetTime: 't\\s*\\+\\s*spec\\.openBodyTailSec\\s*\\*\\s*spec\\.openTailExtend',
   stopExpr: 'body',
   blockPattern: /if\s*\(hihatBudget\.useOpenBody[\s\S]*?body\.start\(t\);\s*body\.stop\([^;]+\);\s*\}/,
 });
@@ -75,7 +75,7 @@ assert(
 const metalBlock = synth.match(/if\s*\(spec\.metalGain\s*>\s*0\.001\s*&&\s*metallicFrequencies\.length\)\s*\{[\s\S]*?for\s*\(const\s+frequency\s+of\s+metallicFrequencies\)\s*\{[\s\S]*?o\.start\(t\);\s*o\.stop\([^;]+\);\s*\}\s*\}/);
 assert(metalBlock, 'metallic layer: runtime oscillator block is present');
 assert(
-  /mg\.gain\.setTargetAtTime\(\.001,\s*t\s*\+\s*spec\.metalTailSec\s*\*\s*spec\.openTailDamp,\s*spec\.tailReleaseTau\s*\*\s*\.75\)/.test(metalBlock[0]),
+  /mg\.gain\.setTargetAtTime\(\.001,\s*t\s*\+\s*spec\.metalTailSec\s*\*\s*spec\.openTailExtend,\s*spec\.tailReleaseTau\s*\*\s*\.75\)/.test(metalBlock[0]),
   'metallic layer: uses resolver-driven setTargetAtTime tail release'
 );
 assert(

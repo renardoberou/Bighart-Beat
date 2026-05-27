@@ -211,7 +211,7 @@
     const accentedOpenTailTighten = accentedHit * openShape;
     const openSoftReleaseBloom = openShape * softHit;
     const tailReleaseTau = clamp((0.014 + open * 0.062 + open * open * 0.036 + instability * 0.20) * (1 + openSoftReleaseBloom * 0.12 - accentedOpenTailTighten * 0.10), 0.010, 0.16);
-    const openTailDamp = clamp(1 - open * 0.10 - open * open * 0.16, 0.68, 1);
+    const openTailExtend = clamp(1 + open * 0.10 + open * open * 0.30, 1, 1.40);
     const tailHeadroomTrim = clamp(1 - open * 0.08 - open * open * 0.14 - accentedHit * 0.03, 0.70, 1);
     const openSoftAirBloom = openShape * softHit;
     const velocityTail = clamp(1 - softHit * 0.06 + openSoftAirBloom * 0.42 - accentedOpenTailTighten * 0.16 - aphexClosedNeedleAccent * 0.09, 0.78, 1.28);
@@ -320,7 +320,7 @@
       noiseTailSec,
       metalTailSec,
       tailReleaseTau,
-      openTailDamp,
+      openTailExtend,
       tailHeadroomTrim,
       transientGain,
       outputTrim,

@@ -56,12 +56,12 @@ assert(
   'synthHihat applies resolver transientGain and attackSec to the noise attack'
 );
 assert(
-  /ng\.gain\.setTargetAtTime\(\.001,\s*t\s*\+\s*spec\.noiseTailSec\s*\*\s*spec\.openTailDamp,\s*spec\.tailReleaseTau\)/.test(main),
-  'synthHihat uses resolver-provided noiseTailSec/openTailDamp/releaseTau for one coherent noise tail path'
+  /ng\.gain\.setTargetAtTime\(\.001,\s*t\s*\+\s*spec\.noiseTailSec\s*\*\s*spec\.openTailExtend,\s*spec\.tailReleaseTau\)/.test(main),
+  'synthHihat uses resolver-provided noiseTailSec/openTailExtend/releaseTau for one coherent noise tail path'
 );
 assert(
-  /mg\.gain\.setTargetAtTime\(\.001,\s*t\s*\+\s*spec\.metalTailSec\s*\*\s*spec\.openTailDamp,\s*spec\.tailReleaseTau\s*\*\s*\.75\)/.test(main),
-  'synthHihat uses resolver-provided metalTailSec/openTailDamp/releaseTau for one coherent metallic hihat tail path'
+  /mg\.gain\.setTargetAtTime\(\.001,\s*t\s*\+\s*spec\.metalTailSec\s*\*\s*spec\.openTailExtend,\s*spec\.tailReleaseTau\s*\*\s*\.75\)/.test(main),
+  'synthHihat uses resolver-provided metalTailSec/openTailExtend/releaseTau for one coherent metallic hihat tail path'
 );
 assert(
   /o\.start\(t\);\s*o\.stop\(t\s*\+\s*spec\.metalTailSec\s*\+\s*spec\.tailReleaseTau\s*\*\s*4\)/.test(main),

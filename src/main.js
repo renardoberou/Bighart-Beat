@@ -710,7 +710,7 @@ function synthHihat(t, v, p) {
   const ng = A.createGain();
   ng.gain.setValueAtTime(0, t);
   ng.gain.linearRampToValueAtTime(clamp(v * spec.noiseGain * spec.transientGain, 0, .72), t + spec.attackSec);
-  ng.gain.setTargetAtTime(.001, t + spec.noiseTailSec * spec.openTailDamp, spec.tailReleaseTau);
+  ng.gain.setTargetAtTime(.001, t + spec.noiseTailSec * spec.openTailExtend, spec.tailReleaseTau);
   ns.connect(hf); hf.connect(hf2); hf2.connect(ng); ng.connect(choke);
   ns.start(t); ns.stop(t + spec.noiseTailSec + spec.tailReleaseTau * 4);
   if (hihatBudget.useOpenShimmer && spec.openShimmerGain > 0.001) {
@@ -719,7 +719,7 @@ function synthHihat(t, v, p) {
     const sg = A.createGain();
     sg.gain.setValueAtTime(0, t);
     sg.gain.linearRampToValueAtTime(clamp(v * spec.openShimmerGain * openAccentBloomLift, 0, .085), t + spec.attackSec);
-    sg.gain.setTargetAtTime(.001, t + spec.openShimmerTailSec * spec.openTailDamp, spec.tailReleaseTau);
+    sg.gain.setTargetAtTime(.001, t + spec.openShimmerTailSec * spec.openTailExtend, spec.tailReleaseTau);
     shimmer.connect(sf); sf.connect(sg); sg.connect(choke);
     shimmer.start(t); shimmer.stop(t + spec.openShimmerTailSec + spec.tailReleaseTau * 4);
   }
@@ -741,7 +741,7 @@ function synthHihat(t, v, p) {
     const bg = A.createGain();
     bg.gain.setValueAtTime(0, t);
     bg.gain.linearRampToValueAtTime(clamp(v * spec.openBodyGain * openAccentBloomLift, 0, .11), t + spec.attackSec);
-    bg.gain.setTargetAtTime(.001, t + spec.openBodyTailSec * spec.openTailDamp, spec.tailReleaseTau);
+    bg.gain.setTargetAtTime(.001, t + spec.openBodyTailSec * spec.openTailExtend, spec.tailReleaseTau);
     body.connect(bf); bf.connect(bg); bg.connect(choke);
     body.start(t); body.stop(t + spec.openBodyTailSec + spec.tailReleaseTau * 4);
   }
@@ -807,7 +807,7 @@ function synthHihat(t, v, p) {
     const mg = A.createGain();
     mg.gain.setValueAtTime(0, t);
     mg.gain.linearRampToValueAtTime(clamp(v * spec.metalGain * spec.tailHeadroomTrim, 0, .34), t + Math.max(.0008, spec.attackSec * .8));
-    mg.gain.setTargetAtTime(.001, t + spec.metalTailSec * spec.openTailDamp, spec.tailReleaseTau * .75);
+    mg.gain.setTargetAtTime(.001, t + spec.metalTailSec * spec.openTailExtend, spec.tailReleaseTau * .75);
     const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = spec.metalHighpassHz;
     mg.connect(hp); hp.connect(choke);
     const metallicOscillatorGain = clamp(spec.oscillatorGain * (spec.oscillatorFrequencies.length / metallicFrequencies.length), 0, .25);
