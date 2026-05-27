@@ -1550,7 +1550,7 @@ function buildSeq() {
       const isOpenHihatStep = () => PATTERNS[S.patt][trackId][i] && State.getHihatOpenness(HHT_OPENNESS[S.patt], i) === 1;
       const isCellOn = () => isOpenHihatRow ? isOpenHihatStep() : !!PATTERNS[S.patt][trackId][i] && (trackId !== 'hihat' || !isOpenHihatStep());
       function setSynthNoteMarker() {
-        c.classList.remove('syn-note', 'syn-note-selected');
+        c.classList.remove('syn-note', 'syn-note-selected', 'ratchet-lbl');
         delete c.dataset.note;
         if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT && i === LAST_SYNTH_NOTE_STEP) {
           c.classList.add('syn-note-selected');
@@ -1559,6 +1559,11 @@ function buildSeq() {
         const ratio = getStepSynthRatio(i);
         c.classList.add('syn-note');
         c.dataset.note = State.formatSynthNoteMarkerLabel(ratio);
+        // When both note label and ratchet badge exist, add class to swap positions
+        const currentRatchet = State.getRatchetCount(RATCHETS[S.patt], trackId, i);
+        if (currentRatchet > 1) {
+          c.classList.add('ratchet-lbl');
+        }
       }
       const setHihatCellMarker = () => {
         c.classList.remove('hht-tight', 'hht-open', 'hht-accent');

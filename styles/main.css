@@ -859,6 +859,49 @@ body.running #ss  { display: none; }
     padding: 11px 12px;
     touch-action: manipulation;
   }
+
+  /* Synth note grid labels: larger on mobile for readability */
+  .row[data-id="synth"] .sc.syn-note::before {
+    font-size: 9px;
+    left: 1px;
+    top: 1px;
+  }
+  .row[data-id="synth"] .sc.syn-note:not(.on)::before { opacity: 0.85; }
+
+  /* Ratchet badges on synth rows: larger on mobile */
+  .row[data-id="synth"] .sc.r2::after,
+  .row[data-id="synth"] .sc.r3::after {
+    font-size: 9px;
+    right: 1px;
+    bottom: 1px;
+  }
+
+  /* Synth note + ratchet coexistence: swap positions to avoid crowding */
+  .row[data-id="synth"] .sc.syn-note.ratchet-lbl::before {
+    top: auto;
+    bottom: 1px;
+  }
+  .row[data-id="synth"] .sc.ratchet-lbl.r2::after,
+  .row[data-id="synth"] .sc.ratchet-lbl.r3::after {
+    bottom: auto;
+    top: 1px;
+  }
+
+  /* Selected synth note step: stronger highlight on mobile */
+  .row[data-id="synth"] .sc.syn-note-selected {
+    outline-width: 3px;
+    outline-offset: -4px;
+  }
+
+  /* Synth note status/hint in voice panel: larger on mobile */
+  .hat-help {
+    font-size: 10px;
+    letter-spacing: 0.6px;
+  }
+  .hat-help-engine {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
 }
 
 .panel {
