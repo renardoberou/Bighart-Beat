@@ -52,7 +52,8 @@
     const decaySec = clamp(requestedDecay * profile.decay * (0.75 + shape * 0.55), 0.04, 2.5);
     const filterBase = 160 + pitchHz * (1.8 + tone * 12.5) * profile.tone;
     const filterHz = clamp(filterBase, 120, 12000);
-    const filterQ = clamp(0.2 + shape * 8.5 * profile.q + (profile.personality === 'acid-bass' ? tone * 4.5 : 0), 0.2, 18);
+    const acidQBoost = profile.personality === 'acid-bass' ? tone * 9.0 : 0;
+    const filterQ = clamp(0.2 + shape * 8.5 * profile.q + acidQBoost, 0.2, profile.personality === 'acid-bass' ? 24 : 18);
     const filterEnvAmount = clamp(profile.filterEnv * (0.75 + shape * 0.75) * (0.85 + tone * 0.30), 0, 4.5);
     const filterEndRatio = clamp(profile.filterEnd * (1.08 - shape * 0.28), 0.12, 0.62);
     const filterAttackSec = clamp(profile.filterSnap * (1.15 - shape * 0.30), 0.0005, 0.012);
@@ -62,7 +63,7 @@
     const driveAmount = clamp(profile.drive * (0.70 + shape * 0.70), 0, 0.75);
     const bodyGain = clamp(profile.body * (0.78 + tone * 0.20), 0, 0.7);
     const subGain = clamp(profile.sub * (1.10 - tone * 0.35), 0, 0.35);
-    const noiseGain = clamp(profile.noise * (0.40 + shape * 1.20), 0, 0.16);
+    const noiseGain = clamp(profile.noise * (0.40 + shape * 1.20), 0, profile.personality === 'industrial-mono' ? 0.20 : 0.16);
     const attackSec = clamp(profile.attack * (1.18 - shape * 0.35), 0.001, 0.03);
     const releaseTau = clamp(profile.release * (0.7 + decaySec * 0.35), 0.003, 0.20);
     const glideSec = clamp(profile.glide * (0.5 + shape), 0, 0.08);
@@ -102,7 +103,7 @@
       tone,
       modRatio,
       modIndex,
-      detuneCents: profile.personality === 'vintage-sh' ? (shape - 0.5) * 11 : (isAphexDigital ? -3 + (shape - 0.5) * 16 : 0),
+      detuneCents: profile.personality === 'vintage-sh' ? (shape - 0.5) * 11 : (profile.personality === 'analog-sub-body' ? Math.round((shape - 0.5) * 12) : (profile.personality === 'acid-bass' ? Math.round((shape - 0.5) * 20) : (profile.personality === 'industrial-mono' ? Math.round((shape - 0.5) * 30) : (isAphexDigital ? -3 + (shape - 0.5) * 16 : 0)))),
     };
   }
 
