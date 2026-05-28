@@ -27,6 +27,20 @@ const reznorStatus = State.formatSynthNoteStatusLabel({ stepIndex: 0, ratio, roo
 assert(nineOhNineStatus.includes('ROOT 100 Hz → 100 Hz'), 'status formatter can display the 909 engine-resolved Hz');
 assert(reznorStatus.includes('ROOT 100 Hz → 148 Hz'), 'status formatter can display the Reznor engine-resolved Hz');
 
+const nineOhNineWithEngine = State.formatSynthNoteStatusLabel({ stepIndex: 0, ratio, rootHz, pitchHz: expected909, engine: '909' });
+assert(nineOhNineWithEngine.includes('· 909'), 'status formatter appends uppercase engine tag when engine is provided');
+const aphexWithEngine = State.formatSynthNoteStatusLabel({ stepIndex: 3, ratio: 1.5, rootHz: 80, pitchHz: 120, engine: 'aphex' });
+assert(aphexWithEngine.includes('· APHEX'), 'status formatter appends uppercase engine tag for aphex');
+const reznorWithEngine = State.formatSynthNoteStatusLabel({ stepIndex: 7, ratio: 2, rootHz: 100, pitchHz: 148, engine: 'reznor' });
+assert(reznorWithEngine.includes('· REZNOR'), 'status formatter appends uppercase engine tag for reznor');
+const noEngine = State.formatSynthNoteStatusLabel({ stepIndex: 0, ratio: 1, rootHz: 100, pitchHz: 100 });
+assert(!noEngine.includes('· 808') && !noEngine.includes('· APHEX'), 'status formatter omits engine tag when engine is not provided');
+
+assert(
+  /formatSynthNoteStatusLabel\(\{[\s\S]*?engine:\s*S\.engine[\s\S]*?\}\)/.test(main),
+  'synthNoteStatusText passes S.engine into formatSynthNoteStatusLabel'
+);
+
 assert(
   /function\s+getStepSynthAudiblePitch\s*\(\s*step\s*\)\s*\{[\s\S]*SynthVoice\.resolveSynthVoiceSpec\(\s*S\.engine\s*,\s*\{\s*\.\.\.TRACKS\[6\]\.p\s*,\s*pitch:\s*getStepSynthPitch\(step\)\s*\}\s*\)\.pitchHz[\s\S]*\}/.test(main),
   'main exposes a selected-step audible pitch helper that uses the same engine resolver path/context as synthSynth audition/playback'

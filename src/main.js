@@ -1240,6 +1240,7 @@ function synthNoteStatusText(step) {
     ratio,
     rootHz,
     pitchHz: getStepSynthAudiblePitch(boundedStep),
+    engine: S.engine,
   });
 }
 

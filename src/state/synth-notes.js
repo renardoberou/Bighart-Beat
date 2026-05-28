@@ -75,6 +75,7 @@
     if (root && pitch) parts.push('ROOT ' + root + ' → ' + pitch);
     else if (root) parts.push('ROOT ' + root);
     else if (pitch) parts.push(pitch);
+    if (opts.engine) parts.push(opts.engine.toUpperCase());
     return parts.join(' · ');
   }
 
