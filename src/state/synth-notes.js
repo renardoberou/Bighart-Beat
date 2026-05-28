@@ -24,6 +24,13 @@
   ];
   const SYNTH_INTERVAL_RATIO_EPSILON = 0.001;
 
+  const ENGINE_DISPLAY_LABELS = {
+    '808': '808',
+    '909': '909',
+    'reznor': 'NIN',
+    'aphex': 'AFX',
+  };
+
   function finiteOr(value, fallback) {
     return Number.isFinite(value) ? value : fallback;
   }
@@ -66,6 +73,7 @@
     if (typeof engineId !== 'string' || !engineId) return '';
     const id = engineId.trim();
     if (!id) return '';
+    if (ENGINE_DISPLAY_LABELS[id] !== undefined) return ENGINE_DISPLAY_LABELS[id];
     // Keep numeric engine ids as-is, abbreviate named ones to 3 chars
     if (/^\d+$/.test(id)) return id;
     return id.slice(0, 3).toUpperCase();
@@ -212,6 +220,7 @@
     formatSynthNoteStatusLabel,
     formatSynthNoteCompactStatusLabel,
     abbreviateEngineId,
+    ENGINE_DISPLAY_LABELS,
     formatSynthNoteEditHintLabel,
     createDefaultSynthNotesGrid,
     createSynthNotesBanks,

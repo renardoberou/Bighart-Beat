@@ -204,6 +204,23 @@ assert(/buildSeq\(\)[\s\S]*updateSynthNoteStatus\(\)[\s\S]*previewSynthNoteEditA
 assert(!/autosave\s*\(/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation does not autosave because selection movement is UI-only');
 assert(!/SYNTH_NOTES\s*\[\s*S\.patt\s*\]\s*=|State\.cycleSynthNoteRatio|State\.randomHarmonicSynthNoteStep|State\.resetSynthNoteStepToRoot/.test(moveSelectedSynthNoteStepBody[1]), 'STEP navigation does not mutate synth note ratios');
 assert(css.includes('.row[data-id="synth"] .sc.syn-note-selected'), 'CSS defines a selected synth note step marker');
-assert(/\.row\[data-id="synth"\]\s+\.sc\.syn-note-selected\s*\{[\s\S]*?(outline|border|box-shadow)/.test(css), 'selected synth note marker has a visible mobile-readable outline/border/shadow');
+assert(/row\[data-id="synth"\]\s+\.sc\.syn-note-selected\s*\{[\s\S]*?(outline|border|box-shadow)/.test(css), 'selected synth note marker has a visible mobile-readable outline/border/shadow');
+
+// --- Engine display label mapping (Issue: display labels match button UI) ---
+assert.strictEqual(SynthNotes.ENGINE_DISPLAY_LABELS['808'], '808', '808 maps to 808');
+assert.strictEqual(SynthNotes.ENGINE_DISPLAY_LABELS['909'], '909', '909 maps to 909');
+assert.strictEqual(SynthNotes.ENGINE_DISPLAY_LABELS['reznor'], 'NIN', 'reznor maps to NIN');
+assert.strictEqual(SynthNotes.ENGINE_DISPLAY_LABELS['aphex'], 'AFX', 'aphex maps to AFX');
+
+const labelAphex = SynthNotes.formatSynthNoteCompactStatusLabel({ stepIndex: 0, ratio: 1, engine: 'aphex' });
+assert(labelAphex.includes('AFX'), 'compact status label for aphex uses AFX, got: ' + labelAphex);
+assert(!labelAphex.includes('APX'), 'compact status label for aphex does not use old APX abbreviation, got: ' + labelAphex);
+
+const labelReznor = SynthNotes.formatSynthNoteCompactStatusLabel({ stepIndex: 0, ratio: 1, engine: 'reznor' });
+assert(labelReznor.includes('NIN'), 'compact status label for reznor uses NIN, got: ' + labelReznor);
+assert(!labelReznor.includes('REZ'), 'compact status label for reznor does not use old REZ abbreviation, got: ' + labelReznor);
+
+const label909 = SynthNotes.formatSynthNoteCompactStatusLabel({ stepIndex: 0, ratio: 1, engine: '909' });
+assert(label909.includes('909'), 'compact status label for 909 includes 909, got: ' + label909);
 
 console.log('Issue 015 synth note harmonic-step checks passed.');
