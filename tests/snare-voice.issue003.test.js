@@ -37,6 +37,8 @@ function assertFiniteBounded(spec, label) {
     'noiseStopSec',
     'shellStopSec',
     'crackStopSec',
+    'digitalCrackGain',
+    'digitalCrackHz',
   ].forEach(key => {
     assert(Number.isFinite(spec[key]), `${label}: ${key} is finite`);
     assert(spec[key] >= 0, `${label}: ${key} is non-negative`);
@@ -77,6 +79,11 @@ assert(reznor.noisePeakGain > snare909.noisePeakGain * 0.95, 'Reznor snare noise
 assert(reznor.noiseBandpassHz < snare909.noiseBandpassHz, 'Reznor-inspired snare is darker/noisier than 909');
 assert(aphex.crackHighpassHz > snare808.crackHighpassHz, 'Aphex-inspired snare has a brighter crack than 808');
 assert(aphex.shellDecaySec < snare808.shellDecaySec, 'Aphex-inspired snare is tighter than 808');
+
+// digital crack personality differentiation
+assert(aphex.digitalCrackGain > 0, 'Aphex snare has digitalCrackGain > 0 at full velocity');
+assert.strictEqual(snare808.digitalCrackGain, 0, '808 snare has no digital crack (gain is 0)');
+assert(aphex.digitalCrackHz >= snare808.digitalCrackHz, 'Aphex digitalCrackHz >= 808 digitalCrackHz');
 
 const hostile = resolveSnareVoiceSpec('reznor', {
   tone: Infinity,

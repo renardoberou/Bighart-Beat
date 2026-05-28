@@ -21,6 +21,7 @@
     const profile = fullProfile.snare;
     const p = params || {};
     const v = clamp(finiteOr(velocity, 1), 0, 1);
+    const isReznor = engine === 'reznor';
 
     const tone = clamp(finiteOr(p.tone, 180), 60, 900);
     const body = clamp(finiteOr(p.body, 0.72), 0, 1);
@@ -56,6 +57,15 @@
       shellStopSec: clamp(shellDecaySec + 0.033, 0.02, 0.5),
       crackStopSec: clamp(crackDecaySec + 0.008, 0.01, 0.055),
       outputTrim,
+      digitalCrackGain: clamp(
+        (engine === 'aphex'
+          ? clamp(0.18 * snapMul * outputTrim, 0, 0.42)
+          : (isReznor ? clamp(0.06 * snapMul * outputTrim, 0, 0.28) : 0)) * v,
+        0, 0.42
+      ),
+      digitalCrackHz: engine === 'aphex'
+        ? clamp(3200 * toneMul, 2000, 8000)
+        : clamp(2200 * toneMul, 1500, 6000),
     };
   }
 

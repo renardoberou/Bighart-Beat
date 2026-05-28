@@ -651,6 +651,17 @@ function synthSnare(t, v, p) {
   cg.gain.exponentialRampToValueAtTime(.001, t + spec.crackDecaySec);
   cr.connect(cf); cf.connect(cg); cg.connect(dest);
   cr.start(t); cr.stop(t + spec.crackStopSec);
+
+  // digital crack — short square-wave burst for IDM/industrial engines
+  if (spec.digitalCrackGain > 0.001) {
+    const dc = A.createOscillator(); dc.type = 'square';
+    dc.frequency.value = spec.digitalCrackHz;
+    const dg = A.createGain();
+    dg.gain.setValueAtTime(spec.digitalCrackGain, t);
+    dg.gain.exponentialRampToValueAtTime(.001, t + 0.006);
+    dc.connect(dg); dg.connect(dest);
+    dc.start(t); dc.stop(t + 0.008);
+  }
 }
 
 function triggerHihatChoke(t, openAmount, choke, spec) {

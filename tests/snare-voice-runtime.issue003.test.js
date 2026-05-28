@@ -97,5 +97,9 @@ assert(
   /const\s+dest\s*=\s*routeVoice\(t,\s*1,\s*Math\.max\(spec\.noiseStopSec,\s*spec\.shellStopSec,\s*spec\.crackStopSec\)\)/.test(main),
   'snare remains routed through the track send router with its resolved tail',
 );
+assert(
+  /spec\.digitalCrackGain/.test(main) && /spec\.digitalCrackHz/.test(main),
+  'main.js wires digitalCrackGain and digitalCrackHz into synthSnare',
+);
 
 console.log('Issue 003 snare voice runtime wiring checks passed.');
