@@ -38,7 +38,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.filterAttackSec >= 0.0005 && spec.filterAttackSec <= 0.012, `${label}: filterAttackSec bounded`);
   assert(spec.filterDecaySec > spec.filterAttackSec, `${label}: filterDecaySec closes after filter attack`);
   assert(spec.filterDecaySec <= spec.decaySec, `${label}: filterDecaySec closes no later than voice decay`);
-  assert(spec.filterQ >= 0.2 && spec.filterQ <= (spec.personality === 'acid-bass' ? 24 : 18), `${label}: filterQ bounded`);
+  assert(spec.filterQ >= 0.2 && spec.filterQ <= (spec.personality === 'acid-bass' ? 28 : 18), `${label}: filterQ bounded`);
   assert(spec.driveAmount >= 0 && spec.driveAmount <= 0.75, `${label}: driveAmount bounded`);
   assert(spec.bodyGain >= 0 && spec.bodyGain <= 0.7, `${label}: bodyGain bounded`);
   assert(spec.subGain >= 0 && spec.subGain <= 0.35, `${label}: subGain bounded`);
@@ -49,7 +49,7 @@ function assertFiniteBounded(spec, label) {
   assert(['ms20-bass', 'analog-sub-body', 'acid-bass', 'industrial-mono', 'vintage-sh', 'idm-digital-alien'].includes(spec.personality), `${label}: personality known`);
   assert(spec.modRatio >= 0.5 && spec.modRatio <= 8, `${label}: FM/digital mod ratio bounded`);
   assert(spec.modIndex >= 0 && spec.modIndex <= 260, `${label}: FM/digital mod index bounded`);
-  assert(spec.detuneCents >= -24 && spec.detuneCents <= 24, `${label}: digital detune bounded`);
+  assert(spec.detuneCents >= -24 && spec.detuneCents <= 30, `${label}: digital detune bounded`);
 }
 
 for (const engine of ['808', '909', 'reznor', 'aphex', 'unknown']) {
@@ -112,14 +112,14 @@ const body808Sharp = resolveSynthVoiceSpec('808', { pitch: 220, decay: 0.35, ton
 const acid909Sharp = resolveSynthVoiceSpec('909', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.9 });
 const industrialSharp = resolveSynthVoiceSpec('reznor', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.9 });
 assert(body808Sharp.detuneCents !== 0, '808 at sharp shape gets analog detune drift');
-assert(body808Sharp.detuneCents === 5, '808 sharp shape gets +5 cents warm drift');
+assert(body808Sharp.detuneCents === 9, '808 sharp shape gets +9 cents warm drift');
 assert(acid909Sharp.detuneCents !== 0, '909 at sharp shape gets acid detune');
-assert(acid909Sharp.detuneCents === 8, '909 sharp shape gets +8 cents acid detune');
+assert(acid909Sharp.detuneCents === 10, '909 sharp shape gets +10 cents acid detune');
 assert(industrialSharp.detuneCents !== 0, 'reznor at sharp shape gets industrial detune');
-assert(industrialSharp.detuneCents === 12, 'reznor sharp shape gets +12 cents industrial detune');
-assert(body808Sharp.detuneCents >= -6 && body808Sharp.detuneCents <= 6, '808 detune stays within analog drift bounds');
-assert(acid909Sharp.detuneCents >= -10 && acid909Sharp.detuneCents <= 10, '909 detune stays within acid bounds');
-assert(industrialSharp.detuneCents >= -15 && industrialSharp.detuneCents <= 15, 'reznor detune stays within industrial bounds');
+assert(industrialSharp.detuneCents === 22, 'reznor sharp shape gets +22 cents industrial detune');
+assert(body808Sharp.detuneCents >= -10 && body808Sharp.detuneCents <= 15, '808 detune stays within analog drift bounds');
+assert(acid909Sharp.detuneCents >= -18 && acid909Sharp.detuneCents <= 15, '909 detune stays within acid bounds');
+assert(industrialSharp.detuneCents >= -20 && industrialSharp.detuneCents <= 30, 'reznor detune stays within industrial bounds');
 assert(aphexIdm.filterQ >= 5.0, 'aphex keeps a narrow glass/resonant focus');
 assert.notStrictEqual(aphexIdm.oscType, acid909.oscType, 'aphex oscillator differs from 909 acid');
 assert.notStrictEqual(aphexIdm.oscType, industrial.oscType, 'aphex oscillator differs from Reznor industrial square');

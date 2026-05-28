@@ -53,7 +53,7 @@
     const filterBase = 160 + pitchHz * (1.8 + tone * 12.5) * profile.tone;
     const filterHz = clamp(filterBase, 120, 12000);
     const acidQBoost = profile.personality === 'acid-bass' ? tone * 9.0 : 0;
-    const filterQ = clamp(0.2 + shape * 8.5 * profile.q + acidQBoost, 0.2, profile.personality === 'acid-bass' ? 24 : 18);
+    const filterQ = clamp(0.2 + shape * 8.5 * profile.q + acidQBoost, 0.2, profile.personality === 'acid-bass' ? 28 : 18);
     const filterEnvAmount = clamp(profile.filterEnv * (0.75 + shape * 0.75) * (0.85 + tone * 0.30), 0, 4.5);
     const filterEndRatio = clamp(profile.filterEnd * (1.08 - shape * 0.28), 0.12, 0.62);
     const filterAttackSec = clamp(profile.filterSnap * (1.15 - shape * 0.30), 0.0005, 0.012);
@@ -103,7 +103,7 @@
       tone,
       modRatio,
       modIndex,
-      detuneCents: profile.personality === 'vintage-sh' ? (shape - 0.5) * 11 : (profile.personality === 'analog-sub-body' ? Math.round((shape - 0.5) * 12) : (profile.personality === 'acid-bass' ? Math.round((shape - 0.5) * 20) : (profile.personality === 'industrial-mono' ? Math.round((shape - 0.5) * 30) : (isAphexDigital ? -3 + (shape - 0.5) * 16 : 0)))),
+      detuneCents: profile.personality === 'vintage-sh' ? (shape - 0.5) * 11 : (profile.personality === 'analog-sub-body' ? Math.round(3 + (shape - 0.5) * 16) : (profile.personality === 'acid-bass' ? Math.round(-2 + (shape - 0.5) * 30) : (profile.personality === 'industrial-mono' ? Math.round(4 + (shape - 0.5) * 44) : (isAphexDigital ? -5 + (shape - 0.5) * 20 : 0)))),
     };
   }
 
