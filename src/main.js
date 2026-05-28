@@ -1245,11 +1245,9 @@ function setLastSynthNoteStep(step) {
 function synthNoteStatusText(step) {
   const boundedStep = clamp(Number.isInteger(step) ? step : LAST_SYNTH_NOTE_STEP, 0, 15);
   const ratio = getStepSynthRatio(boundedStep);
-  const rootHz = TRACKS[6].p.pitch;
-  return State.formatSynthNoteStatusLabel({
+  return State.formatSynthNoteCompactStatusLabel({
     stepIndex: boundedStep,
     ratio,
-    rootHz,
     pitchHz: getStepSynthAudiblePitch(boundedStep),
     engine: S.engine,
   });
@@ -1590,7 +1588,7 @@ function buildSeq() {
         if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT && i === LAST_SYNTH_NOTE_STEP) {
           c.classList.add('syn-note-selected');
         }
-        if (trackId !== 'synth' || !PATTERNS[S.patt][trackId][i]) return;
+        if (trackId !== 'synth') return;
         const ratio = getStepSynthRatio(i);
         c.classList.add('syn-note');
         c.dataset.note = State.formatSynthNoteMarkerLabel(ratio);

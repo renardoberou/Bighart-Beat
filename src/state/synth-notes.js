@@ -62,6 +62,15 @@
     return formatSynthNoteIntervalLabel(ratio);
   }
 
+  function abbreviateEngineId(engineId) {
+    if (typeof engineId !== 'string' || !engineId) return '';
+    const id = engineId.trim();
+    if (!id) return '';
+    // Keep numeric engine ids as-is, abbreviate named ones to 3 chars
+    if (/^\d+$/.test(id)) return id;
+    return id.slice(0, 3).toUpperCase();
+  }
+
   function formatSynthNoteStatusLabel(options) {
     const opts = options || {};
     const rawStep = Number.isInteger(opts.stepIndex) ? opts.stepIndex : 0;
@@ -76,6 +85,18 @@
     else if (root) parts.push('ROOT ' + root);
     else if (pitch) parts.push(pitch);
     if (opts.engine) parts.push(opts.engine.toUpperCase());
+    return parts.join(' · ');
+  }
+
+  function formatSynthNoteCompactStatusLabel(options) {
+    const opts = options || {};
+    const rawStep = Number.isInteger(opts.stepIndex) ? opts.stepIndex : 0;
+    const step = clamp(rawStep, 0, STEP_COUNT - 1);
+    const interval = formatSynthNoteIntervalLabel(opts.ratio);
+    const parts = [String(step + 1).padStart(2, '0'), interval];
+    if (Number.isFinite(opts.pitchHz)) parts.push(Math.round(opts.pitchHz) + ' Hz');
+    const engineAbbr = abbreviateEngineId(opts.engine);
+    if (engineAbbr) parts.push(engineAbbr);
     return parts.join(' · ');
   }
 
@@ -189,6 +210,8 @@
     formatSynthNoteIntervalLabel,
     formatSynthNoteMarkerLabel,
     formatSynthNoteStatusLabel,
+    formatSynthNoteCompactStatusLabel,
+    abbreviateEngineId,
     formatSynthNoteEditHintLabel,
     createDefaultSynthNotesGrid,
     createSynthNotesBanks,

@@ -173,7 +173,7 @@ assert(/querySelector\('\[data-synth-rnd-harm\]'\)\.addEventListener\('\s*click\
 assert(mainJs.includes('data-synth-note-status'), 'voice editor exposes selected synth note status marker');
 assert(mainJs.includes('data-synth-note-hint'), 'voice editor exposes selected synth note harmonic edit hint marker');
 assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');
-assert(mainJs.includes('formatSynthNoteStatusLabel'), 'voice editor uses synth note status label helper');
+assert(mainJs.includes('formatSynthNoteCompactStatusLabel'), 'voice editor uses compact synth note status label helper');
 assert(mainJs.includes('formatSynthNoteEditHintLabel'), 'voice editor uses synth note edit hint helper');
 assert(mainJs.includes('State.formatSynthNoteMarkerLabel(ratio)'), 'runtime uses compact marker helper for step badges');
 assert(/function updateSynthNoteStatus\(\) \{[\s\S]*?querySelector\('\[data-synth-note-status\]'\)[\s\S]*?querySelector\('\[data-synth-note-hint\]'\)[\s\S]*?synthNoteStatusText\(LAST_SYNTH_NOTE_STEP\)[\s\S]*?synthNoteEditHintText\(LAST_SYNTH_NOTE_STEP\)/.test(mainJs), 'selected synth note refresh updates both status and adjacent harmonic edit hint');

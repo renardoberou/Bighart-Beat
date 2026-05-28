@@ -37,8 +37,8 @@ const noEngine = State.formatSynthNoteStatusLabel({ stepIndex: 0, ratio: 1, root
 assert(!noEngine.includes('· 808') && !noEngine.includes('· APHEX'), 'status formatter omits engine tag when engine is not provided');
 
 assert(
-  /formatSynthNoteStatusLabel\(\{[\s\S]*?engine:\s*S\.engine[\s\S]*?\}\)/.test(main),
-  'synthNoteStatusText passes S.engine into formatSynthNoteStatusLabel'
+  /formatSynthNoteCompactStatusLabel\(\{[\s\S]*?engine:\s*S\.engine[\s\S]*?\}\)/.test(main),
+  'synthNoteStatusText passes S.engine into formatSynthNoteCompactStatusLabel'
 );
 
 assert(
