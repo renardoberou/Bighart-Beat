@@ -47,8 +47,8 @@ const HIHAT_VOICE_PREVIOUS_TOKENS = [
   HIHAT_APHEX_CLOSED_NEEDLE_ACCENT_TOKEN,
 ];
 const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
-const SYNTH_VOICE_TOKEN = 'v=synth-detune-personality-20260527';
-const MAIN_JS_TOKEN = 'v=synth-detune-personality-20260527';
+const SYNTH_VOICE_TOKEN = 'v=synth-detune-personality-20260527-b';
+const MAIN_JS_TOKEN = 'v=synth-detune-personality-20260527-b';
 const MAIN_JS_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   HIHAT_METALLIC_RATTLE_PAN_TOKEN,
