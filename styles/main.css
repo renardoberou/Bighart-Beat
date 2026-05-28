@@ -1191,14 +1191,13 @@ body.running #ss  { display: none; }
 .fx-nm.dly { color: var(--skyLt); }
 .fx-nm.rev { color: var(--etherLt); }
 .wreck-send-status {
-  margin: -2px 0 8px;
-  padding: 5px 7px;
-  border: 1px solid var(--border);
-  background: rgba(0,0,0,.18);
+  margin: 0 0 4px;
+  padding: 2px 0;
   color: var(--textDm);
-  font-size: 8px;
-  letter-spacing: 1.4px;
-  text-align: center;
+  font-size: 7px;
+  letter-spacing: 1px;
+  text-align: left;
+  opacity: 0.7;
 }
 .wreck-send-status--warn {
   color: var(--amberLt);
@@ -1209,6 +1208,16 @@ body.running #ss  { display: none; }
   color: var(--greenLt);
   border-color: var(--green);
   background: rgba(42,122,74,.14);
+}
+.wreck-order--comp-wreck {
+  border-color: var(--green);
+  color: var(--greenLt);
+  background: rgba(42,122,74,.12);
+}
+.wreck-order--wreck-comp {
+  border-color: var(--amberLt);
+  color: var(--amberLt);
+  background: rgba(106,74,18,.12);
 }
 .fx-tog {
   width: 28px; height: 14px;
@@ -1325,6 +1334,14 @@ body.running #ss  { display: none; }
   border-color: var(--t-syn);
   color: var(--bg);
   background: var(--t-syn);
+}
+
+@keyframes syn-note-edit-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,176,0,0.0); }
+  50% { box-shadow: 0 0 6px 2px rgba(255,176,0,0.25); }
+}
+.syn-note-controls__btn--edit:not(.on) {
+  animation: syn-note-edit-pulse 2.4s ease-in-out 3;
 }
 
 /* output VU */

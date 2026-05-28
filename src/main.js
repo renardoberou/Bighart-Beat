@@ -2426,7 +2426,12 @@ function syncFxControls() {
   setFdr('wreckTone', Math.round(FX.wreck.tone * 100), v => v + '%');
   setFdr('wreckMix', Math.round(FX.wreck.mix * 100), v => v + '%');
   setFdr('wreckOut', Math.round(FX.wreck.out * 100), v => v + '%');
-  if ($('wreckOrderToggle')) $('wreckOrderToggle').textContent = FX.wreck.order === 'wreck-comp' ? 'ORDER: WRK→COMP' : 'ORDER: COMP→WRK';
+  const _wt = $('wreckOrderToggle');
+  if (_wt) {
+    _wt.textContent = FX.wreck.order === 'wreck-comp' ? 'ORDER: WRK→COMP' : 'ORDER: COMP→WRK';
+    _wt.classList.toggle('wreck-order--comp-wreck', FX.wreck.order === 'comp-wreck');
+    _wt.classList.toggle('wreck-order--wreck-comp', FX.wreck.order === 'wreck-comp');
+  }
   updateWreckSendStatus();
 }
 
@@ -2740,6 +2745,8 @@ function wire() {
   if (orderToggle) {
     orderToggle.addEventListener('click', () => {
       FX.wreck.order = FX.wreck.order === 'wreck-comp' ? 'comp-wreck' : 'wreck-comp';
+      orderToggle.classList.toggle('wreck-order--comp-wreck', FX.wreck.order === 'comp-wreck');
+      orderToggle.classList.toggle('wreck-order--wreck-comp', FX.wreck.order === 'wreck-comp');
       syncFxControls();
       applyFXState();
       autosave();
