@@ -174,5 +174,5 @@ assert(/toggleHihatAccent\(HHT_ACCENT\[S\.patt\],\s*i\)/.test(openHihatClickBran
 assert(openHihatClickBranch[1].indexOf('toggleHihatAccent') < openHihatClickBranch[1].indexOf('toggleStep'), 'selected active OHH accent toggle runs before OHH row can toggle the step off');
 assert(/clearHihatAccent\(HHT_ACCENT\[S\.patt\],\s*i\)/.test(main), 'turning hihat step off clears accent');
 assert(/\.sc\.hht-accent/.test(css), 'accent marker has CSS');
-assert(/v=aphex-snare-clap-idm-20260528/.test(html), 'cache bust/version marker updated after aphex-snare-clap-idm slice');
+assert(/v=hihat-aphex-bright-headroom-20260528/.test(html), 'cache bust/version marker updated after hihat-aphex-bright-headroom slice');
 console.log('Issue 003 hihat accent checks passed.');

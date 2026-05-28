@@ -36,8 +36,8 @@ assert(/data-open=['"]\.45['"][\s\S]*?>TIGHT</.test(hihatPanel), 'tight hihat pr
 assert(/data-open=['"]1['"][\s\S]*?>OPEN</.test(hihatPanel), 'open hihat preview button remains present');
 
 assert(
-  /v=aphex-snare-clap-idm-20260528/.test(html),
-  'static asset cache token is bumped for the aphex-snare-clap-idm slice',
+  /v=hihat-aphex-bright-headroom-20260528/.test(html),
+  'static asset cache token is bumped for the hihat-aphex-bright-headroom slice',
 );
 
 console.log('Issue 003 hihat OPEN fader contract regression checks passed.');
