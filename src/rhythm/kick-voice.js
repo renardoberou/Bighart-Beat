@@ -42,11 +42,11 @@
     const isAphex = engine === 'aphex';
     const digitalCrack = isAphex && accentedHit > 0;
     const digitalCrackGain = clamp(
-      (isAphex ? clamp(0.16 * accentedHit, 0, 0.42) : (v > 0 ? 0 : 0)) * v,
+      (isAphex ? clamp(0.16 * accentedHit, 0, 0.42) : 0) * v,
       0, 0.42
     );
-    const digitalCrackDecay = isAphex
-      ? clamp(0.006 + accentedHit * 0.034, 0.002, 0.04)
+    const digitalCrackHz = isAphex
+      ? clamp(2800 + accentedHit * 3200, 1500, 8000)
       : 0;
 
     return {
@@ -68,7 +68,7 @@
       subPeakGain: clamp(v * 0.28 * subMul * outputTrim, 0, 0.32),
       digitalCrack,
       digitalCrackGain,
-      digitalCrackDecay,
+      digitalCrackHz,
     };
   }
 

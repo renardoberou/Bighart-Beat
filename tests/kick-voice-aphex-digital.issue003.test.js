@@ -26,8 +26,8 @@ assert.strictEqual(aphexLoud.engine, 'aphex', 'aphex engine id preserved');
 assert.strictEqual(aphexLoud.digitalCrack, true, 'aphex loud kick has digitalCrack enabled');
 assert(Number.isFinite(aphexLoud.digitalCrackGain), 'digitalCrackGain is a finite number');
 assert(aphexLoud.digitalCrackGain > 0, 'aphex loud kick has positive digitalCrackGain');
-assert(Number.isFinite(aphexLoud.digitalCrackDecay), 'digitalCrackDecay is a finite number');
-assert(aphexLoud.digitalCrackDecay > 0, 'aphex loud kick has positive digitalCrackDecay');
+assert(Number.isFinite(aphexLoud.digitalCrackHz), 'digitalCrackHz is a finite number');
+assert(aphexLoud.digitalCrackHz > 0, 'aphex loud kick has positive digitalCrackHz');
 
 // ── Test 2: Aphex at medium-high velocity (just above accent threshold) gets digitalCrack ──
 const aphexMed = resolveKickVoiceSpec('aphex', baseParams, 0.8);
@@ -49,6 +49,20 @@ assert(
   'aphex at velocity 0.5 does not trigger digitalCrack'
 );
 
+// ── Test 4b: Aphex at exact accent threshold (0.75) — accentedHit === 0, no crack ──
+const aphexBoundary = resolveKickVoiceSpec('aphex', baseParams, 0.75);
+assert(
+  !aphexBoundary.digitalCrack && aphexBoundary.digitalCrackGain === 0,
+  'aphex at velocity 0.75 (exact threshold) does not trigger digitalCrack'
+);
+
+// ── Test 4c: Aphex at zero velocity — no crack ──
+const aphexZero = resolveKickVoiceSpec('aphex', baseParams, 0);
+assert(
+  !aphexZero.digitalCrack && aphexZero.digitalCrackGain === 0,
+  'aphex at velocity 0 does not trigger digitalCrack'
+);
+
 // ── Test 5: Non-aphex engines have no digitalCrack ──
 for (const engine of ['808', '909', 'reznor']) {
   const spec = resolveKickVoiceSpec(engine, baseParams, 1);
@@ -60,11 +74,25 @@ for (const engine of ['808', '909', 'reznor']) {
     spec.digitalCrackGain, 0,
     `${engine} engine has zero digitalCrackGain`
   );
+  assert.strictEqual(
+    spec.digitalCrackHz, 0,
+    `${engine} engine has zero digitalCrackHz`
+  );
 }
 
 // ── Test 6: digitalCrackGain is bounded ──
 assert(aphexLoud.digitalCrackGain <= 0.42, 'digitalCrackGain stays within headroom bound');
-assert(aphexLoud.digitalCrackDecay >= 0.002, 'digitalCrackDecay is at least 2ms');
-assert(aphexLoud.digitalCrackDecay <= 0.04, 'digitalCrackDecay is at most 40ms');
+assert(aphexLoud.digitalCrackGain > 0, 'digitalCrackGain is positive at max velocity');
+
+// ── Test 7: digitalCrackHz is bounded ──
+assert(aphexLoud.digitalCrackHz >= 1500, 'digitalCrackHz is at least 1500 Hz');
+assert(aphexLoud.digitalCrackHz <= 8000, 'digitalCrackHz is at most 8000 Hz');
+
+// ── Test 8: digitalCrackHz scales with accentedHit ──
+assert(aphexMed.digitalCrackHz >= 1500, 'med velocity crack Hz is within bounds');
+assert(aphexMed.digitalCrackHz <= aphexLoud.digitalCrackHz, 'Hz does not exceed max at lower velocity');
+
+// ── Test 9: Spec does not contain stale digitalCrackDecay field ──
+assert.strictEqual(aphexLoud.digitalCrackDecay, undefined, 'stale digitalCrackDecay field is not present');
 
 console.log('Aphex IDM digital crack transient kick-voice tests passed.');

@@ -617,6 +617,17 @@ function synthKick(t, v, p) {
   g2.gain.exponentialRampToValueAtTime(.001, t + spec.subDecaySec);
   o2.connect(g2); g2.connect(dest);
   o2.start(t); o2.stop(t + spec.subStopSec);
+
+  // digital crack — short square-wave burst for aphex/IDM kick character
+  if (spec.digitalCrackGain > 0.001) {
+    const dc = A.createOscillator(); dc.type = 'square';
+    dc.frequency.value = spec.digitalCrackHz;
+    const dg = A.createGain();
+    dg.gain.setValueAtTime(spec.digitalCrackGain, t);
+    dg.gain.exponentialRampToValueAtTime(.001, t + 0.006);
+    dc.connect(dg); dg.connect(dest);
+    dc.start(t); dc.stop(t + 0.008);
+  }
 }
 
 // ── SNARE ── noise + pitched shell + crack
