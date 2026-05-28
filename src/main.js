@@ -912,6 +912,18 @@ function synthClap(t, v, p) {
     }
     ns.start(bt); ns.stop(bt + b.durationSec + spec.stopPaddingSec);
   }
+
+  // digital texture — short high-frequency noise burst for IDM/industrial engines
+  if (spec.digitalTextureGain > 0.001) {
+    const dt = A.createBufferSource(); dt.buffer = nz; dt.loop = true;
+    const df = A.createBiquadFilter(); df.type = 'highpass';
+    df.frequency.value = spec.digitalCrackleHz;
+    const dg = A.createGain();
+    dg.gain.setValueAtTime(spec.digitalTextureGain, t);
+    dg.gain.exponentialRampToValueAtTime(.001, t + 0.008);
+    dt.connect(df); df.connect(dg); dg.connect(dest);
+    dt.start(t); dt.stop(t + 0.010);
+  }
 }
 
 // ── INPUT ── sample playback

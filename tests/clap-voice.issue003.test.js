@@ -27,6 +27,8 @@ function assertFiniteBounded(spec, label) {
     'filterQ',
     'stopPaddingSec',
     'velocityGain',
+    'digitalTextureGain',
+    'digitalCrackleHz',
   ].forEach(key => {
     assert(Number.isFinite(spec[key]), `${label}: ${key} is finite`);
     assert(spec[key] >= 0, `${label}: ${key} is non-negative`);
@@ -94,5 +96,17 @@ const hostile = resolveClapVoiceSpec('reznor', {
 }, 99);
 assertFiniteBounded(hostile, 'hostile params');
 assert(hostile.bursts.every(b => b.gain <= 0.55), 'hostile params cannot exceed clap burst headroom');
+
+const aphexFull = resolveClapVoiceSpec('aphex', baseParams, 1);
+const clap808Full = resolveClapVoiceSpec('808', baseParams, 1);
+const reznorFull = resolveClapVoiceSpec('reznor', baseParams, 1);
+const reznorSoft = resolveClapVoiceSpec('reznor', baseParams, 0.2);
+
+assert(aphexFull.digitalTextureGain > 0, 'aphex clap has digital texture at full velocity');
+assert.strictEqual(clap808Full.digitalTextureGain, 0, '808 clap has zero digital texture (no IDM character)');
+assert(aphexFull.digitalCrackleHz >= 8000, 'aphex digital crackle is high-frequency for IDM character');
+assert(reznorFull.digitalTextureGain > 0, 'reznor clap has small but non-zero digital texture at high velocity');
+assert(reznorFull.digitalTextureGain < aphexFull.digitalTextureGain, 'reznor digital texture is less than aphex');
+assert(reznorSoft.digitalTextureGain >= 0, 'reznor soft hit has non-negative digital texture');
 
 console.log('Issue 003 clap voice resolver checks passed.');

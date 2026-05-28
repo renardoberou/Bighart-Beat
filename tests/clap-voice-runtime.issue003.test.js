@@ -93,5 +93,13 @@ assert(
   !/bp\.frequency\.value\s*=\s*p\.tone/.test(main),
   'synthClap no longer drives filters directly from raw tone params',
 );
+assert(
+  /digitalTextureGain/.test(main),
+  'synthClap references digitalTextureGain from resolved clap spec',
+);
+assert(
+  /digitalCrackleHz/.test(main),
+  'synthClap references digitalCrackleHz from resolved clap spec',
+);
 
 console.log('Issue 003 clap voice runtime wiring checks passed.');
