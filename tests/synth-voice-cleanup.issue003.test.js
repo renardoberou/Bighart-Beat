@@ -27,7 +27,7 @@ assert(
 );
 
 assert(
-  /function\s+triggerSynthChoke\s*\(\s*t,\s*voiceGain,\s*spec,\s*cleanup\s*\)\s*\{[\s\S]*const\s+previousCleanup\s*=\s*synthVoiceState\.cleanup[\s\S]*const\s+cleanupAt\s*=\s*t\s*\+\s*Math\.max\(\s*\.02,\s*Math\.min\(\s*\.18,\s*spec\.chokeTau\s*\*\s*6\s*\)\s*\)[\s\S]*previousCleanup\(\s*cleanupAt\s*\)[\s\S]*synthVoiceState\.cleanup\s*=\s*cleanup/.test(main),
+  /function\s+triggerSynthChoke\s*\([^)]*\)\s*\{[\s\S]*const\s+previousCleanup\s*=\s*synthVoiceState\.cleanup[\s\S]*const\s+cleanupAt\s*=\s*t\s*\+\s*Math\.max\(\s*\.02,\s*Math\.min\(\s*\.18,\s*spec\.chokeTau\s*\*\s*6\s*\)\s*\)[\s\S]*previousCleanup\(\s*cleanupAt\s*\)[\s\S]*synthVoiceState\.cleanup\s*=\s*cleanup/.test(main),
   'triggerSynthChoke retires the previous cleanup handle shortly after the choke tail and stores the new handle'
 );
 
@@ -56,8 +56,8 @@ assert(
   'cleanup handle includes optional noise source/filter/gain nodes when created'
 );
 assert(
-  /if\s*\(\s*!audition\s*\)\s*\{\s*triggerSynthChoke\(\s*t,\s*voiceGain,\s*spec,\s*createSynthVoiceCleanupHandle\(\s*synthCleanupNodes\s*\)\s*\);\s*\}/.test(synthBody),
-  'only non-audition playback stores/replaces the cleanup handle'
+  /if\s*\(\s*!audition\s*\)\s*\{\s*triggerSynthChoke\(\s*t,\s*voiceGain,\s*spec,\s*createSynthVoiceCleanupHandle\(\s*synthCleanupNodes\s*\)\s*,\s*timeSincePreviousSec\s*\);\s*\}/.test(synthBody),
+  'only non-audition playback stores/replaces the cleanup handle (with legato timeSincePreviousSec)'
 );
 assert(
   !/audition[\s\S]{0,120}synthVoiceState\.cleanup\s*=/.test(synthBody),

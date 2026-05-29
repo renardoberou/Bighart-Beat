@@ -22,8 +22,8 @@ assert(
   'synthSynth derives an explicit audition flag from options.audition'
 );
 assert(
-  /if\s*\(\s*!audition\s*\)\s*\{\s*triggerSynthChoke\(t,\s*voiceGain,\s*spec,\s*createSynthVoiceCleanupHandle\(synthCleanupNodes\)\);\s*\}/.test(synthBody),
-  'synthSynth only chokes/stores the shared mono voice cleanup for non-audition playback'
+  /if\s*\(\s*!audition\s*\)\s*\{\s*triggerSynthChoke\(t,\s*voiceGain,\s*spec,\s*createSynthVoiceCleanupHandle\(synthCleanupNodes\)\s*,/.test(synthBody),
+  'synthSynth only chokes/stores the shared mono voice cleanup for non-audition playback (now with legato timeSincePreviousSec arg)'
 );
 assert(
   /const\s+previousPitchHz\s*=\s*audition\s*\?\s*null\s*:\s*synthVoiceState\.pitchHz/.test(synthBody),

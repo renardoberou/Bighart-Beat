@@ -1085,15 +1085,16 @@ function createSynthVoiceCleanupHandle(nodes) {
   };
 }
 
-function triggerSynthChoke(t, voiceGain, spec, cleanup) {
+function triggerSynthChoke(t, voiceGain, spec, cleanup, timeSincePreviousSec = Infinity) {
   const previous = synthVoiceState.gain;
   const previousCleanup = synthVoiceState.cleanup;
-  if (previous && previous.gain) {
+  const isLegato = timeSincePreviousSec < 0.085;
+  if (previous && previous.gain && !isLegato) {
     const g = previous.gain;
     cancelAndHoldOrSmoothParam(g, t, { floor: .0008, smoothTime: .003, fallbackValue: .0008 });
     g.setTargetAtTime(.0008, t, spec.chokeTau);
   }
-  if (previousCleanup) {
+  if (previousCleanup && !isLegato) {
     const cleanupAt = t + Math.max(.02, Math.min(.18, spec.chokeTau * 6));
     previousCleanup(cleanupAt);
   }
@@ -1124,6 +1125,7 @@ function synthSynth(t, v, p, options = {}) {
   osc.type = spec.oscType;
   const previousPitchHz = audition ? null : synthVoiceState.pitchHz;
   const previousTriggerTime = audition ? null : synthVoiceState.triggerTime;
+  const timeSincePreviousSec = (!audition && Number.isFinite(previousTriggerTime) && t >= previousTriggerTime) ? (t - previousTriggerTime) : Infinity;
   const recentlyTriggered = Number.isFinite(previousTriggerTime) && t >= previousTriggerTime && (t - previousTriggerTime) <= Math.max(spec.stopSec, spec.glideSec);
   const shouldGlide = spec.glideSec > 0 && recentlyTriggered && Number.isFinite(previousPitchHz) && previousPitchHz !== spec.pitchHz;
   applySynthGlideFrequency(osc.frequency, spec.pitchHz, t, spec, shouldGlide, previousPitchHz);
@@ -1179,7 +1181,7 @@ function synthSynth(t, v, p, options = {}) {
     ns.start(t); ns.stop(t + Math.min(.22, spec.stopSec));
   }
   if (!audition) {
-    triggerSynthChoke(t, voiceGain, spec, createSynthVoiceCleanupHandle(synthCleanupNodes));
+    triggerSynthChoke(t, voiceGain, spec, createSynthVoiceCleanupHandle(synthCleanupNodes), timeSincePreviousSec);
   }
 }
 
