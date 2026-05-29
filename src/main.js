@@ -1256,7 +1256,7 @@ function synthNoteStatusText(step) {
 
 function synthNoteEditHintText(step) {
   const boundedStep = clamp(Number.isInteger(step) ? step : LAST_SYNTH_NOTE_STEP, 0, 15);
-  return State.formatSynthNoteEditHintLabel(getStepSynthRatio(boundedStep));
+  return State.formatSynthNoteEditHintLabel(getStepSynthRatio(boundedStep), TRACKS[6].p.pitch);
 }
 
 function updateSynthNoteStatus() {

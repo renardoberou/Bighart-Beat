@@ -239,10 +239,15 @@
     return SYNTH_HARMONIC_RATIOS[nextIndex];
   }
 
-  function formatSynthNoteEditHintLabel(ratio) {
-    const previous = formatSynthNoteIntervalLabel(findPreviousApprovedHarmonicRatio(ratio));
-    const next = formatSynthNoteIntervalLabel(findNextApprovedHarmonicRatio(ratio));
-    return 'HARM ▼ ' + previous + ' · HARM ▲ ' + next;
+  function formatSynthNoteEditHintLabel(ratio, rootHz) {
+    const previousRatio = findPreviousApprovedHarmonicRatio(ratio);
+    const nextRatio = findNextApprovedHarmonicRatio(ratio);
+    const previousInterval = formatSynthNoteIntervalLabel(previousRatio);
+    const nextInterval = formatSynthNoteIntervalLabel(nextRatio);
+    const root = rootHz || SYNTH_ROOT_MAX_HZ;
+    const previousName = hzToNoteName(synthPitchForStep(root, previousRatio), false);
+    const nextName = hzToNoteName(synthPitchForStep(root, nextRatio), false);
+    return 'HARM ▼ ' + previousName + ' ' + previousInterval + ' · HARM ▲ ' + nextName + ' ' + nextInterval;
   }
 
   function createDefaultSynthNotesGrid() {

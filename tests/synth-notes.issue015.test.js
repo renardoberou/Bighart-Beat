@@ -97,18 +97,18 @@ assert.strictEqual(
 );
 assert.strictEqual(
   SynthNotes.formatSynthNoteEditHintLabel(1),
-  'HARM ▼ 5th↓ · HARM ▲ 3rd-ish',
-  'edit hint helper shows the previous/down and next/up approved harmonic labels for root'
+  'HARM ▼ F#2 5th↓ · HARM ▲ D#3 3rd-ish',
+  'edit hint helper shows the previous/down and next/up approved harmonic labels with note names for root'
 );
 assert.strictEqual(
   SynthNotes.formatSynthNoteEditHintLabel(0.5),
-  'HARM ▼ 2 oct · HARM ▲ 5th↓',
-  'edit hint helper wraps from the lowest approved harmonic to the highest approved harmonic'
+  'HARM ▼ B4 2 oct · HARM ▲ F#2 5th↓',
+  'edit hint helper wraps from the lowest approved harmonic to the highest approved harmonic with note names'
 );
 assert.strictEqual(
   SynthNotes.formatSynthNoteEditHintLabel(1.37),
-  'HARM ▼ 4th · HARM ▲ 5th',
-  'edit hint helper describes adjacent approved harmonics for non-listed ratios without duplicating the table in UI code'
+  'HARM ▼ E3 4th · HARM ▲ F#3 5th',
+  'edit hint helper describes adjacent approved harmonics with note names for non-listed ratios without duplicating the table in UI code'
 );
 
 const activeSteps = Array(16).fill(0);
