@@ -751,7 +751,7 @@ body.running #ss  { display: none; }
   left: 2px;
   top: 1px;
   z-index: 1;
-  font-size: 7px;
+  font-size: 8px;
   line-height: 1;
   color: #16091d;
   text-shadow: 0 1px 1px rgba(255,255,255,.25);
@@ -886,6 +886,14 @@ body.running #ss  { display: none; }
     font-size: 9px;
     left: 1px;
     top: 1px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  .row[data-id="synth"] .sc.syn-note.ph::before {
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    opacity: 1;
   }
   .row[data-id="synth"] .sc.syn-note:not(.on)::before { opacity: 0.85; }
 
