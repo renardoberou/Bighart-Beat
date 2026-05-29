@@ -53,8 +53,15 @@ const HIHAT_VOICE_PREVIOUS_TOKENS = [
 const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
 const SYNTH_VOICE_TOKEN = 'v=synth-detune-personality-20260527-b';
 const KICK_VOICE_TOKEN = 'v=aphex-kick-digital-crack-20260528';
+const SYNTH_NOTES_TOKEN = 'v=synth-note-selector-20260528';
 const MAIN_JS_TOKEN = 'v=synth-note-selector-20260528';
 const MAIN_JS_PREVIOUS_TOKENS = [
+  ...PREVIOUS_TOKENS,
+  HIHAT_METALLIC_RATTLE_PAN_TOKEN,
+  HIHAT_SOFT_OPEN_TAIL_TOKEN,
+  'v=engine-display-labels-20260528',
+];
+const SYNTH_NOTES_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   HIHAT_METALLIC_RATTLE_PAN_TOKEN,
   HIHAT_SOFT_OPEN_TAIL_TOKEN,
@@ -136,6 +143,7 @@ const expectedScriptSrcs = [
   if (unversionedPath === 'src/rhythm/engine-profiles.js') return `${unversionedPath}?${CLAP_STEREO_WIDTH_TOKEN}`;
   if (unversionedPath === 'src/rhythm/clap-voice.js') return `${unversionedPath}?${CLAP_STEREO_WIDTH_TOKEN}`;
   if (unversionedPath === 'src/rhythm/kick-voice.js') return `${unversionedPath}?${KICK_VOICE_TOKEN}`;
+  if (unversionedPath === 'src/state/synth-notes.js') return `${unversionedPath}?${SYNTH_NOTES_TOKEN}`;
   if (unversionedPath === 'src/main.js') return `${unversionedPath}?${MAIN_JS_TOKEN}`;
   return `${unversionedPath}?${EXPECTED_TOKEN}`;
 });
@@ -164,6 +172,10 @@ scriptSrcs.forEach((src) => {
   if (src.startsWith('src/main.js?')) {
     expectedToken = MAIN_JS_TOKEN;
     previousTokens = MAIN_JS_PREVIOUS_TOKENS;
+  }
+  if (src.startsWith('src/state/synth-notes.js?')) {
+    expectedToken = SYNTH_NOTES_TOKEN;
+    previousTokens = SYNTH_NOTES_PREVIOUS_TOKENS;
   }
   assertExactlyOneCurrentToken(src, expectedToken, previousTokens);
 });
