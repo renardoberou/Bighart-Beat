@@ -68,10 +68,9 @@
     const releaseTau = clamp(profile.release * (0.7 + decaySec * 0.35), 0.003, 0.20);
     const glideSec = clamp(profile.glide * (0.5 + shape), 0, 0.08);
     const chokeTau = clamp(Math.min(0.06, releaseTau * 0.55), 0.003, 0.08);
-    const is808Glass = profile.personality === 'mono-fm-glass';
     const isAphexDigital = profile.personality === 'idm-digital-alien';
-    const modRatio = is808Glass ? 2 + shape * 3 : (isAphexDigital ? 2.7 + shape * 3.1 + tone * 0.3 : 1 + shape);
-    const modIndex = is808Glass ? 35 + tone * 220 : (isAphexDigital ? 48 + tone * 72 + shape * 28 : 0);
+    const modRatio = isAphexDigital ? 2.7 + shape * 3.1 + tone * 0.3 : 1 + shape;
+    const modIndex = isAphexDigital ? 48 + tone * 72 + shape * 28 : 0;
 
     return {
       engine,
@@ -103,7 +102,7 @@
       tone,
       modRatio,
       modIndex,
-      detuneCents: profile.personality === 'vintage-sh' ? (shape - 0.5) * 11 : (profile.personality === 'analog-sub-body' ? Math.round(3 + (shape - 0.5) * 16) : (profile.personality === 'acid-bass' ? Math.round(-2 + (shape - 0.5) * 30) : (profile.personality === 'industrial-mono' ? Math.round(4 + (shape - 0.5) * 44) : (isAphexDigital ? -5 + (shape - 0.5) * 20 : 0)))),
+      detuneCents: profile.personality === 'analog-sub-body' ? Math.round(3 + (shape - 0.5) * 16) : (profile.personality === 'acid-bass' ? Math.round(-2 + (shape - 0.5) * 30) : (profile.personality === 'industrial-mono' ? Math.round(4 + (shape - 0.5) * 44) : (isAphexDigital ? -5 + (shape - 0.5) * 20 : 0))),
     };
   }
 

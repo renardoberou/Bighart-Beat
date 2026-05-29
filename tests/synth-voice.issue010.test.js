@@ -46,7 +46,7 @@ function assertFiniteBounded(spec, label) {
   assert(spec.stopSec > spec.decaySec, `${label}: stopSec leaves release padding`);
   assert(['sine', 'triangle', 'sawtooth', 'square'].includes(spec.oscType), `${label}: oscillator type safe`);
   assert(['lowpass', 'bandpass'].includes(spec.filterType), `${label}: filter type safe`);
-  assert(['ms20-bass', 'analog-sub-body', 'acid-bass', 'industrial-mono', 'vintage-sh', 'idm-digital-alien'].includes(spec.personality), `${label}: personality known`);
+  assert(['analog-sub-body', 'acid-bass', 'industrial-mono', 'idm-digital-alien'].includes(spec.personality), `${label}: personality known`);
   assert(spec.modRatio >= 0.5 && spec.modRatio <= 8, `${label}: FM/digital mod ratio bounded`);
   assert(spec.modIndex >= 0 && spec.modIndex <= 260, `${label}: FM/digital mod index bounded`);
   assert(spec.detuneCents >= -24 && spec.detuneCents <= 30, `${label}: digital detune bounded`);
