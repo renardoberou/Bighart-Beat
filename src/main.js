@@ -1668,7 +1668,7 @@ function buildSeq() {
         if (trackId !== 'synth') return;
         const ratio = getStepSynthRatio(i);
         c.classList.add('syn-note');
-        c.dataset.note = State.formatSynthNoteMarkerLabel(ratio);
+        c.dataset.note = State.formatSynthNoteMarkerLabelWithPitch(ratio, TRACKS[6].p.pitch);
         // When both note label and ratchet badge exist, add class to swap positions
         const currentRatchet = State.getRatchetCount(RATCHETS[S.patt], trackId, i);
         if (currentRatchet > 1) {

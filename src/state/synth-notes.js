@@ -170,6 +170,13 @@
     return formatSynthNoteIntervalLabel(ratio);
   }
 
+  function formatSynthNoteMarkerLabelWithPitch(ratio, rootHz) {
+    const interval = formatSynthNoteIntervalLabel(ratio);
+    const pitchHz = synthPitchForStep(rootHz, ratio);
+    const noteName = hzToNoteName(pitchHz, false);
+    return noteName + '·' + interval;
+  }
+
   function abbreviateEngineId(engineId) {
     if (typeof engineId !== 'string' || !engineId) return '';
     const id = engineId.trim();
@@ -203,7 +210,10 @@
     const step = clamp(rawStep, 0, STEP_COUNT - 1);
     const interval = formatSynthNoteIntervalLabel(opts.ratio);
     const parts = [String(step + 1).padStart(2, '0'), interval];
-    if (Number.isFinite(opts.pitchHz)) parts.push(Math.round(opts.pitchHz) + ' Hz');
+    if (Number.isFinite(opts.pitchHz)) {
+      const noteName = hzToNoteName(opts.pitchHz, false);
+      parts.push(noteName + ' ' + Math.round(opts.pitchHz) + ' Hz');
+    }
     const engineAbbr = abbreviateEngineId(opts.engine);
     if (engineAbbr) parts.push(engineAbbr);
     return parts.join(' · ');
@@ -318,6 +328,7 @@
     formatSynthNoteRatioLabel,
     formatSynthNoteIntervalLabel,
     formatSynthNoteMarkerLabel,
+    formatSynthNoteMarkerLabelWithPitch,
     formatSynthNoteStatusLabel,
     formatSynthNoteCompactStatusLabel,
     abbreviateEngineId,

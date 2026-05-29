@@ -74,6 +74,18 @@ assert(
   'synth-notes.js should export formatSynthNoteMarkerLabel'
 );
 
+// 9b. formatSynthNoteMarkerLabelWithPitch combines note name + interval
+assert(
+  /formatSynthNoteMarkerLabelWithPitch/.test(synthNotesJs),
+  'synth-notes.js should export formatSynthNoteMarkerLabelWithPitch'
+);
+
+// 9c. hzToNoteName is used in compact status label export chain
+assert(
+  /hzToNoteName/.test(synthNotesJs),
+  'synth-notes.js should use hzToNoteName for compact status label'
+);
+
 // 10. SYNTH_HARMONIC_INTERVAL_LABELS has expected entries
 assert(
   /'oct↓'/.test(synthNotesJs) && /'root'/.test(synthNotesJs) && /'5th'/.test(synthNotesJs),

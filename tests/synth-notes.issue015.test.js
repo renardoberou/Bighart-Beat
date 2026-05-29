@@ -175,7 +175,7 @@ assert(mainJs.includes('data-synth-note-hint'), 'voice editor exposes selected s
 assert(mainJs.includes('LAST_SYNTH_NOTE_STEP'), 'runtime tracks last edited synth note step');
 assert(mainJs.includes('formatSynthNoteCompactStatusLabel'), 'voice editor uses compact synth note status label helper');
 assert(mainJs.includes('formatSynthNoteEditHintLabel'), 'voice editor uses synth note edit hint helper');
-assert(mainJs.includes('State.formatSynthNoteMarkerLabel(ratio)'), 'runtime uses compact marker helper for step badges');
+assert(mainJs.includes('State.formatSynthNoteMarkerLabelWithPitch(ratio'), 'runtime uses compact marker helper for step badges');
 assert(/function updateSynthNoteStatus\(\) \{[\s\S]*?querySelector\('\[data-synth-note-status\]'\)[\s\S]*?querySelector\('\[data-synth-note-hint\]'\)[\s\S]*?synthNoteStatusText\(LAST_SYNTH_NOTE_STEP\)[\s\S]*?synthNoteEditHintText\(LAST_SYNTH_NOTE_STEP\)/.test(mainJs), 'selected synth note refresh updates both status and adjacent harmonic edit hint');
 const noteEditCellTapBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && SYNTH_NOTE_EDIT\) \{[\s\S]*?\n        \}/);
 assert(noteEditCellTapBranch, 'runtime handles selected SYN NOTE EDIT cell taps');

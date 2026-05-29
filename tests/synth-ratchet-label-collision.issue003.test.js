@@ -48,8 +48,8 @@ assert(
 );
 
 assert(
-  /c\.dataset\.note\s*=\s*State\.formatSynthNoteMarkerLabel\(ratio\)/.test(js),
-  'runtime still writes SYN harmonic marker text to data-note'
+  /c\.dataset\.note\s*=\s*State\.formatSynthNoteMarkerLabelWithPitch\s*\(ratio/.test(js),
+  'runtime writes SYN harmonic marker text with pitch note name to data-note'
 );
 assert(
   /c\.dataset\.r\s*=\s*ratchet\s*\+\s*'x'/.test(js),
