@@ -69,8 +69,9 @@
     const glideSec = clamp(profile.glide * (0.5 + shape), 0, 0.08);
     const chokeTau = clamp(Math.min(0.06, releaseTau * 0.55), 0.003, 0.08);
     const isAphexDigital = profile.personality === 'idm-digital-alien';
-    const modRatio = isAphexDigital ? 2.7 + shape * 3.1 + tone * 0.3 : 1 + shape;
-    const modIndex = isAphexDigital ? 48 + tone * 72 + shape * 28 : 0;
+    const isIndustrialMono = profile.personality === 'industrial-mono';
+    const modRatio = isAphexDigital ? 2.7 + shape * 3.1 + tone * 0.3 : (isIndustrialMono ? 1.1 + shape * 2.4 + tone * 0.8 : 1 + shape);
+    const modIndex = isAphexDigital ? 48 + tone * 72 + shape * 28 : (isIndustrialMono ? 8 + tone * 38 + shape * 22 : 0);
 
     return {
       engine,

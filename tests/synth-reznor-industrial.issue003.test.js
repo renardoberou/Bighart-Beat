@@ -13,7 +13,7 @@ assert.strictEqual(reznor.engine, 'reznor');
 assert.strictEqual(reznor.personality, 'industrial-mono');
 assert.strictEqual(reznor.oscType, 'square');
 assert.strictEqual(reznor.filterType, 'bandpass');
-assert.strictEqual(reznor.modIndex, 0, 'Reznor stays non-FM so it does not blur into 808 glass/FM');
+assert(reznor.modIndex > 0 && reznor.modIndex <= 68, 'Reznor has bounded industrial FM modulation');
 
 assert(
   reznor.noiseGain > aphex.noiseGain && reznor.noiseGain > eightOhEight.noiseGain && reznor.noiseGain > nineOhNine.noiseGain,
