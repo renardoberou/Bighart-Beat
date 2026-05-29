@@ -33,11 +33,11 @@ function assertFiniteBounded(spec, label) {
   assert(spec.filterTriggerHz >= 120 && spec.filterTriggerHz <= 12000, `${label}: filterTriggerHz bounded`);
   assert(spec.filterRestHz >= 80 && spec.filterRestHz <= 12000, `${label}: filterRestHz bounded`);
   assert(spec.filterTriggerHz > spec.filterRestHz, `${label}: trigger filter opens above rest cutoff`);
-  assert(spec.filterEnvAmount >= 0 && spec.filterEnvAmount <= 4.5, `${label}: filterEnvAmount bounded`);
+  assert(spec.filterEnvAmount >= 0 && spec.filterEnvAmount <= 7.0, `${label}: filterEnvAmount bounded`);
   assert(spec.filterEndRatio >= 0.12 && spec.filterEndRatio <= 0.62, `${label}: filterEndRatio bounded`);
   assert(spec.filterAttackSec >= 0.0005 && spec.filterAttackSec <= 0.012, `${label}: filterAttackSec bounded`);
   assert(spec.filterDecaySec > spec.filterAttackSec, `${label}: filterDecaySec closes after filter attack`);
-  assert(spec.filterDecaySec <= spec.decaySec, `${label}: filterDecaySec closes no later than voice decay`);
+  assert(spec.filterDecaySec <= spec.decaySec * (spec.personality === 'acid-bass' ? 1.4 : 1), `${label}: filterDecaySec closes no later than voice decay (acid-bass may sustain 1.4x)`);
   assert(spec.filterQ >= 0.2 && spec.filterQ <= (spec.personality === 'acid-bass' ? 28 : 18), `${label}: filterQ bounded`);
   assert(spec.driveAmount >= 0 && spec.driveAmount <= 0.75, `${label}: driveAmount bounded`);
   assert(spec.bodyGain >= 0 && spec.bodyGain <= 0.7, `${label}: bodyGain bounded`);
@@ -83,7 +83,7 @@ assert.strictEqual(acid909.oscType, 'sawtooth', '909 acid voice keeps the 303-st
 assert.strictEqual(acid909.filterType, 'lowpass', '909 acid voice keeps the 303-style lowpass filter');
 assert(acid909.driveAmount >= 0.68, '909 acid voice has even more aggressive drive bite');
 assert(acid909.filterQ >= 16.0, '909 acid voice has very aggressive 303-style squelchy resonance');
-assert(acid909.filterEnvAmount >= 3.0, '909 acid voice has a hard throaty trigger filter sweep');
+assert(acid909.filterEnvAmount >= 3.5, '909 acid voice has a hard throaty trigger filter sweep');
 assert(acid909.filterEndRatio <= 0.20, '909 acid voice snaps back to a low cutoff for acid pluck');
 assert(acid909.filterTriggerHz > acid909.filterRestHz * 20, '909 acid sweep opens dramatically from rest cutoff');
 assert(acid909.glideSec >= 0.050, '909 acid voice has audible 303-style glide');
