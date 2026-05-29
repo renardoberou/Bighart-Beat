@@ -1267,8 +1267,8 @@ function synthNoteEditHintText(step) {
 
 function updateSynthNoteStatus() {
   const panel = $('vePanel');
-  const status = panel && document.querySelector('[data-synth-note-status]');
-  const hint = panel && document.querySelector('[data-synth-note-hint]');
+  const status = panel && panel.querySelector('[data-synth-note-status]');
+  const hint = panel && panel.querySelector('[data-synth-note-hint]');
   if (status) status.textContent = synthNoteStatusText(LAST_SYNTH_NOTE_STEP);
   if (hint) hint.textContent = synthNoteEditHintText(LAST_SYNTH_NOTE_STEP);
 }
@@ -2233,7 +2233,8 @@ function buildVE() {
       tetBtn.classList.toggle('on', synthUse24Tet);
       noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
       // Rebuild note buttons for 24-TET if needed
-      rebuildNoteSelector(noteRow, octaveRow, currentNoteIdx, currentOctave);
+      // Re-read current note/octave so 24-TET toggle doesn't stale the highlight
+      rebuildNoteSelector(noteRow, octaveRow, synthRootNoteIndex(), synthRootOctave());
       autosave();
     });
     tetRow.appendChild(tetBtn);
