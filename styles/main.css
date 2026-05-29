@@ -1506,3 +1506,23 @@ input[type="file"] { display: none; }
   color: var(--bg);
   border-color: var(--amber);
 }
+
+@media (max-width: 640px), (pointer: coarse) {
+  .syn-note-selector__btn {
+    min-height: 44px;
+    padding: 10px 4px;
+    font-size: 9px;
+    touch-action: manipulation;
+  }
+  .syn-note-selector__btn--octave {
+    min-height: 44px;
+    padding: 10px 4px;
+  }
+  .syn-note-selector__btn--tet {
+    min-height: 44px;
+    padding: 10px 8px;
+  }
+  .syn-note-label-wrap {
+    flex-wrap: wrap;
+  }
+}

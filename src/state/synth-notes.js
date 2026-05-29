@@ -33,7 +33,31 @@
 
   // Chromatic note names (12-TET)
   const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const NOTE_NAMES_24 = ['C', 'C#', 'D♭', 'D', 'D#', 'E♭', 'E', 'F', 'F#', 'G♭', 'G', 'G#', 'A♭', 'A', 'A#', 'B♭', 'B'];
+  const NOTE_NAMES_24 = [
+    'C',    // 0  - C
+    'C♯½',  // 1  - C quarter-sharp
+    'C♯',   // 2  - C# / D♭
+    'D♭½',  // 3  - D quarter-flat
+    'D',    // 4  - D
+    'D♯½',  // 5  - D quarter-sharp
+    'D♯',   // 6  - D# / E♭
+    'E♭½',  // 7  - E quarter-flat
+    'E',    // 8  - E
+    'E♯½',  // 9  - E quarter-sharp (F♭)
+    'F',    // 10 - F
+    'F♯½',  // 11 - F quarter-sharp
+    'F♯',   // 12 - F# / G♭
+    'G♭½',  // 13 - G quarter-flat
+    'G',    // 14 - G
+    'G♯½',  // 15 - G quarter-sharp
+    'G♯',   // 16 - G# / A♭
+    'A♭½',  // 17 - A quarter-flat
+    'A',    // 18 - A
+    'A♯½',  // 19 - A quarter-sharp
+    'A♯',   // 20 - A# / B♭
+    'B♭½',  // 21 - B quarter-flat
+    'B',    // 22 - B
+  ];
 
   // Reference: A4 = 440 Hz, note index 9 (A) in octave 4
   const A4_HZ = 440;
