@@ -31,6 +31,107 @@
     'aphex': 'AFX',
   };
 
+  // Chromatic note names (12-TET)
+  const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const NOTE_NAMES_24 = ['C', 'C#', 'D♭', 'D', 'D#', 'E♭', 'E', 'F', 'F#', 'G♭', 'G', 'G#', 'A♭', 'A', 'A#', 'B♭', 'B'];
+
+  // Reference: A4 = 440 Hz, note index 9 (A) in octave 4
+  const A4_HZ = 440;
+  const A4_MIDI = 69;
+
+  function hzToMidi(hz) {
+    if (!Number.isFinite(hz) || hz <= 0) return 0;
+    return 12 * Math.log2(hz / A4_HZ) + A4_MIDI;
+  }
+
+  function midiToHz(midi) {
+    if (!Number.isFinite(midi)) return SYNTH_ROOT_MAX_HZ;
+    return A4_HZ * Math.pow(2, (midi - A4_MIDI) / 12);
+  }
+
+  function hzToNoteName(hz, use24Tet) {
+    const midi = hzToMidi(hz);
+    const midiRounded = Math.round(midi);
+    const cents = Math.round((midi - midiRounded) * 100);
+    const octave = Math.floor(midiRounded / 12) - 1;
+    const noteIndex = ((midiRounded % 12) + 12) % 12;
+    if (use24Tet) {
+      // 24-TET: use sharps/flats for quarter-tone neighbors
+      const centsRounded = Math.round(cents / 50) * 50;
+      if (centsRounded === 50) {
+        return NOTE_NAMES_24[noteIndex * 2 + 1] || NOTE_NAMES[noteIndex] + '♯½';
+      } else if (centsRounded === -50) {
+        const prevIndex = ((noteIndex - 1) + 12) % 12;
+        return NOTE_NAMES_24[prevIndex * 2 + 1] || NOTE_NAMES[prevIndex] + '♭½';
+      }
+      return NOTE_NAMES[noteIndex] + octave;
+    }
+    return NOTE_NAMES[noteIndex] + octave;
+  }
+
+  function noteNameToHz(nameAndOctave, use24Tet) {
+    const str = String(nameAndOctave || '').trim();
+    if (!str) return SYNTH_ROOT_MAX_HZ;
+    // Parse note name and octave
+    const match = str.match(/^([A-Ga-g][#♯♭]?)([-+]?\d+)?$/);
+    if (!match) return SYNTH_ROOT_MAX_HZ;
+    let noteStr = match[1].toUpperCase();
+    // Normalize accidentals
+    if (noteStr.includes('♯')) noteStr = noteStr.replace('♯', '#');
+    if (noteStr.includes('♭')) {
+      // Convert flat to sharp of previous note
+      const flatMap = { 'DB': 'C#', 'EB': 'D#', 'GB': 'F#', 'AB': 'G#', 'BB': 'A#' };
+      noteStr = flatMap[noteStr] || noteStr.replace('♭', 'B');
+    }
+    const octave = match[2] !== undefined ? parseInt(match[2]) : 4;
+    let noteIndex = NOTE_NAMES.indexOf(noteStr);
+    if (noteIndex < 0) {
+      // Try 24-TET names
+      const idx24 = NOTE_NAMES_24.indexOf(match[1].toUpperCase());
+      if (idx24 >= 0) {
+        noteIndex = Math.floor(idx24 / 2);
+      } else {
+        return SYNTH_ROOT_MAX_HZ;
+      }
+    }
+    const midi = (octave + 1) * 12 + noteIndex;
+    return midiToHz(midi);
+  }
+
+  function formatSynthNotePitchDisplay(rootHz, use24Tet) {
+    const clamped = clamp(rootHz, SYNTH_MIN_HZ, SYNTH_MAX_FREQUENCY_HZ);
+    const noteName = hzToNoteName(clamped, use24Tet);
+    const cents = Math.round((hzToMidi(clamped) - Math.round(hzToMidi(clamped))) * 100);
+    const centsStr = cents === 0 ? '' : ` ${cents > 0 ? '+' : ''}${cents}¢`;
+    return `${noteName}${centsStr} (${Math.round(clamped)} Hz)`;
+  }
+
+  // Generate note options for a given range (for selectors)
+  function noteOptionsForRange(loHz, hiHz, use24Tet) {
+    const options = [];
+    const loMidi = Math.ceil(hzToMidi(loHz));
+    const hiMidi = Math.floor(hzToMidi(hiHz));
+    for (let midi = loMidi; midi <= hiMidi; midi++) {
+      const hz = midiToHz(midi);
+      const octave = Math.floor(midi / 12) - 1;
+      const noteIndex = ((midi % 12) + 12) % 12;
+      const name = use24Tet ? NOTE_NAMES_24[noteIndex * 2] || NOTE_NAMES[noteIndex] : NOTE_NAMES[noteIndex];
+      options.push({ midi, hz, label: name + octave, cents: 0 });
+      // Add quarter-tone if 24-TET
+      if (use24Tet) {
+        const qMidi = midi + 0.5;
+        const qHz = midiToHz(qMidi);
+        if (qHz <= hiHz) {
+          const qName = NOTE_NAMES_24[noteIndex * 2 + 1];
+          if (qName) {
+            options.push({ midi: qMidi, hz: qHz, label: qName + octave, cents: 50 });
+          }
+        }
+      }
+    }
+    return options;
+  }
+
   function finiteOr(value, fallback) {
     return Number.isFinite(value) ? value : fallback;
   }
@@ -234,6 +335,15 @@
     synthPitchForStep,
     randomHarmonicSynthNoteStep,
     randomHarmonicSynthNotes,
+    // Note name / pitch display utilities
+    NOTE_NAMES,
+    NOTE_NAMES_24,
+    hzToMidi,
+    midiToHz,
+    hzToNoteName,
+    noteNameToHz,
+    formatSynthNotePitchDisplay,
+    noteOptionsForRange,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

@@ -31,6 +31,7 @@ let SYNTH_NOTE_EDIT = false;
 let LAST_SYNTH_NOTE_STEP = 0;
 let lastBrainLoopResultStatus = '';
 let firingStep = 0;
+let synthUse24Tet = false;
 
 /* ═══════════════════════════════════════════════
    AUDIO ENGINE
@@ -1266,6 +1267,82 @@ function updateSynthNoteStatus() {
   if (hint) hint.textContent = synthNoteEditHintText(LAST_SYNTH_NOTE_STEP);
 }
 
+// Note name helpers for the chromatic selector
+const NOTE_SELECTOR_NAMES = State.NOTE_NAMES || ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NOTE_SELECTOR_24_NAMES = State.NOTE_NAMES_24 || NOTE_SELECTOR_NAMES;
+
+function synthRootNoteIndex() {
+  // Return the closest note index for the current synth root pitch (0-11 = C-B)
+  const hz = TRACKS[6].p.pitch;
+  return State.hzToMidi(hz) % 12;
+}
+
+function synthRootOctave() {
+  return Math.floor(State.hzToMidi(TRACKS[6].p.pitch) / 12) - 1;
+}
+
+function setSynthRootFromNote(noteIndex, octave) {
+  const midi = (octave + 1) * 12 + noteIndex;
+  TRACKS[6].p.pitch = clamp(State.midiToHz(midi), 40, SYNTH_ROOT_MAX_HZ);
+  updateSynthNoteStatus();
+}
+
+function noteLabel(noteIndex, octave) {
+  return NOTE_SELECTOR_NAMES[noteIndex] + octave;
+}
+
+function currentSynthNoteLabel() {
+  return State.hzToNoteName(TRACKS[6].p.pitch, synthUse24Tet);
+}
+
+function rebuildNoteSelector(noteRow, octaveRow, currentNoteIdx, currentOctave) {
+  // Rebuild note buttons for 24-TET mode
+  noteRow.innerHTML = '';
+  if (synthUse24Tet) {
+    // Show 24-TET names: C, C#/D♭, D, D#/E♭, E, F, F#/G♭, G, G#/A♭, A, A#/B♭, B
+    for (let ni = 0; ni < 12; ni++) {
+      const nb = document.createElement('button');
+      const name24 = NOTE_SELECTOR_24_NAMES[ni * 2] || NOTE_SELECTOR_NAMES[ni];
+      nb.className = 'syn-note-selector__btn' + (ni === currentNoteIdx ? ' on' : '');
+      nb.textContent = name24;
+      nb.title = name24 + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
+      nb.addEventListener('click', () => {
+        setSynthRootFromNote(ni, currentOctave);
+        noteRow.querySelectorAll('.syn-note-selector__btn').forEach(b => b.classList.remove('on'));
+        nb.classList.add('on');
+        noteSelectorDiv_querySelectorLabel();
+        autosave();
+        initAudio();
+        scheduleVoiceEditAudition('synth');
+      });
+      noteRow.appendChild(nb);
+    }
+  } else {
+    for (let ni = 0; ni < 12; ni++) {
+      const nb = document.createElement('button');
+      nb.className = 'syn-note-selector__btn' + (ni === currentNoteIdx ? ' on' : '');
+      nb.textContent = NOTE_SELECTOR_NAMES[ni];
+      nb.title = NOTE_SELECTOR_NAMES[ni] + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
+      nb.addEventListener('click', () => {
+        setSynthRootFromNote(ni, currentOctave);
+        noteRow.querySelectorAll('.syn-note-selector__btn').forEach(b => b.classList.remove('on'));
+        nb.classList.add('on');
+        noteSelectorDiv_querySelectorLabel();
+        autosave();
+        initAudio();
+        scheduleVoiceEditAudition('synth');
+      });
+      noteRow.appendChild(nb);
+    }
+  }
+}
+
+function noteSelectorDiv_querySelectorLabel() {
+  const panel = $('vePanel');
+  const el = panel && panel.querySelector('.syn-note-selector__label');
+  if (el) el.textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
+}
+
 function moveSelectedSynthNoteStep(delta) {
   setLastSynthNoteStep((LAST_SYNTH_NOTE_STEP + delta + 16) % 16);
   buildSeq();
@@ -1952,7 +2029,7 @@ function buildVE() {
     const hatTest = document.createElement('div');
     hatTest.className = 'hat-test';
     hatTest.innerHTML = `<div class="hat-help">
-        <div class="hat-help-engine">ENGINE: ${S.engine.toUpperCase()}</div>
+        <div class="hat-help-engine">ENGINE: ${State.abbreviateEngineId(S.engine) || S.engine.toUpperCase()}</div>
         <div>HAT TEST USES SELECTED ENGINE</div>
         <div>OPENNESS IS PER STEP: PLACE/OHH ROW</div>
         <div>HHT/OHH: TAP ACTIVE = ACC · DOUBLE-TAP CLEAR · HOLD = RATCHET</div>
@@ -2045,8 +2122,8 @@ function buildVE() {
     const syn = document.createElement('div');
     syn.className = 'syn-test';
     syn.innerHTML = `<div class="hat-help">
-        <div class="hat-help-engine">SYNTH ENGINE: ${S.engine.toUpperCase()}</div>
-        <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.toUpperCase()}</div>
+        <div class="hat-help-engine">SYNTH ENGINE: ${State.abbreviateEngineId(S.engine) || S.engine.toUpperCase()}</div>
+        <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</div>
         <div>ROOT 40 Hz–125 Hz · STEP NOTES ARE HARMONIC RATIOS</div>
         <div data-synth-note-status="1">${synthNoteStatusText(LAST_SYNTH_NOTE_STEP)}</div>
         <div data-synth-note-hint="1">${synthNoteEditHintText(LAST_SYNTH_NOTE_STEP)}</div>
@@ -2090,7 +2167,73 @@ function buildVE() {
       previewSynthNoteEditAudition();
       toast('SYN harmonic steps randomized');
     });
-    mkRow('PITCH', 40, SYNTH_ROOT_MAX_HZ, 1, Math.min(tr.p.pitch, SYNTH_ROOT_MAX_HZ), x=>`${x|0} Hz`, v=>{ tr.p.pitch=Math.min(v, SYNTH_ROOT_MAX_HZ); updateSynthNoteStatus(); }, c);
+    // Note selector + 24-TET toggle (replaces old PITCH frequency slider)
+    const noteSelectorDiv = document.createElement('div');
+    noteSelectorDiv.className = 'syn-note-selector';
+    noteSelectorDiv.innerHTML = `<div class="syn-note-selector__label">ROOT NOTE · ${currentSynthNoteLabel()}</div>`;
+    const noteRow = document.createElement('div');
+    noteRow.className = 'syn-note-selector__row';
+    const currentOctave = synthRootOctave();
+    const currentNoteIdx = synthRootNoteIndex();
+    // Build 12 chromatic note buttons
+    for (let ni = 0; ni < 12; ni++) {
+      const nb = document.createElement('button');
+      nb.className = 'syn-note-selector__btn' + (ni === currentNoteIdx ? ' on' : '');
+      nb.textContent = NOTE_SELECTOR_NAMES[ni];
+      nb.title = NOTE_SELECTOR_NAMES[ni] + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
+      nb.addEventListener('click', () => {
+        setSynthRootFromNote(ni, currentOctave);
+        // Update button states
+        noteRow.querySelectorAll('.syn-note-selector__btn').forEach(b => b.classList.remove('on'));
+        nb.classList.add('on');
+        noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
+        autosave();
+        initAudio();
+        scheduleVoiceEditAudition(tr.id);
+      });
+      noteRow.appendChild(nb);
+    }
+    noteSelectorDiv.appendChild(noteRow);
+    // Octave selector row
+    const octaveRow = document.createElement('div');
+    octaveRow.className = 'syn-note-selector__row syn-note-selector__row--octave';
+    for (let oct = 1; oct <= 3; oct++) {
+      const ob = document.createElement('button');
+      ob.className = 'syn-note-selector__btn syn-note-selector__btn--octave' + (oct === currentOctave ? ' on' : '');
+      ob.textContent = 'C' + oct;
+      ob.title = 'Octave ' + oct;
+      ob.addEventListener('click', () => {
+        setSynthRootFromNote(currentNoteIdx, oct);
+        octaveRow.querySelectorAll('.syn-note-selector__btn--octave').forEach(b => b.classList.remove('on'));
+        ob.classList.add('on');
+        noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
+        autosave();
+        initAudio();
+        scheduleVoiceEditAudition(tr.id);
+      });
+      octaveRow.appendChild(ob);
+    }
+    noteSelectorDiv.appendChild(octaveRow);
+    // 24-TET toggle
+    const tetRow = document.createElement('div');
+    tetRow.className = 'syn-note-selector__row syn-note-selector__row--tet';
+    const tetBtn = document.createElement('button');
+    tetBtn.className = 'syn-note-selector__btn syn-note-selector__btn--tet' + (synthUse24Tet ? ' on' : '');
+    tetBtn.textContent = synthUse24Tet ? '24-TET ON' : '12-TET';
+    tetBtn.title = 'Toggle 24-TET (quarter-tone) note selector';
+    tetBtn.addEventListener('click', () => {
+      synthUse24Tet = !synthUse24Tet;
+      tetBtn.textContent = synthUse24Tet ? '24-TET ON' : '12-TET';
+      tetBtn.classList.toggle('on', synthUse24Tet);
+      noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
+      // Rebuild note buttons for 24-TET if needed
+      rebuildNoteSelector(noteRow, octaveRow, currentNoteIdx, currentOctave);
+      autosave();
+    });
+    tetRow.appendChild(tetBtn);
+    noteSelectorDiv.appendChild(tetRow);
+    pn.appendChild(noteSelectorDiv);
+
     mkRow('DECAY', 4, 220, 1, Math.round(tr.p.decay*100), x=>`${(x/100).toFixed(2)} s`, v=>tr.p.decay=v/100, c);
     mkRow('TONE', 0, 100, 1, Math.round(tr.p.tone*100), x=>`${x}%`, v=>tr.p.tone=v/100, c);
     mkRow('SHAPE', 0, 100, 1, Math.round(tr.p.shape*100), x=>`${x}%`, v=>tr.p.shape=v/100, c);

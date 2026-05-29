@@ -27,7 +27,7 @@ assert(/function\s+getStepSynthPitch\s*\(\s*step\s*\)[\s\S]*State\.synthPitchFor
 assert(/case\s+'synth':\s*\{\s*const\s+v\s*=\s*getTrackVoiceVelocity\(ti\);\s*synthSynth\(t,\s*v,\s*\{\s*\.\.\.tr\.p,\s*pitch:\s*getStepSynthPitch\(firingStep\)\s*\}\);\s*break;\s*\}/.test(main), 'fire() dispatches synth track with stable excitation and per-step harmonic pitch');
 assert(/function\s+previewSynth\s*\(\s*\)\s*\{[\s\S]*initAudio\(\)[\s\S]*triggerCompGate\(t,\s*tr\.id\)[\s\S]*synthSynth\(t,\s*getTrackVoiceVelocity\(\s*6\s*\),\s*\{\s*\.\.\.tr\.p,\s*pitch:\s*getStepSynthPitch\(LAST_SYNTH_NOTE_STEP\)\s*\},\s*\{\s*audition:\s*true\s*\}\s*\)/.test(main), 'TEST SYN audition uses selected/last-edited harmonic step pitch, stable excitation, compressor gate, and isolates mono state');
 assert(/tr\.n\s*===\s*'SYN'\s*\?\s*'SYNTH'/.test(main), 'voice editor names SYN as SYNTH');
-assert(/tr\.id\s*===\s*'synth'[\s\S]*SYNTH ENGINE:\s*\$\{S\.engine\.toUpperCase\(\)\}[\s\S]*TEST SYN[\s\S]*mkRow\('PITCH'[\s\S]*mkRow\('DECAY'[\s\S]*mkRow\('TONE'[\s\S]*mkRow\('SHAPE'/.test(main), 'voice editor exposes SYN engine info, TEST SYN, pitch, decay, tone, and shape controls');
+assert(/tr\.id\s*===\s*'synth'[\s\S]*SYNTH ENGINE:[\s\S]*TEST SYN[\s\S]*syn-note-selector[\s\S]*mkRow\('DECAY'[\s\S]*mkRow\('TONE'[\s\S]*mkRow\('SHAPE'/.test(main), 'voice editor exposes SYN engine info, TEST SYN, chromatic note selector, decay, tone, and shape controls');
 assert(/data-synth-test/.test(main), 'TEST SYN button has a stable data hook');
 assert(/data-synth-note-edit/.test(main), 'SYN voice editor exposes a stable note-edit hook');
 assert(/data-synth-rnd-harm/.test(main), 'SYN voice editor exposes a stable harmonic-randomize hook');

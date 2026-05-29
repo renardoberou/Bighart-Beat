@@ -23,8 +23,8 @@ assert(
 );
 
 assert(
-  /tr\.id\s*===\s*'synth'[\s\S]*mkRow\(\s*'PITCH'\s*,\s*40\s*,\s*SYNTH_ROOT_MAX_HZ\s*,\s*1\s*,\s*Math\.min\(tr\.p\.pitch,\s*SYNTH_ROOT_MAX_HZ\)[\s\S]*updateSynthNoteStatus\(\)/.test(main),
-  'SYN pitch fader is clamped to 40 Hz minimum and the 125 Hz root max constant while updating note status'
+  /tr\.id\s*===\s*'synth'[\s\S]*noteOptionsForRange\(|\.syn-note-selector|syn-note-selector__btn/.test(main),
+  'SYN synth editor exposes chromatic note selector buttons instead of raw frequency fader'
 );
 
 assert(

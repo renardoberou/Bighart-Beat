@@ -14,7 +14,7 @@ assert(hihatBranchEnd > hihatBranchStart, 'hihat branch can be inspected');
 const hihatBranch = main.slice(hihatBranchStart, hihatBranchEnd);
 
 assert(/hat-help/.test(hihatBranch), 'hihat editor renders a compact engine/help readout');
-assert(/ENGINE:\s*\$\{S\.engine\.toUpperCase\(\)\}/.test(hihatBranch), 'hihat readout shows the currently selected engine');
+assert(/State\.abbreviateEngineId\(S\.engine\)/.test(hihatBranch) || /\$\{S\.engine\.toUpperCase\(\)\}/.test(hihatBranch), 'hihat readout shows the currently selected engine');
 assert(/HAT TEST USES SELECTED ENGINE/.test(hihatBranch), 'hihat readout explains auditions use the selected engine');
 assert(/OPENNESS IS PER STEP:\s*PLACE\/OHH ROW/.test(hihatBranch), 'hihat readout explains per-step openness placement via PLACE/OHH row');
 assert(/HHT\/OHH:\s*TAP ACTIVE = ACC\s*·\s*DOUBLE-TAP CLEAR\s*·\s*HOLD = RATCHET/.test(hihatBranch), 'hihat readout explains active HHT/OHH tap/hold workflow');
