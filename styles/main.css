@@ -759,6 +759,27 @@ body.running #ss  { display: none; }
 }
 .row[data-id="synth"] .sc.syn-note:not(.on)::before { color: var(--t-syn); opacity: .85; }
 
+/* synth playhead step — visible glow */
+.row[data-id="synth"] .sc.syn-note.ph {
+  box-shadow: inset 0 0 0 1px rgba(9,7,5,.78), 0 0 8px rgba(214,156,255,.60), 0 0 14px rgba(214,156,255,.35);
+  border-color: #d69cff;
+}
+
+/* synth step that is both playing and selected */
+.row[data-id="synth"] .sc.syn-note-selected.ph {
+  box-shadow: inset 0 0 0 1px rgba(9,7,5,.78), 0 0 10px rgba(255,244,197,.78), 0 0 18px rgba(214,156,255,.60);
+  border-color: #fff4c5;
+  outline-color: #fff4c5;
+}
+
+@keyframes synthPhPulse {
+  0%   { box-shadow: inset 0 0 0 1px rgba(9,7,5,.78), 0 0 6px rgba(214,156,255,.45); }
+  100% { box-shadow: inset 0 0 0 1px rgba(9,7,5,.78), 0 0 12px rgba(214,156,255,.70); }
+}
+.row[data-id="synth"] .sc.syn-note.ph:not(.on) {
+  border-color: rgba(214,156,255,.7);
+}
+
 /* ratchet badges */
 .row:not([data-id="synth"]) .sc.r2::before,
 .row:not([data-id="synth"]) .sc.r3::before,
