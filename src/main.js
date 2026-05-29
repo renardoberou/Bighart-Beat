@@ -887,6 +887,7 @@ function previewEngineKit() {
   const kick = TRACKS[0];
   const snare = TRACKS[1];
   const hihat = TRACKS[2];
+  const synth = TRACKS[6];
 
   triggerCompGate(t, kick.id);
   synthKick(t, getTrackVoiceVelocity(0), kick.p);
@@ -896,6 +897,9 @@ function previewEngineKit() {
 
   triggerCompGate(t + .24, hihat.id);
   synthHihat(t + .24, HIHAT_NORMAL_VELOCITY, { ...hihat.p, open: HHT_PLACE });
+
+  triggerCompGate(t + .36, synth.id);
+  synthSynth(t + .36, getTrackVoiceVelocity(6), { ...synth.p, pitch: getStepSynthPitch(LAST_SYNTH_NOTE_STEP) }, { audition: true });
 }
 
 // ── CLAP ── 3 short bursts + tail
