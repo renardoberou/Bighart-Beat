@@ -132,7 +132,7 @@ assert.notStrictEqual(body808.filterType, industrial.filterType, '808 remains di
 assert(body808.modIndex < aphexIdm.modIndex, '808 body voice does not compete with aphex IDM shimmer');
 assert(aphexIdm.filterHz !== acid909.filterHz, 'aphex digital tone differs from 909 acid');
 assert(acid909.filterDecaySec < body808.filterDecaySec, '909 acid filter closes faster than sustained 808 body lowpass motion');
-assert(acid909.filterDecaySec < aphexIdm.filterDecaySec, '909 acid filter closes faster than sustained aphex IDM color');
+assert(acid909.filterDecaySec > aphexIdm.filterDecaySec, '909 acid filter sustains longer than aphex IDM for squelchier 303-style trails');
 assert(industrial.filterDecaySec < body808.filterDecaySec, 'reznor industrial filter closes faster than sustained 808 body lowpass motion');
 assert(industrial.filterDecaySec < aphexIdm.filterDecaySec, 'reznor industrial filter closes faster than sustained aphex IDM color');
 
