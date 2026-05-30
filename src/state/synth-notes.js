@@ -275,7 +275,7 @@
   }
 
   function createDefaultSynthNotesGrid() {
-    return Array.from({ length: STEP_COUNT }, randomHarmonicRatio);
+    return Array.from({ length: STEP_COUNT }, () => 1);
   }
 
   function createSynthNotesBanks() {

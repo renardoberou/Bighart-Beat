@@ -22,7 +22,7 @@ assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(2), 'harmonic list includes oct
 const banks = SynthNotes.createSynthNotesBanks();
 assert.strictEqual(banks.length, 4, 'synth note memory has four pattern banks');
 assert.strictEqual(banks[0].length, 16, 'default synth notes contain one harmonic ratio per step');
-assert(banks[0].every(value => SynthNotes.SYNTH_HARMONIC_RATIOS.includes(value)), 'default synth notes start as random harmonic intervals');
+assert(banks[0].every(value => value === 1), 'default synth notes start as root unison');
 
 const originalFirstRatio = banks[0][0];
 const cycled = SynthNotes.cycleSynthNoteRatio(Array(16).fill(1), 0);
@@ -138,7 +138,7 @@ delete legacy.synthNotes;
 const hydrated = parseProjectImport(legacy);
 assert.strictEqual(hydrated.ok, true, 'legacy projects without synthNotes import');
 assert.strictEqual(hydrated.value.synthNotes[0].length, 16, 'legacy imports hydrate synth note banks');
-assert(hydrated.value.synthNotes[0].every(value => SynthNotes.SYNTH_HARMONIC_RATIOS.includes(value)), 'legacy imports hydrate random harmonic synth note banks');
+assert(hydrated.value.synthNotes[0].every(value => value === 1), 'legacy imports hydrate root unison synth note banks');
 
 const bad = serializeProject({ appState, tracks, fx, patterns, synthNotes: banks });
 bad.synthNotes[0][0] = 999;
