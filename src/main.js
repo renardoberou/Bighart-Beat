@@ -1120,9 +1120,12 @@ function synthSynth(t, v, p, options = {}) {
   const dest = routeVoice(t, 6, spec.stopSec);
   const voiceGain = A.createGain();
   const synthCleanupNodes = [voiceGain];
+  const peakGain = clamp(v * spec.bodyGain, 0, .7);
+  const sustainFloor = 0.012;
   voiceGain.gain.setValueAtTime(0, t);
-  voiceGain.gain.linearRampToValueAtTime(clamp(v * spec.bodyGain, 0, .7), t + spec.attackSec);
-  voiceGain.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec);
+  voiceGain.gain.linearRampToValueAtTime(peakGain, t + spec.attackSec);
+  voiceGain.gain.exponentialRampToValueAtTime(Math.max(sustainFloor, peakGain * 0.08), t + spec.decaySec);
+  voiceGain.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec + spec.releaseTau * 3);
   voiceGain.connect(dest);
 
   const osc = A.createOscillator();
@@ -1168,7 +1171,8 @@ function synthSynth(t, v, p, options = {}) {
     const sg = A.createGain();
     sg.gain.setValueAtTime(0, t);
     sg.gain.linearRampToValueAtTime(clamp(v * spec.subGain, 0, .35), t + spec.attackSec * 1.3);
-    sg.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec * .9);
+    sg.gain.exponentialRampToValueAtTime(Math.max(0.006, clamp(v * spec.subGain, 0, .35) * 0.08), t + spec.decaySec * 0.9);
+    sg.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec + spec.releaseTau * 2);
     sub.connect(sg); sg.connect(voiceGain);
     synthCleanupNodes.push(sub, sg);
     sub.start(t); sub.stop(t + spec.stopSec);
