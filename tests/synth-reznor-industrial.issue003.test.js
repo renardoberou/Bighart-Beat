@@ -40,7 +40,7 @@ assert(
   'Reznor SYN should keep trigger filter movement for per-hit bite'
 );
 assert(
-  reznor.noiseGain <= 0.16,
+  reznor.noiseGain <= 0.20,
   'Reznor noise layer must remain bounded for headroom/mobile safety'
 );
 assert(

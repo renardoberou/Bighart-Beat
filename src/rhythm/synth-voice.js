@@ -17,13 +17,13 @@
     reznor: {
       personality: 'industrial-mono',
       oscType: 'square', filterType: 'bandpass', pitch: 0.74, decay: 0.90, tone: 0.58, q: 2.00,
-      drive: 0.72, body: 0.42, sub: 0.10, noise: 0.12, attack: 0.003, release: 0.026, glide: 0.010,
-      filterEnv: 2.20, filterEnd: 0.28, filterSnap: 0.0035, filterDecay: 0.38,
+      drive: 0.82, body: 0.42, sub: 0.10, noise: 0.18, attack: 0.003, release: 0.018, glide: 0.010,
+      filterEnv: 2.20, filterEnd: 0.28, filterSnap: 0.0035, filterDecay: 0.48,
     },
     aphex: {
       personality: 'idm-digital-alien',
       oscType: 'sine', filterType: 'bandpass', pitch: 1.18, decay: 1.08, tone: 1.34, q: 1.36,
-      drive: 0.28, body: 0.32, sub: 0.05, noise: 0.048, attack: 0.0035, release: 0.045, glide: 0.035,
+      drive: 0.28, body: 0.32, sub: 0.05, noise: 0.065, attack: 0.0035, release: 0.045, glide: 0.055,
       filterEnv: 1.35, filterEnd: 0.32, filterSnap: 0.0012, filterDecay: 0.64,
     },
   };
