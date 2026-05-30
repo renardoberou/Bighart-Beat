@@ -31,7 +31,7 @@ const canonicalTracks = [
     p:{ pitch:1.0, decay:1.0 }, smp:null, smpN:null },
   { id:'ether', n:'ETH', col:'e', mute:false, vol:.62, dlyS:true,  revS:true, wreckS:false,
     p:{ mode:'ether', freq:55, harmonics:.5, texture:.5, decay:.28, grit:.4 } },
-  { id:'synth', n:'SYN', col:'p', mute:false, vol:.52, dlyS:true,  revS:true, wreckS:false,
+  { id:'synth', n:'SYN', col:'p', mute:false, vol:.62, dlyS:true,  revS:true, wreckS:false,
     p:{ pitch:100, decay:.35, tone:.50, shape:.50 } },
 ];
 
