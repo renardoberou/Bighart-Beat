@@ -8,7 +8,7 @@
       playing: false,
       patt: 0,
       sel: 0,
-      engine: 'aphex',
+      engine: '808',
       mstVol: .72,
       patternChain: getDefaultPatternChain(),
     };
