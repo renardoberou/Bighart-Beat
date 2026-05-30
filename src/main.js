@@ -1122,7 +1122,7 @@ function synthSynth(t, v, p, options = {}) {
   const synthCleanupNodes = [voiceGain];
   const peakGain = clamp(v * spec.bodyGain, 0, .7);
   const sustainFloor = 0.012;
-  voiceGain.gain.setValueAtTime(0, t);
+  voiceGain.gain.setValueAtTime(0, t); // zero-floor start: prevents oscillator DC click at trigger
   voiceGain.gain.linearRampToValueAtTime(peakGain, t + spec.attackSec);
   voiceGain.gain.exponentialRampToValueAtTime(Math.max(sustainFloor, peakGain * 0.08), t + spec.decaySec);
   voiceGain.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec + spec.releaseTau * 3);
@@ -1170,7 +1170,7 @@ function synthSynth(t, v, p, options = {}) {
     applySynthGlideFrequency(sub.frequency, spec.pitchHz * .5, t, spec, shouldGlide, previousPitchHz * .5);
     const sg = A.createGain();
     sg.gain.setValueAtTime(0, t);
-    sg.gain.linearRampToValueAtTime(clamp(v * spec.subGain, 0, .35), t + spec.attackSec * 1.3);
+    sg.gain.linearRampToValueAtTime(clamp(v * spec.subGain, 0, .35), t + spec.attackSec);
     sg.gain.exponentialRampToValueAtTime(Math.max(0.006, clamp(v * spec.subGain, 0, .35) * 0.08), t + spec.decaySec * 0.9);
     sg.gain.exponentialRampToValueAtTime(.001, t + spec.decaySec + spec.releaseTau * 2);
     sub.connect(sg); sg.connect(voiceGain);
@@ -1182,7 +1182,9 @@ function synthSynth(t, v, p, options = {}) {
     const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
     const nf = A.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = spec.filterHz; nf.Q.value = Math.max(2, spec.filterQ);
     const ng = A.createGain();
-    ng.gain.setValueAtTime(clamp(v * spec.noiseGain, 0, .16), t);
+    const noisePeak = clamp(v * spec.noiseGain, 0, .16);
+    ng.gain.setValueAtTime(0, t);
+    ng.gain.linearRampToValueAtTime(noisePeak, t + spec.attackSec);
     ng.gain.exponentialRampToValueAtTime(.001, t + Math.min(.16, spec.decaySec));
     ns.connect(nf); nf.connect(ng); ng.connect(voiceGain);
     synthCleanupNodes.push(ns, nf, ng);
