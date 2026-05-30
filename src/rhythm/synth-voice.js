@@ -4,9 +4,9 @@
   const SYNTH_ENGINE_PROFILES = {
     '808': {
       personality: 'analog-sub-body',
-      oscType: 'sine', filterType: 'lowpass', pitch: 0.72, decay: 1.18, tone: 0.82, q: 0.35,
-      drive: 0.40, body: 0.72, sub: 0.45, noise: 0.012, attack: 0.008, release: 0.050, glide: 0.010,
-      filterEnv: 0.45, filterEnd: 0.46, filterSnap: 0.0030, filterDecay: 0.78,
+      oscType: 'sine', filterType: 'lowpass', pitch: 0.72, decay: 0.92, tone: 0.72, q: 0.30,
+      drive: 0.38, body: 0.72, sub: 0.62, noise: 0.008, attack: 0.002, release: 0.055, glide: 0.010,
+      filterEnv: 0.38, filterEnd: 0.46, filterSnap: 0.0030, filterDecay: 0.68,
     },
     '909': {
       personality: 'acid-bass',

@@ -1790,12 +1790,13 @@ function buildSeq() {
         if (trackId === 'synth' && trackIndex === S.sel && SYNTH_NOTE_EDIT) {
           if (!PATTERNS[S.patt][trackId][i]) PATTERNS[S.patt][trackId][i] = 1;
           SYNTH_NOTES[S.patt] = State.cycleSynthNoteRatio(SYNTH_NOTES[S.patt], i);
-          setLastSynthNoteStep(i);
+          LAST_SYNTH_NOTE_STEP = i;
+          updateSynthNoteStatus();
+          previewSynth();
           buildSeq();
           buildVE();
           renderRhythmIntelligence();
           autosave();
-          previewSynthNoteEditAudition();
           return;
         }
         if (trackId === 'hihat' && isCellOn()) {

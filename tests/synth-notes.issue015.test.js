@@ -186,12 +186,12 @@ assert(/function updateSynthNoteStatus\(\) \{[\s\S]*?querySelector\('\[data-synt
 const noteEditCellTapBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && SYNTH_NOTE_EDIT\) \{[\s\S]*?\n        \}/);
 assert(noteEditCellTapBranch, 'runtime handles selected SYN NOTE EDIT cell taps');
 assert(
-  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?setLastSynthNoteStep\(i\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)[\s\S]*?previewSynthNoteEditAudition\(\)/.test(noteEditCellTapBranch[0]),
-  'SYN NOTE EDIT cell taps audition the cycled harmonic through the stopped-only helper after state, editor rebuild, rhythm render, and autosave updates'
+  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?LAST_SYNTH_NOTE_STEP = i[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?previewSynth\(\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)/.test(noteEditCellTapBranch[0]),
+  'SYN NOTE EDIT cell taps audition the cycled harmonic through previewSynth after state, editor rebuild, rhythm render, and autosave updates'
 );
 assert(
-  !/previewSynth\(\)/.test(noteEditCellTapBranch[0]),
-  'SYN NOTE EDIT cell taps do not call raw previewSynth() outside the stopped-only helper'
+  /updateSynthNoteStatus\(\)/.test(noteEditCellTapBranch[0]),
+  'SYN NOTE EDIT cell taps refresh the selected synth note status display'
 );
 assert(!mainJs.includes("'×' + ratio.toFixed"), 'runtime does not duplicate inline synth ratio marker formatting');
 assert(mainJs.includes('synthNotes: SYNTH_NOTES'), 'runtime saves/exports synth note banks');

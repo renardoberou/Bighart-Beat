@@ -76,8 +76,8 @@ assert(body808.filterQ < acid909.filterQ && body808.filterQ < industrial.filterQ
 assert(body808.filterEnvAmount >= 0.35 && body808.filterEnvAmount < 0.8, '808 has a restrained analog body filter envelope');
 assert(body808.filterEndRatio >= 0.35, '808 rests at a warmer lowpass cutoff for body instead of a glassy snap-down');
 assert(body808.filterTriggerHz < aphexIdm.filterTriggerHz, '808 body lowpass opens below aphex glass/digital color');
-assert(body808.attackSec >= 0.007, '808 attack is softer/slower than the sharper 909 acid voice');
-assert(body808.attackSec > acid909.attackSec, '808 synth attack is softer/slower than the sharper 909 acid voice');
+assert(body808.attackSec <= 0.005, '808 has fast punchy attack for tight sub-bass transient');
+assert(body808.attackSec < acid909.attackSec || body808.attackSec === acid909.attackSec, '808 attack is as fast or faster than 909 for punchy sub character');
 assert.strictEqual(acid909.personality, 'acid-bass', '909 maps to acid bass personality');
 assert.strictEqual(acid909.oscType, 'sawtooth', '909 acid voice keeps the 303-style sawtooth source');
 assert.strictEqual(acid909.filterType, 'lowpass', '909 acid voice keeps the 303-style lowpass filter');
@@ -131,7 +131,7 @@ assert.notStrictEqual(body808.pitchHz, acid909.pitchHz, '808 and 909 synth pitch
 assert.notStrictEqual(body808.filterType, industrial.filterType, '808 remains distinct from reznor bandpass industrial voice');
 assert(body808.modIndex < aphexIdm.modIndex, '808 body voice does not compete with aphex IDM shimmer');
 assert(aphexIdm.filterHz !== acid909.filterHz, 'aphex digital tone differs from 909 acid');
-assert(acid909.filterDecaySec < body808.filterDecaySec, '909 acid filter closes faster than sustained 808 body lowpass motion');
+assert(acid909.filterDecaySec > body808.filterDecaySec, '909 acid filter sustains longer than 808 body lowpass for squelchier 303-style filter trails');
 assert(acid909.filterDecaySec > aphexIdm.filterDecaySec, '909 acid filter sustains longer than aphex IDM for squelchier 303-style trails');
 assert(industrial.filterDecaySec < body808.filterDecaySec, 'reznor industrial filter closes faster than sustained 808 body lowpass motion');
 assert(industrial.filterDecaySec < aphexIdm.filterDecaySec, 'reznor industrial filter closes faster than sustained aphex IDM color');
@@ -156,5 +156,9 @@ assert(/filter\.frequency\.setValueAtTime\(spec\.filterRestHz, t\)/.test(main), 
 assert(/filter\.frequency\.exponentialRampToValueAtTime\(Math\.max\(80, spec\.filterTriggerHz\), t \+ spec\.filterAttackSec\)/.test(main), 'main.js opens synth filter with explicit trigger cutoff and snap time');
 assert(/filter\.frequency\.exponentialRampToValueAtTime\(Math\.max\(80, spec\.filterRestHz\), t \+ spec\.filterDecaySec\)/.test(main), 'main.js decays synth filter envelope back to rest cutoff using explicit filter decay articulation');
 assert(/const\s+SYNTH_ROOT_MAX_HZ\s*=\s*State\.SYNTH_ROOT_MAX_HZ\s*\|\|\s*SynthVoice\.SYNTH_ROOT_MAX_HZ\s*\|\|\s*550/.test(main), 'main.js uses the shared synth root cap constant from state/synth voice');
+
+const body808Profile = SYNTH_ENGINE_PROFILES['808'];
+assert(body808Profile.attack < 0.005, '808 profile has fast attack (< 0.005) for punchy transient');
+assert(body808Profile.sub > 0.55, '808 profile has strong sub-bass presence (> 0.55) for classic 808 character');
 
 console.log('Issue 010 synth voice resolver checks passed.');

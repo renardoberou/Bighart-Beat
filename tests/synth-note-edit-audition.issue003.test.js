@@ -49,8 +49,9 @@ const sequencerSynthNoteEditEnd = main.indexOf('return;', sequencerSynthNoteEdit
 assert(sequencerSynthNoteEditEnd > sequencerSynthNoteEditStart, 'sequencer-cell SYNTH_NOTE_EDIT handler can be inspected');
 const sequencerSynthNoteEditHandler = main.slice(sequencerSynthNoteEditStart, sequencerSynthNoteEditEnd);
 
-assert(/previewSynthNoteEditAudition\s*\(\s*\)\s*;/.test(sequencerSynthNoteEditHandler), 'sequencer-cell SYNTH_NOTE_EDIT handler uses stopped-only synth note edit audition helper');
-assert(!/[^\w$]previewSynth\s*\(\s*\)\s*;/.test(sequencerSynthNoteEditHandler), 'sequencer-cell SYNTH_NOTE_EDIT handler does not call raw previewSynth()');
+assert(/previewSynth\s*\(\)\s*;/.test(sequencerSynthNoteEditHandler), 'sequencer-cell SYNTH_NOTE_EDIT handler calls previewSynth for immediate note feedback');
+assert(/updateSynthNoteStatus\s*\(\)\s*;/.test(sequencerSynthNoteEditHandler), 'sequencer-cell SYNTH_NOTE_EDIT handler updates synth note status display');
+assert(/LAST_SYNTH_NOTE_STEP\s*=\s*i/.test(sequencerSynthNoteEditHandler), 'sequencer-cell SYNTH_NOTE_EDIT handler tracks last edited step for display');
 
 const testSynthLine = main.match(/querySelector\('\[data-synth-test\]'\)\.addEventListener\('click',\s*previewSynth\s*\)/);
 assert(testSynthLine, 'explicit TEST SYN button continues to call previewSynth directly');
