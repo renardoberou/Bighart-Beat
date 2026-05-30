@@ -275,7 +275,12 @@
   }
 
   function createDefaultSynthNotesGrid() {
-    return Array.from({ length: STEP_COUNT }, () => 1);
+    // Musical default: root, _, _, _, 5th, _, _, _, octave, _, _, _, 5th, _, _, _
+    const grid = Array(STEP_COUNT).fill(1);
+    if (STEP_COUNT > 12) { grid[4] = 1.5; grid[8] = 2; grid[12] = 1.5; }
+    else if (STEP_COUNT > 8) { grid[4] = 1.5; grid[8] = 2; }
+    else if (STEP_COUNT > 4) { grid[4] = 1.5; }
+    return grid;
   }
 
   function createSynthNotesBanks() {

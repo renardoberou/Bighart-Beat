@@ -22,7 +22,11 @@ assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(2), 'harmonic list includes oct
 const banks = SynthNotes.createSynthNotesBanks();
 assert.strictEqual(banks.length, 4, 'synth note memory has four pattern banks');
 assert.strictEqual(banks[0].length, 16, 'default synth notes contain one harmonic ratio per step');
-assert(banks[0].every(value => value === 1), 'default synth notes start as root unison');
+// Default grid uses musical intervals: root(1) on most steps, 5th(1.5) on 4 and 12, octave(2) on 8
+assert.strictEqual(banks[0][0], 1, 'default synth notes start with root on step 0');
+assert.strictEqual(banks[0][4], 1.5, 'default synth notes place 5th on step 4');
+assert.strictEqual(banks[0][8], 2, 'default synth notes place octave on step 8');
+assert.strictEqual(banks[0][12], 1.5, 'default synth notes place 5th on step 12');
 
 const originalFirstRatio = banks[0][0];
 const cycled = SynthNotes.cycleSynthNoteRatio(Array(16).fill(1), 0);
@@ -138,7 +142,9 @@ delete legacy.synthNotes;
 const hydrated = parseProjectImport(legacy);
 assert.strictEqual(hydrated.ok, true, 'legacy projects without synthNotes import');
 assert.strictEqual(hydrated.value.synthNotes[0].length, 16, 'legacy imports hydrate synth note banks');
-assert(hydrated.value.synthNotes[0].every(value => value === 1), 'legacy imports hydrate root unison synth note banks');
+assert.strictEqual(hydrated.value.synthNotes[0][0], 1, 'legacy imports hydrate synth note banks with root on step 0');
+assert.strictEqual(hydrated.value.synthNotes[0][4], 1.5, 'legacy imports hydrate musical default with 5th on step 4');
+assert.strictEqual(hydrated.value.synthNotes[0][8], 2, 'legacy imports hydrate musical default with octave on step 8');
 
 const bad = serializeProject({ appState, tracks, fx, patterns, synthNotes: banks });
 bad.synthNotes[0][0] = 999;
