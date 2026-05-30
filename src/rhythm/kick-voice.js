@@ -55,7 +55,7 @@
       fallbackEngine: engine !== requestedEngine,
       attackHz: clamp(pitch * 1.8 * pitchMul, 20, 420),
       dropHz: clamp(pitch * pitchMul, 20, 260),
-      endHz: clamp(end * pitchMul, 18, 160),
+      endHz: clamp(end * pitchMul, 25, 160),
       bodyDecaySec,
       subDecaySec,
       oscStopSec: clamp(bodyDecaySec + 0.08, 0.05, 1.9),

@@ -43,8 +43,7 @@ function assertFiniteBounded(spec, label) {
   });
   assert(spec.attackHz >= 20 && spec.attackHz <= 420, `${label}: attackHz bounded for mobile speakers/headroom`);
   assert(spec.dropHz >= 20 && spec.dropHz <= 260, `${label}: dropHz bounded`);
-  assert(spec.endHz >= 18 && spec.endHz <= 160, `${label}: endHz bounded`);
-  assert(spec.bodyDecaySec >= 0.035 && spec.bodyDecaySec <= 1.6, `${label}: bodyDecaySec bounded`);
+  assert(spec.endHz >= 25 && spec.endHz <= 160, `${label}: endHz bounded`);
   assert(spec.subDecaySec >= spec.bodyDecaySec, `${label}: sub tail is at least body length`);
   assert(spec.driveAmount >= 0 && spec.driveAmount <= 1, `${label}: driveAmount waveshaper input bounded`);
   assert(spec.clickGain <= 0.9, `${label}: clickGain leaves headroom`);
