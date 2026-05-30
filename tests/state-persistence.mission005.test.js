@@ -114,7 +114,7 @@ const legacyShape = {
 };
 assert.strictEqual(parseProjectImport(legacyShape).ok, true, 'parseProjectImport accepts legacy six-track export shape without schemaVersion');
 assert.strictEqual(parseProjectImport({ ...legacyShape, patt: 1 }).ok, true, 'parseProjectImport accepts legacy six-track shape with patt and without schemaVersion');
-assert.strictEqual(parseProjectImport(legacyShape).value.engine, 'aphex', 'legacy imports without engine default to aphex');
+assert.strictEqual(parseProjectImport(legacyShape).value.engine, '808', 'legacy imports without engine default to 808');
 assert.strictEqual(parseProjectImport(legacyShape).value.swing, 0, 'legacy imports without swing default to straight timing');
 const hydratedLegacy = parseProjectImport(legacyShape);
 assert.strictEqual(hydratedLegacy.ok, true, 'legacy six-track import parses');

@@ -1092,7 +1092,7 @@ function createSynthVoiceCleanupHandle(nodes) {
 function triggerSynthChoke(t, voiceGain, spec, cleanup, timeSincePreviousSec = Infinity) {
   const previous = synthVoiceState.gain;
   const previousCleanup = synthVoiceState.cleanup;
-  const isLegato = timeSincePreviousSec < 0.085;
+  const isLegato = timeSincePreviousSec < 0.180;
   if (previous && previous.gain && !isLegato) {
     const g = previous.gain;
     cancelAndHoldOrSmoothParam(g, t, { floor: .0008, smoothTime: .003, fallbackValue: .0008 });

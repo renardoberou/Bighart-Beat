@@ -581,7 +581,7 @@
     const validation = validateProjectData(data);
     if (!validation.ok) return validation;
     const value = cloneValue(data);
-    if (value.engine === undefined) value.engine = 'aphex';
+    if (value.engine === undefined) value.engine = '808';
     if (value.swing === undefined) value.swing = 0;
     if (value.ratchets === undefined) value.ratchets = createRatchetBanks();
     if (value.hihatOpenness === undefined) value.hihatOpenness = createHihatOpennessBanks();

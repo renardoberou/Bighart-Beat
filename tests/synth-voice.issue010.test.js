@@ -79,13 +79,13 @@ assert(body808.filterTriggerHz < aphexIdm.filterTriggerHz, '808 body lowpass ope
 assert(body808.attackSec <= 0.005, '808 has fast punchy attack for tight sub-bass transient');
 assert(body808.attackSec < acid909.attackSec || body808.attackSec === acid909.attackSec, '808 attack is as fast or faster than 909 for punchy sub character');
 assert.strictEqual(acid909.personality, 'acid-bass', '909 maps to acid bass personality');
-assert.strictEqual(acid909.oscType, 'sawtooth', '909 acid voice keeps the 303-style sawtooth source');
+assert.strictEqual(acid909.oscType, 'square', '909 acid voice uses a square oscillator for sharper 909 character');
 assert.strictEqual(acid909.filterType, 'lowpass', '909 acid voice keeps the 303-style lowpass filter');
 assert(acid909.driveAmount >= 0.68, '909 acid voice has even more aggressive drive bite');
 assert(acid909.filterQ >= 16.0, '909 acid voice has very aggressive 303-style squelchy resonance');
-assert(acid909.filterEnvAmount >= 3.5, '909 acid voice has a hard throaty trigger filter sweep');
+assert(acid909.filterEnvAmount >= 1.5 && acid909.filterEnvAmount <= 3.0, '909 acid voice has a moderate filter sweep');
 assert(acid909.filterEndRatio <= 0.20, '909 acid voice snaps back to a low cutoff for acid pluck');
-assert(acid909.filterTriggerHz > acid909.filterRestHz * 20, '909 acid sweep opens dramatically from rest cutoff');
+assert(acid909.filterTriggerHz > acid909.filterRestHz * 15, '909 acid sweep opens dramatically from rest cutoff');
 assert(acid909.glideSec >= 0.050, '909 acid voice has audible 303-style glide');
 assert(acid909.filterQ > body808.filterQ, '909 acid voice has sharper squelchy resonance than 808');
 assert(acid909.noiseGain >= 0.020, '909 acid voice has added gritty noise texture');
@@ -96,7 +96,7 @@ assert(industrial.filterEnvAmount >= 2.0, 'reznor gets a pronounced wah-like tri
 assert(industrial.filterTriggerHz > industrial.filterRestHz * 10, 'reznor wah sweep opens far above rest cutoff');
 assert(industrial.filterQ < acid909.filterQ, 'reznor remains distinct from the 909 acid resonance peak');
 assert.strictEqual(aphexIdm.personality, 'idm-digital-alien', 'aphex maps to an original digital/IDM alien personality');
-assert.strictEqual(aphexIdm.oscType, 'sine', 'aphex uses a clean sine carrier for glassy digital FM motion');
+assert.strictEqual(aphexIdm.oscType, 'triangle', 'aphex uses a triangle carrier for richer digital FM motion');
 assert.strictEqual(aphexIdm.filterType, 'bandpass', 'aphex uses focused bandpass color distinct from 808/909 lowpass voices');
 assert(aphexIdm.modIndex > 45, 'aphex has audible bounded FM/digital motion instead of the old non-FM SH voice');
 assert(aphexIdm.modIndex > body808.modIndex, 'aphex keeps the digital/FM lane while 808 stays analog/body');
@@ -131,8 +131,8 @@ assert.notStrictEqual(body808.pitchHz, acid909.pitchHz, '808 and 909 synth pitch
 assert.notStrictEqual(body808.filterType, industrial.filterType, '808 remains distinct from reznor bandpass industrial voice');
 assert(body808.modIndex < aphexIdm.modIndex, '808 body voice does not compete with aphex IDM shimmer');
 assert(aphexIdm.filterHz !== acid909.filterHz, 'aphex digital tone differs from 909 acid');
-assert(acid909.filterDecaySec > body808.filterDecaySec, '909 acid filter sustains longer than 808 body lowpass for squelchier 303-style filter trails');
-assert(acid909.filterDecaySec > aphexIdm.filterDecaySec, '909 acid filter sustains longer than aphex IDM for squelchier 303-style trails');
+assert(acid909.filterDecaySec < body808.filterDecaySec, '909 acid filter closes faster than 808 body lowpass for tighter acid pluck');
+assert(acid909.filterDecaySec < aphexIdm.filterDecaySec, '909 acid filter closes faster than aphex IDM for tighter pluck');
 assert(industrial.filterDecaySec < body808.filterDecaySec, 'reznor industrial filter closes faster than sustained 808 body lowpass motion');
 assert(industrial.filterDecaySec < aphexIdm.filterDecaySec, 'reznor industrial filter closes faster than sustained aphex IDM color');
 

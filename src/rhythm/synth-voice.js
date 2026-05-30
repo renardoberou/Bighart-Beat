@@ -10,9 +10,9 @@
     },
     '909': {
       personality: 'acid-bass',
-      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 3.60,
+      oscType: 'square', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 3.60,
       drive: 0.70, body: 0.50, sub: 0.22, noise: 0.025, attack: 0.004, release: 0.040, glide: 0.060,
-      filterEnv: 3.30, filterEnd: 0.18, filterSnap: 0.0025, filterDecay: 0.62,
+      filterEnv: 1.80, filterEnd: 0.18, filterSnap: 0.0025, filterDecay: 0.35,
     },
     reznor: {
       personality: 'industrial-mono',
@@ -22,7 +22,7 @@
     },
     aphex: {
       personality: 'idm-digital-alien',
-      oscType: 'sine', filterType: 'bandpass', pitch: 1.18, decay: 1.08, tone: 1.34, q: 1.36,
+      oscType: 'triangle', filterType: 'bandpass', pitch: 1.18, decay: 1.08, tone: 1.34, q: 1.36,
       drive: 0.28, body: 0.32, sub: 0.05, noise: 0.065, attack: 0.0035, release: 0.045, glide: 0.055,
       filterEnv: 1.35, filterEnd: 0.32, filterSnap: 0.0012, filterDecay: 0.64,
     },

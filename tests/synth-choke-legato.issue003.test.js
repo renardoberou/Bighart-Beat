@@ -21,9 +21,9 @@ assert(hasTimeSinceParam,
 // ── 2. Legato gate: when gap is small, choke does NOT ramp to 0.0008 ──
 // There should be a conditional that skips or reduces the choke when
 // timeSincePreviousSec is below the threshold (~85ms).
-const legatoGatePattern = /timeSincePreviousSec\s*<\s*0\.08/;
+const legatoGatePattern = /timeSincePreviousSec\s*<\s*0\.18/;
 assert(legatoGatePattern.test(main),
-  'main.js contains a legato time-gate check (timeSincePreviousSec < ~0.085)');
+  'main.js contains a legato time-gate check (timeSincePreviousSec < ~0.180)');
 
 // The legato branch should prevent the full .0008 choke ramp.
 // Look for isLegato or equivalent guard that skips setTargetAtTime or uses a higher floor.
