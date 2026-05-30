@@ -12,10 +12,10 @@ const { createPatternBanks } = require(path.join(root, 'src', 'state', 'patterns
 const { serializeProject, parseProjectImport } = require(path.join(root, 'src', 'state', 'persistence.js'));
 
 assert.strictEqual(SynthNotes.SYNTH_MIN_HZ, 40, 'synth root minimum is 40 Hz');
-assert.strictEqual(SynthNotes.SYNTH_MAX_FREQUENCY_HZ, 500, 'canonical synth maximum frequency is 500 Hz');
+assert.strictEqual(SynthNotes.SYNTH_MAX_FREQUENCY_HZ, 2200, 'canonical synth maximum frequency is 2200 Hz');
 assert.strictEqual(SynthNotes.SYNTH_MAX_HARMONIC_RATIO, 4, 'synth harmonic ratios expose the canonical 4x maximum');
-assert.strictEqual(SynthNotes.SYNTH_ROOT_MAX_HZ, 125, 'synth root maximum is derived from the 500 Hz cap divided by the 4x harmonic');
-assert.strictEqual(SynthNotes.SYNTH_MAX_HZ, 125, 'synth root maximum aliases the 125 Hz root cap');
+assert.strictEqual(SynthNotes.SYNTH_ROOT_MAX_HZ, 550, 'synth root maximum is derived from the 2200 Hz cap divided by the 4x harmonic');
+assert.strictEqual(SynthNotes.SYNTH_MAX_HZ, 550, 'synth root maximum aliases the 550 Hz root cap');
 assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(1.5), 'harmonic list includes perfect fifth ratio');
 assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(2), 'harmonic list includes octave ratio');
 
@@ -58,9 +58,9 @@ assert.deepStrictEqual(otherBank, otherBankBefore, 'selected-step random harmoni
 
 assert.strictEqual(SynthNotes.synthPitchForStep(220, 2), 440, 'step pitch multiplies root by harmonic ratio');
 assert.strictEqual(SynthNotes.synthPitchForStep(17, 1), 40, 'step pitch clamps below 40 Hz');
-assert.strictEqual(SynthNotes.synthPitchForStep(125, 4), 500, 'step pitch reaches 500 Hz at max root and max harmonic ratio');
-assert.strictEqual(SynthNotes.synthPitchForStep(125, 3), 375, 'high harmonic ratios remain distinct at the maximum synth root');
-assert.strictEqual(SynthNotes.synthPitchForStep(8000, 4), 500, 'step pitch still has a final 500 Hz output safety cap');
+assert.strictEqual(SynthNotes.synthPitchForStep(125, 4), 500, 'step pitch reaches 500 Hz at 125 Hz root and max harmonic ratio');
+assert.strictEqual(SynthNotes.synthPitchForStep(125, 3), 375, 'high harmonic ratios remain distinct at 125 Hz root');
+assert.strictEqual(SynthNotes.synthPitchForStep(8000, 4), 2200, 'step pitch still has a final 2200 Hz output safety cap');
 assert.strictEqual(SynthNotes.normalizeSynthNoteRatio(999), 16, 'ratios are bounded for import safety');
 assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(1), '×1', 'ratio helper preserves root marker style');
 assert.strictEqual(SynthNotes.formatSynthNoteRatioLabel(1.25), '×1.25', 'ratio helper preserves above-root marker style');
@@ -97,17 +97,17 @@ assert.strictEqual(
 );
 assert.strictEqual(
   SynthNotes.formatSynthNoteEditHintLabel(1),
-  'HARM ▼ F#2 5th↓ · HARM ▲ D#3 3rd-ish',
+  'HARM ▼ G#4 5th↓ · HARM ▲ F5 3rd-ish',
   'edit hint helper shows the previous/down and next/up approved harmonic labels with note names for root'
 );
 assert.strictEqual(
   SynthNotes.formatSynthNoteEditHintLabel(0.5),
-  'HARM ▼ B4 2 oct · HARM ▲ F#2 5th↓',
+  'HARM ▼ C#7 2 oct · HARM ▲ G#4 5th↓',
   'edit hint helper wraps from the lowest approved harmonic to the highest approved harmonic with note names'
 );
 assert.strictEqual(
   SynthNotes.formatSynthNoteEditHintLabel(1.37),
-  'HARM ▼ E3 4th · HARM ▲ F#3 5th',
+  'HARM ▼ F#5 4th · HARM ▲ G#5 5th',
   'edit hint helper describes adjacent approved harmonics with note names for non-listed ratios without duplicating the table in UI code'
 );
 

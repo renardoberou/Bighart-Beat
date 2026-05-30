@@ -9,7 +9,7 @@
   const ETHER_MODES = ['hum', 'clock', 'wifi', 'ether'];
   const STEP_COUNT = 16;
   const BANK_COUNT = 4;
-  const SYNTH_MAX_FREQUENCY_HZ = 500;
+  const SYNTH_MAX_FREQUENCY_HZ = 2200;
   const SYNTH_MAX_HARMONIC_RATIO = 4;
   const SYNTH_ROOT_MAX_HZ = SYNTH_MAX_FREQUENCY_HZ / SYNTH_MAX_HARMONIC_RATIO;
   const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype'];

@@ -35,7 +35,7 @@ grid = SynthNotes.cycleSynthNoteRatio(grid, 0);
 assert.strictEqual(grid[0], 0.5, 'cycleSynthNoteRatio wraps high out-of-list values back to first harmonic ratio');
 
 assert.strictEqual(SynthNotes.synthPitchForStep(220, 2), 440, 'synthPitchForStep multiplies root pitch by step ratio');
-assert.strictEqual(SynthNotes.synthPitchForStep(1000, 16), 500, 'synthPitchForStep clamps high playback pitch to safe ceiling');
+assert.strictEqual(SynthNotes.synthPitchForStep(1000, 16), 2200, 'synthPitchForStep clamps high playback pitch to safe ceiling');
 assert.strictEqual(SynthNotes.synthPitchForStep(20, 0.25), 40, 'synthPitchForStep clamps low playback pitch to safe floor');
 
 const activeOnly = SynthNotes.randomHarmonicSynthNotes(Array(16).fill(1), [0, 1, 0, 1]);

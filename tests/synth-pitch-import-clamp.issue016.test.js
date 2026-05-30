@@ -43,7 +43,7 @@ assert.deepStrictEqual(synthTrack(legacyParsed.value), {
   dlyS: false,
   revS: true,
   wreckS: true,
-  p: { pitch: 125, decay: 1.25, tone: 0.75, shape: 0.2 },
+  p: { pitch: 550, decay: 1.25, tone: 0.75, shape: 0.2 },
 }, 'legacy boosted synth pitch is narrowly clamped while valid synth fields are preserved');
 
 const validSynthProject = clone(baseProject);

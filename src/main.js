@@ -62,8 +62,8 @@ const CLAP_VOICE_VELOCITY = 0.58;
 const INPUT_VOICE_VELOCITY = 0.70;
 const ETHER_VOICE_VELOCITY = 0.62;
 const SYNTH_VOICE_VELOCITY = 0.52;
-const SYNTH_MAX_FREQUENCY_HZ = State.SYNTH_MAX_FREQUENCY_HZ || SynthVoice.SYNTH_MAX_FREQUENCY_HZ || 500;
-const SYNTH_ROOT_MAX_HZ = State.SYNTH_ROOT_MAX_HZ || SynthVoice.SYNTH_ROOT_MAX_HZ || 125;
+const SYNTH_MAX_FREQUENCY_HZ = State.SYNTH_MAX_FREQUENCY_HZ || SynthVoice.SYNTH_MAX_FREQUENCY_HZ || 2200;
+const SYNTH_ROOT_MAX_HZ = State.SYNTH_ROOT_MAX_HZ || SynthVoice.SYNTH_ROOT_MAX_HZ || 550;
 const SYNTH_OSC_SAFETY_MIN_HZ = 1;
 const SYNTH_OSC_SAFETY_MAX_HZ = 20000;
 const hihatChokeState = { gain: null, open: 0 };
@@ -2134,7 +2134,7 @@ function buildVE() {
     syn.innerHTML = `<div class="hat-help">
         <div class="hat-help-engine">SYNTH ENGINE: ${State.abbreviateEngineId(S.engine) || S.engine.toUpperCase()}</div>
         <div>PLAYABLE MONO · ${SynthVoice.resolveSynthVoiceSpec(S.engine, tr.p).personality.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</div>
-        <div>ROOT 40 Hz–125 Hz · STEP NOTES ARE HARMONIC RATIOS</div>
+        <div>ROOT 40 Hz–550 Hz · STEP NOTES ARE HARMONIC RATIOS</div>
         <div data-synth-note-status="1">${synthNoteStatusText(LAST_SYNTH_NOTE_STEP)}</div>
         <div data-synth-note-hint="1">${synthNoteEditHintText(LAST_SYNTH_NOTE_STEP)}</div>
         <div>${SYNTH_NOTE_EDIT ? 'NOTE EDIT ON: TAP SYN STEPS TO CYCLE RATIOS' : 'ENABLE NOTE EDIT TO CHANGE SYN STEPS'}</div>

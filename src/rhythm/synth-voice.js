@@ -4,7 +4,7 @@
   const SYNTH_ENGINE_PROFILES = {
     '808': {
       personality: 'analog-sub-body',
-      oscType: 'triangle', filterType: 'lowpass', pitch: 0.72, decay: 1.18, tone: 0.82, q: 0.35,
+      oscType: 'sine', filterType: 'lowpass', pitch: 0.72, decay: 1.18, tone: 0.82, q: 0.35,
       drive: 0.40, body: 0.72, sub: 0.45, noise: 0.012, attack: 0.008, release: 0.050, glide: 0.010,
       filterEnv: 0.45, filterEnd: 0.46, filterSnap: 0.0030, filterDecay: 0.78,
     },
@@ -27,7 +27,7 @@
       filterEnv: 1.35, filterEnd: 0.32, filterSnap: 0.0012, filterDecay: 0.64,
     },
   };
-  const SYNTH_MAX_FREQUENCY_HZ = 500;
+  const SYNTH_MAX_FREQUENCY_HZ = 2200;
   const SYNTH_MAX_HARMONIC_RATIO = 4;
   const SYNTH_ROOT_MAX_HZ = SYNTH_MAX_FREQUENCY_HZ / SYNTH_MAX_HARMONIC_RATIO;
 

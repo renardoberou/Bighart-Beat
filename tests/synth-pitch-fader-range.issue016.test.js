@@ -10,16 +10,16 @@ const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const persistence = fs.readFileSync(path.join(root, 'src', 'state', 'persistence.js'), 'utf8');
 const { SYNTH_MAX_FREQUENCY_HZ, SYNTH_ROOT_MAX_HZ, SYNTH_MAX_HZ, SYNTH_MAX_HARMONIC_RATIO, synthPitchForStep } = require(path.join(root, 'src', 'state', 'synth-notes.js'));
 
-assert.strictEqual(SYNTH_MAX_FREQUENCY_HZ, 500, 'canonical synth max output frequency cap is 500 Hz');
+assert.strictEqual(SYNTH_MAX_FREQUENCY_HZ, 2200, 'canonical synth max output frequency cap is 2200 Hz');
 assert.strictEqual(SYNTH_MAX_HARMONIC_RATIO, 4, 'canonical synth harmonic table tops out at a 4x ratio');
-assert.strictEqual(SYNTH_ROOT_MAX_HZ, 125, 'canonical synth root max keeps the 4x harmonic distinct under the 500 Hz output cap');
-assert.strictEqual(SYNTH_MAX_HZ, SYNTH_ROOT_MAX_HZ, 'legacy synth root maximum alias matches the 125 Hz root cap');
-assert.strictEqual(synthPitchForStep(125, 4), 500, 'synthPitchForStep maps max root and max harmonic ratio to the 500 Hz output cap');
-assert.strictEqual(synthPitchForStep(125, 3), 375, 'higher harmonics remain distinct at the max root instead of collapsing to 500 Hz');
+assert.strictEqual(SYNTH_ROOT_MAX_HZ, 550, 'canonical synth root max keeps the 4x harmonic distinct under the 2200 Hz output cap');
+assert.strictEqual(SYNTH_MAX_HZ, SYNTH_ROOT_MAX_HZ, 'legacy synth root maximum alias matches the 550 Hz root cap');
+assert.strictEqual(synthPitchForStep(550, 4), 2200, 'synthPitchForStep maps max root and max harmonic ratio to the 2200 Hz output cap');
+assert.strictEqual(synthPitchForStep(550, 3), 1650, 'higher harmonics remain distinct at the max root instead of collapsing to 2200 Hz');
 
 assert(
-  /ROOT 40 Hz[–-]125 Hz · STEP NOTES ARE HARMONIC RATIOS/.test(main),
-  'SYN voice editor help text announces the 40 Hz–125 Hz root pitch range'
+  /ROOT 40 Hz[–-]550 Hz · STEP NOTES ARE HARMONIC RATIOS/.test(main),
+  'SYN voice editor help text announces the 40 Hz–550 Hz root pitch range'
 );
 
 assert(
@@ -34,7 +34,7 @@ assert(
 
 assert(
   /synth:\s*\{\s*pitch:\s*\[\s*40\s*,\s*SYNTH_ROOT_MAX_HZ\s*\]/.test(persistence),
-  'SYN persistence validation range uses the canonical 40 Hz–125 Hz root pitch range'
+  'SYN persistence validation range uses the canonical 40 Hz–550 Hz root pitch range'
 );
 
 assert(
