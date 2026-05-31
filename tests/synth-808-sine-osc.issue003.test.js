@@ -1,7 +1,7 @@
 'use strict';
 
 const { resolveSynthVoiceSpec, SYNTH_ENGINE_PROFILES, SYNTH_MAX_FREQUENCY_HZ } = require('../src/rhythm/synth-voice');
-const hihat = require('../src/rhythm/hihat-voice');
+const tracks = require('../src/state/tracks');
 
 let failures = 0;
 
@@ -31,6 +31,24 @@ const aphexVoice = resolveSynthVoiceSpec('aphex', { pitch: 440, shape: 1.0, tone
 assert(
   aphexVoice.pitchHz > 500,
   "aphex synth voice can produce frequencies above 500 Hz (got pitchHz: " + aphexVoice.pitchHz + ")"
+);
+
+// Test 4: 808 synth at default track pitch (130) produces audible-range pitch (~93.6 Hz)
+const defaultTracks = tracks.createDefaultTracks();
+const synthTrack = defaultTracks.find(t => t.id === 'synth');
+assert(synthTrack !== undefined, 'default tracks include a synth track');
+assert(synthTrack.p.pitch === 130, 'synth track default pitch is 130 Hz (got: ' + synthTrack.p.pitch + ')');
+const eightOhEightVoice = resolveSynthVoiceSpec('808', synthTrack.p);
+assert(
+  Math.abs(eightOhEightVoice.pitchHz - 93.6) < 0.5,
+  "808 synth at default pitch produces ~93.6 Hz audible-range pitch (got: " + eightOhEightVoice.pitchHz + ")"
+);
+
+// Test 5: Aphex modIndex at tone=0.5, shape=0.5 should be ~12 (crystalline, not harsh)
+const aphexMid = resolveSynthVoiceSpec('aphex', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
+assert(
+  Math.abs(aphexMid.modIndex - 12) < 0.5,
+  "Aphex modIndex at tone=0.5 shape=0.5 should be ~12 crystalline (got: " + aphexMid.modIndex + ")"
 );
 
 if (failures > 0) {

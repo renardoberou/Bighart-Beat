@@ -70,8 +70,8 @@
     const chokeTau = clamp(Math.min(0.06, releaseTau * 0.55), 0.003, 0.08);
     const isAphexDigital = profile.personality === 'idm-digital-alien';
     const isIndustrialMono = profile.personality === 'industrial-mono';
-    const modRatio = isAphexDigital ? 2.7 + shape * 3.1 + tone * 0.3 : (isIndustrialMono ? 1.1 + shape * 2.4 + tone * 0.8 : 1 + shape);
-    const modIndex = isAphexDigital ? 8 + tone * 12 + shape * 6 : (isIndustrialMono ? 8 + tone * 38 + shape * 22 : 0);
+    const modRatio = isAphexDigital ? 2.0 + shape * 2.0 + tone * 0.2 : (isIndustrialMono ? 1.1 + shape * 2.4 + tone * 0.8 : 1 + shape);
+    const modIndex = isAphexDigital ? 6 + tone * 8 + shape * 4 : (isIndustrialMono ? 8 + tone * 38 + shape * 22 : 0);
 
     return {
       engine,

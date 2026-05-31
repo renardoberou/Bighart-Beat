@@ -15,7 +15,7 @@
       hihat: { noise: 1.14, tone: 0.28, bright: 1.32, decay: 0.82, transient: 1.04, tailDamp: 0.94, airDamp: 1.06, trim: 1.00, ratios: [2.00, 2.33, 3.01, 3.88, 4.61, 5.97], osc: 'square', instability: 0.015, glitch: 0, chokeClosed: 0.014, chokeOpen: 0.044 },
     },
     reznor: {
-      kick: { pitch: 0.82, decay: 0.95, click: 1.05, clickHp: 0.92, drive: 1.55, body: 1.05, sub: 0.85, outputTrim: 0.82 },
+      kick: { pitch: 0.82, decay: 0.95, click: 1.05, clickHp: 0.92, drive: 1.55, body: 1.05, sub: 0.85, outputTrim: 0.90 },
       snare: { tone: 0.72, noise: 1.28, body: 0.70, snap: 1.25, outputTrim: 0.86 },
       clap: { tone: 0.74, decay: 1.05, spread: 1.05, body: 1.14, tail: 1.18, snap: 1.0, highpass: 0.72, q: 1.28, jitter: 1.0, panWidth: 0.12, panAsym: 0.03 },
       hihat: { noise: 1.28, tone: 0.38, bright: 0.64, decay: 1.28, transient: 0.96, tailDamp: 0.90, airDamp: 0.90, trim: 0.90, ratios: [1.41, 1.93, 2.79, 3.76, 5.11, 7.23], osc: 'sawtooth', instability: 0.025, glitch: 0.10, chokeClosed: 0.012, chokeOpen: 0.080 },

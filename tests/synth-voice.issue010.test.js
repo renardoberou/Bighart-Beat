@@ -98,9 +98,9 @@ assert(industrial.filterQ < acid909.filterQ, 'reznor remains distinct from the 9
 assert.strictEqual(aphexIdm.personality, 'idm-digital-alien', 'aphex maps to an original digital/IDM alien personality');
 assert.strictEqual(aphexIdm.oscType, 'triangle', 'aphex uses a triangle carrier for richer digital FM motion');
 assert.strictEqual(aphexIdm.filterType, 'bandpass', 'aphex uses focused bandpass color distinct from 808/909 lowpass voices');
-assert(aphexIdm.modIndex >= 8 && aphexIdm.modIndex <= 26, 'aphex has audible bounded FM/digital motion in crystalline-bell range (8-26)');
+assert(aphexIdm.modIndex >= 6 && aphexIdm.modIndex <= 18, 'aphex has audible bounded FM/digital motion in crystalline-bell range (6-18)');
 assert(aphexIdm.modIndex > body808.modIndex, 'aphex keeps the digital/FM lane while 808 stays analog/body');
-assert(aphexIdm.modRatio > 2.5 && aphexIdm.modRatio < 6.5, 'aphex uses inharmonic IDM-style FM ratios within safe bounds');
+assert(aphexIdm.modRatio > 1.9 && aphexIdm.modRatio < 4.5, 'aphex uses bell-like FM ratios within safe bounds');
 assert(aphexIdm.detuneCents !== 0, 'aphex center shape keeps a small alien detune offset');
 assert(aphexIdm.noiseGain >= 0.030, 'aphex adds a bounded digital dust/noise layer');
 assert(aphexIdm.noiseGain < industrial.noiseGain, 'aphex digital dust remains below Reznor industrial noise');

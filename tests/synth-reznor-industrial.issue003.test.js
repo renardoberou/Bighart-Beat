@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const { resolveSynthVoiceSpec } = require('../src/rhythm/synth-voice.js');
+const { ENGINE_PROFILES } = require('../src/rhythm/engine-profiles.js');
 
 const base = { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 };
 const reznor = resolveSynthVoiceSpec('reznor', base);
@@ -46,6 +47,13 @@ assert(
 assert(
   reznor.driveAmount <= 0.75,
   'Reznor drive must remain bounded for mobile-safe waveshaping'
+);
+
+// Test: Reznor kick outputTrim raised to 0.90 for parity with 808/909
+assert.strictEqual(
+  ENGINE_PROFILES.reznor.kick.outputTrim,
+  0.90,
+  'Reznor kick outputTrim should be 0.90 for parity with 808/909 (got: ' + ENGINE_PROFILES.reznor.kick.outputTrim + ')'
 );
 
 console.log('synth-reznor-industrial issue003 tests passed');
