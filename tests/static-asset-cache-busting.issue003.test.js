@@ -41,7 +41,7 @@ const PREVIOUS_STYLESHEET_TOKENS = [
   'v=hihat-aphex-bright-headroom-20260528',
 ];
 const EXPECTED_TOKEN = 'v=synth-engine-tuneup-20260531';
-const STYLESHEET_TOKEN = 'v=synth-engine-tuneup-20260531';
+const STYLESHEET_TOKEN = 'v=synth-tap-flash-20260531';
 const HIHAT_METALLIC_RATTLE_PAN_TOKEN = 'v=hihat-metallic-rattle-pan-20260526';
 const HIHAT_SOFT_OPEN_TAIL_TOKEN = 'v=hihat-soft-open-tail-20260526';
 const HIHAT_APHEX_CLOSED_NEEDLE_ACCENT_TOKEN = 'v=hihat-aphex-closed-needle-accent-20260526';
@@ -55,16 +55,17 @@ const HIHAT_VOICE_PREVIOUS_TOKENS = [
   'v=aphex-snare-clap-idm-20260528',
 ];
 const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
-const SYNTH_VOICE_TOKEN = 'v=synth-engine-tuneup-20260531-b';
+const SYNTH_VOICE_TOKEN = 'v=synth-engine-tuneup-20260531-c';
 const KICK_VOICE_TOKEN = 'v=kick-endhz-floor-25hz-20260530';
-const SYNTH_NOTES_TOKEN = 'v=synth-musical-defaults-20260530';
+const SYNTH_NOTES_TOKEN = 'v=synth-tet24-persist-20260531';
 const TRACKS_TOKEN = 'v=synth-pitch-330-20260530';
+const PERSISTENCE_TOKEN = 'v=synth-tet24-persist-20260531';
 const TRACKS_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   'v=hihat-aphex-bright-headroom-20260528',
   'v=synth-velocity-boost-20260530',
 ];
-const MAIN_JS_TOKEN = 'v=synth-engine-tuneup-20260531';
+const MAIN_JS_TOKEN = 'v=synth-tap-cycle-20260531';
 const MAIN_JS_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   HIHAT_METALLIC_RATTLE_PAN_TOKEN,
@@ -87,13 +88,13 @@ const SYNTH_NOTES_PREVIOUS_TOKENS = [
   'v=synth-hint-notes-20260528',
   'v=synth-808-refine-20260530',
 ];
-const CLAP_STEREO_WIDTH_TOKEN = EXPECTED_TOKEN;
-const ENGINE_PROFILES_TOKEN = 'v=kick-floor-reznor-snare-20260530';
+const CLAP_STEREO_WIDTH_TOKEN = 'v=clap-burst-tone-20260531';
+const ENGINE_PROFILES_TOKEN = 'v=snare-volume-parity-20260531';
 const CLAP_STEREO_WIDTH_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   'v=input-playback-rate-safety-20260526',
 ];
-const localAssetTokenPattern = /[?&]v=(?:synth-declick|synth-engine-tuneup|synth-note-edit-ux|synth-pitch-330|synth-musical-defaults|synth-velocity-boost|synth-808-refine|kick-floor-reznor-snare|kick-endhz-floor-25hz|hihat-aphex-bright-headroom|aphex-snare-clap-idm|aphex-kick-digital-crack|boost-week|hihat-open-tail-extend|hihat-idm-shimmer-decay-bloom|hihat-idm-engine-polish|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-aphex-closed-needle-accent|aphex-shimmer-edge-boost|hihat-metallic-rattle-pan|hihat-soft-open-tail|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|wreck-order-ux|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|clap-stereo-width|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|synth-detune-personality|synth-note-selector|synth-note-names|synth-hint-notes|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const localAssetTokenPattern = /[?&]v=(?:synth-declick|synth-engine-tuneup|synth-note-edit-ux|synth-pitch-330|synth-musical-defaults|synth-velocity-boost|synth-808-refine|synth-tap-flash|synth-tap-cycle|synth-tet24-persist|kick-floor-reznor-snare|kick-endhz-floor-25hz|hihat-aphex-bright-headroom|aphex-snare-clap-idm|aphex-kick-digital-crack|snare-volume-parity|clap-burst-tone|boost-week|hihat-open-tail-extend|hihat-idm-shimmer-decay-bloom|hihat-idm-engine-polish|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-aphex-closed-needle-accent|aphex-shimmer-edge-boost|hihat-metallic-rattle-pan|hihat-soft-open-tail|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|wreck-order-ux|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|clap-stereo-width|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|synth-detune-personality|synth-note-selector|synth-note-names|synth-hint-notes|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN, previousTokens = PREVIOUS_TOKENS) {
   assert(
     !assetUrl.includes(STALE_TOKEN) && previousTokens.every((token) => !assetUrl.includes(token)),
@@ -165,6 +166,7 @@ const expectedScriptSrcs = [
   if (unversionedPath === 'src/rhythm/clap-voice.js') return `${unversionedPath}?${CLAP_STEREO_WIDTH_TOKEN}`;
   if (unversionedPath === 'src/rhythm/kick-voice.js') return `${unversionedPath}?${KICK_VOICE_TOKEN}`;
   if (unversionedPath === 'src/state/synth-notes.js') return `${unversionedPath}?${SYNTH_NOTES_TOKEN}`;
+  if (unversionedPath === 'src/state/persistence.js') return `${unversionedPath}?${PERSISTENCE_TOKEN}`;
   if (unversionedPath === 'src/state/tracks.js') return `${unversionedPath}?${TRACKS_TOKEN}`;
   if (unversionedPath === 'src/main.js') return `${unversionedPath}?${MAIN_JS_TOKEN}`;
   return `${unversionedPath}?${EXPECTED_TOKEN}`;
@@ -199,6 +201,10 @@ scriptSrcs.forEach((src) => {
   if (src.startsWith('src/state/synth-notes.js?')) {
     expectedToken = SYNTH_NOTES_TOKEN;
     previousTokens = SYNTH_NOTES_PREVIOUS_TOKENS;
+  }
+  if (src.startsWith('src/state/persistence.js?')) {
+    expectedToken = PERSISTENCE_TOKEN;
+    previousTokens = PREVIOUS_TOKENS;
   }
   if (src.startsWith('src/state/tracks.js?')) {
     expectedToken = TRACKS_TOKEN;
