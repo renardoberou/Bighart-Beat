@@ -44,6 +44,7 @@ assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(activeOnly[1]), 'randomHarmonic
 assert(SynthNotes.SYNTH_HARMONIC_RATIOS.includes(activeOnly[3]), 'randomHarmonicSynthNotes assigns harmonic ratios to every active step');
 
 const mainJs = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
+const mainCss = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
 assert(mainJs.includes('data-synth-note-prev'), 'voice editor exposes a stable previous synth-step control marker');
 assert(mainJs.includes('data-synth-note-next'), 'voice editor exposes a stable next synth-step control marker');
 assert(mainJs.includes('data-synth-root-step'), 'voice editor exposes a stable root selected-step control marker');
@@ -63,5 +64,11 @@ assert(/querySelector\('\[data-synth-root-step\]'\)\.addEventListener\('\s*click
 const helperMatch = mainJs.match(/function\s+moveSelectedSynthNoteStep\s*\(\s*delta\s*\)\s*{([\s\S]*?)\n}/);
 assert(helperMatch, 'selected synth-step navigation helper body is discoverable');
 assert(!/PATTERNS|SYNTH_NOTES|cycleSynthNoteRatio|randomHarmonicSynthNotes/.test(helperMatch[1]), 'navigation does not mutate pattern steps or synth note ratios');
+
+// Tap-to-cycle: verify the click handler block for cycling synth note ratios on active steps
+assert(/trackId === 'synth' && trackIndex === S\.sel && !SYNTH_NOTE_EDIT && PATTERNS\[S\.patt\]\[trackId\]\[i\]/.test(mainJs),
+  'tap-to-cycle handler guards on synth track, selected pattern, note-edit off, and step on');
+assert(/tap-flash/.test(mainJs), 'tap-to-cycle handler references tap-flash CSS class for visual feedback');
+assert(/synthTapFlash/.test(mainCss), 'main.css defines the synthTapFlash keyframe animation');
 
 console.log('Issue 003 synth note state and selected-step navigation checks passed.');

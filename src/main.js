@@ -1801,6 +1801,22 @@ function buildSeq() {
           autosave();
           return;
         }
+        // Tap-to-cycle: if synth step is already ON, cycle ratio instead of toggling off
+        if (trackId === 'synth' && trackIndex === S.sel && !SYNTH_NOTE_EDIT && PATTERNS[S.patt][trackId][i]) {
+          SYNTH_NOTES[S.patt] = State.cycleSynthNoteRatio(SYNTH_NOTES[S.patt], i);
+          LAST_SYNTH_NOTE_STEP = i;
+          updateSynthNoteStatus();
+          previewSynth();
+          buildSeq();
+          buildVE();
+          renderRhythmIntelligence();
+          autosave();
+          // Flash visual feedback
+          c.classList.remove('tap-flash');
+          void c.offsetWidth; // force reflow
+          c.classList.add('tap-flash');
+          return;
+        }
         if (trackId === 'hihat' && isCellOn()) {
           HHT_ACCENT[S.patt] = State.toggleHihatAccent(HHT_ACCENT[S.patt], i);
           buildSeq();
