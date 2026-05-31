@@ -40,8 +40,8 @@ const PREVIOUS_STYLESHEET_TOKENS = [
   'v=hihat-flutter-20260523',
   'v=hihat-aphex-bright-headroom-20260528',
 ];
-const EXPECTED_TOKEN = 'v=synth-engine-tuneup-20260530';
-const STYLESHEET_TOKEN = 'v=synth-engine-tuneup-20260530';
+const EXPECTED_TOKEN = 'v=synth-engine-tuneup-20260531';
+const STYLESHEET_TOKEN = 'v=synth-engine-tuneup-20260531';
 const HIHAT_METALLIC_RATTLE_PAN_TOKEN = 'v=hihat-metallic-rattle-pan-20260526';
 const HIHAT_SOFT_OPEN_TAIL_TOKEN = 'v=hihat-soft-open-tail-20260526';
 const HIHAT_APHEX_CLOSED_NEEDLE_ACCENT_TOKEN = 'v=hihat-aphex-closed-needle-accent-20260526';
@@ -55,7 +55,7 @@ const HIHAT_VOICE_PREVIOUS_TOKENS = [
   'v=aphex-snare-clap-idm-20260528',
 ];
 const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
-const SYNTH_VOICE_TOKEN = 'v=synth-engine-tuneup-20260530';
+const SYNTH_VOICE_TOKEN = 'v=synth-engine-tuneup-20260531';
 const KICK_VOICE_TOKEN = 'v=kick-endhz-floor-25hz-20260530';
 const SYNTH_NOTES_TOKEN = 'v=synth-musical-defaults-20260530';
 const TRACKS_TOKEN = 'v=synth-pitch-330-20260530';
@@ -64,7 +64,7 @@ const TRACKS_PREVIOUS_TOKENS = [
   'v=hihat-aphex-bright-headroom-20260528',
   'v=synth-velocity-boost-20260530',
 ];
-const MAIN_JS_TOKEN = 'v=synth-engine-tuneup-20260530';
+const MAIN_JS_TOKEN = 'v=synth-engine-tuneup-20260531';
 const MAIN_JS_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   HIHAT_METALLIC_RATTLE_PAN_TOKEN,

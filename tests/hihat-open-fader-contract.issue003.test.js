@@ -36,7 +36,7 @@ assert(/data-open=['"]\.45['"][\s\S]*?>TIGHT</.test(hihatPanel), 'tight hihat pr
 assert(/data-open=['"]1['"][\s\S]*?>OPEN</.test(hihatPanel), 'open hihat preview button remains present');
 
 assert(
-  /v=synth-engine-tuneup-20260530/.test(html),
+  /v=synth-engine-tuneup-20260531/.test(html),
   'static asset cache token is bumped for the synth-engine-tuneup slice',
 );
 
