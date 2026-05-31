@@ -276,12 +276,16 @@
   }
 
   function createDefaultSynthNotesGrid() {
-    // Musical default: root, _, _, _, 5th, _, _, _, octave, _, _, _, 5th, _, _, _
-    const grid = Array(STEP_COUNT).fill(1);
-    if (STEP_COUNT > 12) { grid[4] = 1.5; grid[8] = 2; grid[12] = 1.5; }
-    else if (STEP_COUNT > 8) { grid[4] = 1.5; grid[8] = 2; }
-    else if (STEP_COUNT > 4) { grid[4] = 1.5; }
-    return grid;
+    // Musical default: varied harmony — root, 5th, root, min7, 5th, root, min7, root, octave, root, 5th, min7, 5th, root, 5th, root
+    const grid = [1, 1.5, 1, 5/3, 1.5, 1, 5/3, 1, 2, 1, 1.5, 5/3, 1.5, 1, 1.5, 1];
+    if (STEP_COUNT !== grid.length) {
+      // Fallback for non-standard step counts: alternate root and 5th
+      const fallback = Array(STEP_COUNT).fill(1);
+      for (let i = 0; i < STEP_COUNT; i++) { if (i % 4 === 1 || i % 4 === 3) fallback[i] = 1.5; }
+      if (STEP_COUNT > 8) fallback[8] = 2;
+      return fallback;
+    }
+    return grid.slice(0, STEP_COUNT);
   }
 
   function createSynthNotesBanks() {
