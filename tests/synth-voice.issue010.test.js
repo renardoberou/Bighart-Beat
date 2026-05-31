@@ -57,7 +57,7 @@ for (const engine of ['808', '909', 'reznor', 'aphex', 'unknown']) {
 }
 
 const body808 = resolveSynthVoiceSpec('808', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
-const acid909 = resolveSynthVoiceSpec('909', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
+const acid909 = resolveSynthVoiceSpec('909', { pitch: 180, decay: 0.35, tone: 0.5, shape: 0.5 });
 const industrial = resolveSynthVoiceSpec('reznor', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const aphexIdm = resolveSynthVoiceSpec('aphex', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });
 const fallback = resolveSynthVoiceSpec('mystery', { pitch: 220, decay: 0.35, tone: 0.5, shape: 0.5 });

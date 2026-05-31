@@ -17,14 +17,14 @@ assert.strictEqual(harmonicPitch, 200, 'fixture has a clear pre-engine harmonic 
 
 const expected909 = SynthVoice.resolveSynthVoiceSpec('909', { pitch: harmonicPitch, decay: 0.35, tone: 0.5, shape: 0.5 }).pitchHz;
 const expectedReznor = SynthVoice.resolveSynthVoiceSpec('reznor', { pitch: harmonicPitch, decay: 0.35, tone: 0.5, shape: 0.5 }).pitchHz;
-assert.strictEqual(expected909, 100, '909 resolver halves the audible synth pitch');
+assert.strictEqual(expected909, 144, '909 resolver applies 0.72 pitch multiplier for audible mobile-range pitch');
 assert.strictEqual(expectedReznor, 148, 'Reznor resolver applies its industrial pitch multiplier');
 assert.notStrictEqual(expected909, harmonicPitch, '909 audible pitch differs from the harmonic helper output');
 assert.notStrictEqual(expectedReznor, harmonicPitch, 'Reznor audible pitch differs from the harmonic helper output');
 
 const nineOhNineStatus = State.formatSynthNoteStatusLabel({ stepIndex: 0, ratio, rootHz, pitchHz: expected909 });
 const reznorStatus = State.formatSynthNoteStatusLabel({ stepIndex: 0, ratio, rootHz, pitchHz: expectedReznor });
-assert(nineOhNineStatus.includes('ROOT 100 Hz → 100 Hz'), 'status formatter can display the 909 engine-resolved Hz');
+assert(nineOhNineStatus.includes('ROOT 100 Hz → 144 Hz'), 'status formatter can display the 909 engine-resolved Hz');
 assert(reznorStatus.includes('ROOT 100 Hz → 148 Hz'), 'status formatter can display the Reznor engine-resolved Hz');
 
 const nineOhNineWithEngine = State.formatSynthNoteStatusLabel({ stepIndex: 0, ratio, rootHz, pitchHz: expected909, engine: '909' });
