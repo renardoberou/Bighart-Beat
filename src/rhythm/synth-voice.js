@@ -63,7 +63,7 @@
     const driveAmount = clamp(profile.drive * (0.70 + shape * 0.70), 0, 0.75);
     const bodyGain = clamp(profile.body * (0.78 + tone * 0.20), 0, 0.7);
     const subGain = clamp(profile.sub * (1.10 - tone * 0.35), 0, 0.35);
-    const noiseGain = clamp(profile.noise * (0.40 + shape * 1.20), 0, profile.personality === 'industrial-mono' ? 0.20 : 0.16);
+    const noiseGain = clamp(profile.noise * (0.40 + shape * 1.20), 0, profile.personality === 'industrial-mono' ? 0.30 : 0.16);
     const attackSec = clamp(profile.attack * (1.18 - shape * 0.35), 0.001, 0.03);
     const releaseTau = clamp(profile.release * (0.7 + decaySec * 0.35), 0.003, 0.20);
     const glideSec = clamp(profile.glide * (0.5 + shape), 0, 0.08);
