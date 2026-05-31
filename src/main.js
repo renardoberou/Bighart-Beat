@@ -1092,7 +1092,7 @@ function createSynthVoiceCleanupHandle(nodes) {
 function triggerSynthChoke(t, voiceGain, spec, cleanup, timeSincePreviousSec = Infinity) {
   const previous = synthVoiceState.gain;
   const previousCleanup = synthVoiceState.cleanup;
-  const isLegato = timeSincePreviousSec < 0.180;
+  const isLegato = timeSincePreviousSec < 0.220;
   if (previous && previous.gain && !isLegato) {
     const g = previous.gain;
     cancelAndHoldOrSmoothParam(g, t, { floor: .0008, smoothTime: .003, fallbackValue: .0008 });
@@ -1133,7 +1133,7 @@ function synthSynth(t, v, p, options = {}) {
   const previousPitchHz = audition ? null : synthVoiceState.pitchHz;
   const previousTriggerTime = audition ? null : synthVoiceState.triggerTime;
   const timeSincePreviousSec = (!audition && Number.isFinite(previousTriggerTime) && t >= previousTriggerTime) ? (t - previousTriggerTime) : Infinity;
-  const recentlyTriggered = Number.isFinite(previousTriggerTime) && t >= previousTriggerTime && (t - previousTriggerTime) <= Math.max(spec.stopSec, spec.glideSec);
+  const recentlyTriggered = Number.isFinite(previousTriggerTime) && t >= previousTriggerTime && (t - previousTriggerTime) <= (spec.decaySec + spec.stopSec + spec.glideSec);
   const shouldGlide = spec.glideSec > 0 && recentlyTriggered && Number.isFinite(previousPitchHz) && previousPitchHz !== spec.pitchHz;
   applySynthGlideFrequency(osc.frequency, spec.pitchHz, t, spec, shouldGlide, previousPitchHz);
   if (Number.isFinite(spec.detuneCents)) osc.detune.setValueAtTime(spec.detuneCents, t);
@@ -1496,6 +1496,8 @@ function stopPlay() {
   document.querySelectorAll('.sc.ph').forEach(c => c.classList.remove('ph'));
   $('stepD').textContent = '--';
   uiStep = -1;
+  hihatChokeState.gain = null;
+  hihatChokeState.open = 0;
 }
 
 /* ═══════════════════════════════════════════════

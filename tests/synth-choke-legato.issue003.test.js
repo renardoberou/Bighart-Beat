@@ -20,10 +20,10 @@ assert(hasTimeSinceParam,
 
 // ── 2. Legato gate: when gap is small, choke does NOT ramp to 0.0008 ──
 // There should be a conditional that skips or reduces the choke when
-// timeSincePreviousSec is below the threshold (~85ms).
-const legatoGatePattern = /timeSincePreviousSec\s*<\s*0\.18/;
+// timeSincePreviousSec is below the threshold (~220ms).
+const legatoGatePattern = /timeSincePreviousSec\s*<\s*0\.22/;
 assert(legatoGatePattern.test(main),
-  'main.js contains a legato time-gate check (timeSincePreviousSec < ~0.180)');
+  'main.js contains a legato time-gate check (timeSincePreviousSec < ~0.220)');
 
 // The legato branch should prevent the full .0008 choke ramp.
 // Look for isLegato or equivalent guard that skips setTargetAtTime or uses a higher floor.
@@ -58,5 +58,9 @@ const hasAuditionBypass = auditionInfinityPattern.test(main) ||
   main.includes('!audition && Number.isFinite(previousTriggerTime)');
 assert(hasAuditionBypass,
   'audition mode legs previousTriggerTime to null so timeSincePreviousSec defaults to Infinity (no legato bypass in audition)');
+
+// ── 6. recentlyTriggered window uses decaySec + stopSec + glideSec so notes with longer decay tails can still legato ──
+assert(/\(t - previousTriggerTime\)\s*<=\s*\(spec\.decaySec\s*\+\s*spec\.stopSec\s*\+\s*spec\.glideSec\)/.test(main),
+  'recentlyTriggered window uses decaySec + stopSec + glideSec so longer-decay synth voices can still legato into next note');
 
 console.log('Issue 003 synth choke legato time-gate checks passed.');

@@ -12,7 +12,7 @@
       personality: 'acid-bass',
       oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 2.80,
       drive: 0.70, body: 0.50, sub: 0.22, noise: 0.025, attack: 0.004, release: 0.040, glide: 0.060,
-      filterEnv: 1.80, filterEnd: 0.28, filterSnap: 0.0025, filterDecay: 1.20,
+      filterEnv: 1.80, filterEnd: 0.28, filterSnap: 0.0050, filterDecay: 1.20,
     },
     reznor: {
       personality: 'industrial-mono',
