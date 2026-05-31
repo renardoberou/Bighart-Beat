@@ -16,15 +16,15 @@
     },
     reznor: {
       personality: 'industrial-mono',
-      oscType: 'square', filterType: 'bandpass', pitch: 0.74, decay: 0.90, tone: 0.58, q: 2.00,
-      drive: 0.82, body: 0.42, sub: 0.10, noise: 0.18, attack: 0.003, release: 0.018, glide: 0.010,
-      filterEnv: 2.20, filterEnd: 0.28, filterSnap: 0.0035, filterDecay: 0.48,
+      oscType: 'square', filterType: 'bandpass', pitch: 0.74, decay: 0.82, tone: 0.58, q: 2.00,
+      drive: 0.90, body: 0.42, sub: 0.10, noise: 0.20, attack: 0.003, release: 0.014, glide: 0.010,
+      filterEnv: 2.50, filterEnd: 0.28, filterSnap: 0.0035, filterDecay: 0.48,
     },
     aphex: {
       personality: 'idm-digital-alien',
-      oscType: 'triangle', filterType: 'bandpass', pitch: 1.18, decay: 1.08, tone: 1.34, q: 1.36,
-      drive: 0.28, body: 0.32, sub: 0.05, noise: 0.065, attack: 0.0035, release: 0.045, glide: 0.055,
-      filterEnv: 1.35, filterEnd: 0.32, filterSnap: 0.0012, filterDecay: 0.64,
+      oscType: 'triangle', filterType: 'bandpass', pitch: 1.18, decay: 1.08, tone: 1.50, q: 1.80,
+      drive: 0.38, body: 0.32, sub: 0.05, noise: 0.095, attack: 0.0035, release: 0.045, glide: 0.065,
+      filterEnv: 1.65, filterEnd: 0.32, filterSnap: 0.0012, filterDecay: 0.80,
     },
   };
   const SYNTH_MAX_FREQUENCY_HZ = 2200;
