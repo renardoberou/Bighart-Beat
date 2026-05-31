@@ -57,7 +57,7 @@ const HIHAT_VOICE_PREVIOUS_TOKENS = [
 const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
 const SYNTH_VOICE_TOKEN = 'v=synth-engine-tuneup-20260531-d';
 const KICK_VOICE_TOKEN = 'v=kick-endhz-floor-25hz-20260530';
-const SYNTH_NOTES_TOKEN = 'v=synth-tet24-persist-20260531';
+const SYNTH_NOTES_TOKEN = 'v=synth-grid-variety-20260531';
 const TRACKS_TOKEN = 'v=synth-pitch-330-20260530';
 const PERSISTENCE_TOKEN = 'v=synth-tet24-persist-20260531';
 const TRACKS_PREVIOUS_TOKENS = [
