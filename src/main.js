@@ -911,7 +911,7 @@ function synthClap(t, v, p) {
     const bt = t + b.offsetSec;
     const ns = A.createBufferSource(); ns.buffer = nz; ns.loop = true;
     const bp = A.createBiquadFilter(); bp.type = 'bandpass';
-    bp.frequency.value = clamp(spec.toneHz + (Math.random() - .5) * spec.toneJitterHz, 700, 6000);
+    bp.frequency.value = clamp(b.toneHz + (Math.random() - .5) * spec.toneJitterHz * 0.5, 700, 6000);
     bp.Q.value = spec.filterQ;
     const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = spec.highpassHz;
     const g = A.createGain();

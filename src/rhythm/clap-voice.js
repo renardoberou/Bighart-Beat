@@ -58,11 +58,14 @@
     const mkPan = position => clamp((position * panWidth) + panAsym, -0.20, 0.20);
     const shortDur = clamp(0.014 * clamp(profile.snap, 0.65, 1.5), 0.006, 0.05);
     const tailOffsetSec = clamp(spreadSec * 3.1, 0, 0.19);
+    // Per-burst tone variation: wire toneJitterHz into spectral content for organic realism
+    const mkBurstToneHz = (factor) => clamp(toneHz * factor, 80, 6000);
+    const jitterScale = toneJitterHz / toneHz; // normalized jitter ratio
     const bursts = [
-      { offsetSec: 0, gain: mkGain(0.48 * bodyGain), durationSec: shortDur, pan: mkPan(-0.55) },
-      { offsetSec: spreadSec, gain: mkGain(0.42 * bodyGain), durationSec: shortDur, pan: mkPan(0.45) },
-      { offsetSec: clamp(spreadSec * 2, 0, 0.12), gain: mkGain(0.38 * bodyGain), durationSec: shortDur, pan: mkPan(-0.25) },
-      { offsetSec: tailOffsetSec, gain: mkGain(0.82 * tailGain), durationSec: tailDecaySec, pan: mkPan(0.75) },
+      { offsetSec: 0, gain: mkGain(0.48 * bodyGain), durationSec: shortDur, pan: mkPan(-0.55), toneHz: mkBurstToneHz(0.95) },
+      { offsetSec: spreadSec, gain: mkGain(0.42 * bodyGain), durationSec: shortDur, pan: mkPan(0.45), toneHz: mkBurstToneHz(1.0) },
+      { offsetSec: clamp(spreadSec * 2, 0, 0.12), gain: mkGain(0.38 * bodyGain), durationSec: shortDur, pan: mkPan(-0.25), toneHz: mkBurstToneHz(1.0 + jitterScale * 0.5) },
+      { offsetSec: tailOffsetSec, gain: mkGain(0.82 * tailGain), durationSec: tailDecaySec, pan: mkPan(0.75), toneHz: mkBurstToneHz(1.0 + jitterScale) },
     ];
 
     return {

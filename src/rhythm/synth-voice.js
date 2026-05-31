@@ -54,7 +54,7 @@
     const filterHz = clamp(filterBase, 120, 12000);
     const acidQBoost = profile.personality === 'acid-bass' ? tone * 9.0 : 0;
     const filterQ = clamp(0.2 + shape * 8.5 * profile.q + acidQBoost, 0.2, 12);
-    const filterEnvAmount = clamp(profile.filterEnv * (0.75 + shape * 0.75) * (0.85 + tone * 0.30), 0, 7.0);
+    const filterEnvAmount = clamp(profile.filterEnv * (0.75 + shape * 0.75) * (profile.personality === 'industrial-mono' ? (1.05 + tone * 0.55) : (0.85 + tone * 0.30)), 0, 7.0);
     const filterEndRatio = clamp(profile.filterEnd * (1.08 - shape * 0.28), 0.12, 0.62);
     const filterAttackSec = clamp(profile.filterSnap * (1.15 - shape * 0.30), 0.0005, 0.012);
     const filterDecaySec = clamp(decaySec * profile.filterDecay * ((profile.personality === 'acid-bass' ? 1.45 : 1.06) - shape * 0.18), filterAttackSec + 0.0005, profile.personality === 'acid-bass' ? decaySec * 1.4 : decaySec);

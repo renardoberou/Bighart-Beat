@@ -42,8 +42,8 @@ assert(
   'synthClap uses resolved burst envelope list',
 );
 assert(
-  /bp\.frequency\.value\s*=\s*clamp\(spec\.toneHz\s*\+\s*\(Math\.random\(\)\s*-\s*\.5\)\s*\*\s*spec\.toneJitterHz/.test(main),
-  'synthClap uses resolved bounded tone and jitter values',
+  /bp\.frequency\.value\s*=\s*clamp\s*\(\s*b\.toneHz\s*\+\s*\(Math\.random\(\)\s*-\s*\.5\)\s*\*\s*spec\.toneJitterHz/.test(main),
+  'synthClap uses per-burst toneHz from resolved spec with reduced random jitter for organic variation',
 );
 assert(
   /bp\.Q\.value\s*=\s*spec\.filterQ/.test(main),
