@@ -1158,8 +1158,10 @@ function synthSynth(t, v, p, options = {}) {
     const mod = A.createOscillator(); mod.type = 'sine';
     applySynthGlideFrequency(mod.frequency, spec.pitchHz * spec.modRatio, t, spec, shouldGlide, previousPitchHz * spec.modRatio);
     const modGain = A.createGain();
-    modGain.gain.setValueAtTime(spec.modIndex, t);
-    modGain.gain.exponentialRampToValueAtTime(.001, t + Math.min(spec.decaySec, .65));
+    const modAttackSec = Math.min(spec.attackSec * 1.5, 0.025);
+    modGain.gain.setValueAtTime(0, t);
+    modGain.gain.linearRampToValueAtTime(spec.modIndex, t + modAttackSec);
+    modGain.gain.exponentialRampToValueAtTime(Math.max(spec.modIndex * 0.08, 0.5), t + Math.min(spec.decaySec, 0.35));
     mod.connect(modGain); modGain.connect(osc.frequency);
     synthCleanupNodes.push(mod, modGain);
     mod.start(t); mod.stop(t + spec.stopSec);

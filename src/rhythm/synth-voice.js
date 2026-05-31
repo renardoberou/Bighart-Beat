@@ -10,9 +10,9 @@
     },
     '909': {
       personality: 'acid-bass',
-      oscType: 'square', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 3.60,
+      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 2.80,
       drive: 0.70, body: 0.50, sub: 0.22, noise: 0.025, attack: 0.004, release: 0.040, glide: 0.060,
-      filterEnv: 1.80, filterEnd: 0.18, filterSnap: 0.0025, filterDecay: 0.35,
+      filterEnv: 1.80, filterEnd: 0.28, filterSnap: 0.0025, filterDecay: 1.20,
     },
     reznor: {
       personality: 'industrial-mono',
@@ -53,7 +53,7 @@
     const filterBase = 160 + pitchHz * (1.8 + tone * 12.5) * profile.tone;
     const filterHz = clamp(filterBase, 120, 12000);
     const acidQBoost = profile.personality === 'acid-bass' ? tone * 9.0 : 0;
-    const filterQ = clamp(0.2 + shape * 8.5 * profile.q + acidQBoost, 0.2, profile.personality === 'acid-bass' ? 28 : 18);
+    const filterQ = clamp(0.2 + shape * 8.5 * profile.q + acidQBoost, 0.2, 12);
     const filterEnvAmount = clamp(profile.filterEnv * (0.75 + shape * 0.75) * (0.85 + tone * 0.30), 0, 7.0);
     const filterEndRatio = clamp(profile.filterEnd * (1.08 - shape * 0.28), 0.12, 0.62);
     const filterAttackSec = clamp(profile.filterSnap * (1.15 - shape * 0.30), 0.0005, 0.012);
@@ -71,7 +71,7 @@
     const isAphexDigital = profile.personality === 'idm-digital-alien';
     const isIndustrialMono = profile.personality === 'industrial-mono';
     const modRatio = isAphexDigital ? 2.7 + shape * 3.1 + tone * 0.3 : (isIndustrialMono ? 1.1 + shape * 2.4 + tone * 0.8 : 1 + shape);
-    const modIndex = isAphexDigital ? 48 + tone * 72 + shape * 28 : (isIndustrialMono ? 8 + tone * 38 + shape * 22 : 0);
+    const modIndex = isAphexDigital ? 8 + tone * 12 + shape * 6 : (isIndustrialMono ? 8 + tone * 38 + shape * 22 : 0);
 
     return {
       engine,
