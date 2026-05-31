@@ -16,7 +16,7 @@
     },
     reznor: {
       kick: { pitch: 0.82, decay: 0.95, click: 1.05, clickHp: 0.92, drive: 1.55, body: 1.05, sub: 0.85, outputTrim: 0.90 },
-      snare: { tone: 0.72, noise: 1.28, body: 0.80, snap: 1.25, outputTrim: 0.86 },
+      snare: { tone: 0.72, noise: 1.28, body: 1.10, snap: 1.25, outputTrim: 0.86 },
       clap: { tone: 0.74, decay: 1.05, spread: 1.05, body: 1.14, tail: 1.18, snap: 1.0, highpass: 0.72, q: 1.28, jitter: 1.0, panWidth: 0.12, panAsym: 0.03 },
       hihat: { noise: 1.28, tone: 0.38, bright: 0.64, decay: 1.28, transient: 0.96, tailDamp: 0.90, airDamp: 0.90, trim: 0.90, ratios: [1.41, 1.93, 2.79, 3.76, 5.11, 7.23], osc: 'sawtooth', instability: 0.025, glitch: 0.10, chokeClosed: 0.012, chokeOpen: 0.080 },
     },

@@ -10,7 +10,7 @@
     },
     '909': {
       personality: 'acid-bass',
-      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.50, decay: 0.92, tone: 0.98, q: 2.80,
+      oscType: 'sawtooth', filterType: 'lowpass', pitch: 0.72, decay: 0.92, tone: 0.98, q: 2.80,
       drive: 0.70, body: 0.50, sub: 0.22, noise: 0.025, attack: 0.004, release: 0.040, glide: 0.060,
       filterEnv: 1.80, filterEnd: 0.28, filterSnap: 0.0050, filterDecay: 1.20,
     },
@@ -23,8 +23,8 @@
     aphex: {
       personality: 'idm-digital-alien',
       oscType: 'triangle', filterType: 'bandpass', pitch: 1.18, decay: 1.08, tone: 1.50, q: 1.80,
-      drive: 0.38, body: 0.32, sub: 0.05, noise: 0.095, attack: 0.0035, release: 0.045, glide: 0.065,
-      filterEnv: 1.65, filterEnd: 0.32, filterSnap: 0.0012, filterDecay: 0.80,
+      drive: 0.38, body: 0.44, sub: 0.05, noise: 0.095, attack: 0.0035, release: 0.045, glide: 0.065,
+      filterEnv: 1.45, filterEnd: 0.32, filterSnap: 0.0012, filterDecay: 0.80,
     },
   };
   const SYNTH_MAX_FREQUENCY_HZ = 2200;
