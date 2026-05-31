@@ -2335,6 +2335,7 @@ function autosave() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try {
+      S.tet24 = synthUse24Tet;
       const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, hihatAccent: HHT_ACCENT, synthNotes: SYNTH_NOTES, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain });
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch(e) {}
@@ -2685,6 +2686,7 @@ function applyProjectData(d) {
   if (typeof d.patt === 'number') S.patt = d.patt;
   S.engine = d.engine || 'aphex';
   S.mstVol = d.mstVol;
+  if (typeof d.tet24 === 'boolean') synthUse24Tet = d.tet24;
   S.patternChain = State.normalizePatternChain(d.patternChain || State.createDefaultPatternChain());
   for (let i = 0; i < 4; i++) {
     PATTERNS[i] = State.clonePatternGrid(d.patterns[i]);
@@ -3078,6 +3080,7 @@ function doTap() {
 }
 
 function exportJSON() {
+  S.tet24 = synthUse24Tet;
   const data = State.serializeProject({ appState: S, tracks: TRACKS, fx: FX, patterns: PATTERNS, ratchets: RATCHETS, hihatOpenness: HHT_OPENNESS, hihatAccent: HHT_ACCENT, synthNotes: SYNTH_NOTES, patternFxScenes: PATTERN_FX_SCENES, patternChain: S.patternChain, timestamp: new Date().toISOString() });
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);

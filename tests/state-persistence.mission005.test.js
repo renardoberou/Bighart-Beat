@@ -59,7 +59,7 @@ const legacySixPatterns = omitSynthFromBanks(patterns);
 const legacySixTracks = omitSynthTrack(tracks);
 
 const serialized = serializeProject({ appState, tracks, fx, patterns });
-assert.deepStrictEqual(Object.keys(serialized), ['schemaVersion', 'bpm', 'swing', 'patt', 'engine', 'mstVol', 'patterns', 'tracks', 'fx', 'meta', 'patternChain'], 'serializeProject uses deterministic v4-compatible top-level shape including swing and pattern chain');
+assert.deepStrictEqual(Object.keys(serialized), ['schemaVersion', 'bpm', 'swing', 'patt', 'engine', 'mstVol', 'tet24', 'patterns', 'tracks', 'fx', 'meta', 'patternChain'], 'serializeProject uses deterministic v4-compatible top-level shape including swing and pattern chain');
 assert.strictEqual(serialized.schemaVersion, 1);
 assert.deepStrictEqual(serialized.meta, { app: 'bighart-beat-v4' }, 'serializeProject omits volatile timestamps unless provided');
 assert.strictEqual(serialized.bpm, 132);

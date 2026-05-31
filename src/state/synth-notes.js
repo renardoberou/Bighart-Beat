@@ -57,6 +57,7 @@
     'A♯',   // 20 - A# / B♭
     'B♭½',  // 21 - B quarter-flat
     'B',    // 22 - B
+    'B♯½',  // 23 - B quarter-sharp (C quarter-flat)
   ];
 
   // Reference: A4 = 440 Hz, note index 9 (A) in octave 4

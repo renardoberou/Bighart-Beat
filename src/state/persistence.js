@@ -199,6 +199,7 @@
       patt: appState.patt,
       engine: ENGINES.includes(appState.engine) ? appState.engine : 'aphex',
       mstVol: appState.mstVol,
+      tet24: !!appState.tet24,
       patterns: clonePatterns(input.patterns),
       tracks: serializeTracks(input.tracks),
       fx: cloneValue(input.fx),
