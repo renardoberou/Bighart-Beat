@@ -52,9 +52,9 @@
     const decaySec = clamp(requestedDecay * profile.decay * (0.75 + shape * 0.55), 0.04, 2.5);
     const filterBase = 160 + pitchHz * (1.8 + tone * 12.5) * profile.tone;
     const filterHz = clamp(filterBase, 120, 12000);
-    const acidQBoost = profile.personality === 'acid-bass' ? tone * 9.0 : 0;
-    const filterQ = clamp(0.2 + shape * 8.5 * profile.q + acidQBoost, 0.2, 12);
-    const filterEnvAmount = clamp(profile.filterEnv * (0.75 + shape * 0.75) * (profile.personality === 'industrial-mono' ? (1.05 + tone * 0.55) : (0.85 + tone * 0.30)), 0, 7.0);
+    const acidQBoost = profile.personality === 'acid-bass' ? tone * 4.0 : 0;
+    const filterQ = clamp(0.2 + shape * 5.5 * profile.q + acidQBoost, 0.2, 12);
+    const filterEnvAmount = clamp(profile.filterEnv * (0.75 + shape * 0.75) * (0.85 + tone * 0.30), 0, 7.0);
     const filterEndRatio = clamp(profile.filterEnd * (1.08 - shape * 0.28), 0.12, 0.62);
     const filterAttackSec = clamp(profile.filterSnap * (1.15 - shape * 0.30), 0.0005, 0.012);
     const rawFilterDecaySec = decaySec * profile.filterDecay * ((profile.personality === 'acid-bass' ? 1.45 : 1.06) - shape * 0.18);
@@ -76,7 +76,7 @@
     const isAphexDigital = profile.personality === 'idm-digital-alien';
     const isIndustrialMono = profile.personality === 'industrial-mono';
     const modRatio = isAphexDigital ? 2.0 + shape * 2.0 + tone * 0.2 : (isIndustrialMono ? 1.1 + shape * 2.4 + tone * 0.8 : 1 + shape);
-    const modIndex = isAphexDigital ? 6 + tone * 8 + shape * 4 : (isIndustrialMono ? 8 + tone * 38 + shape * 22 : 0);
+    const modIndex = isAphexDigital ? 6 + tone * 8 + shape * 4 : (isIndustrialMono ? 4 + tone * 16 + shape * 10 : 0);
 
     return {
       engine,
