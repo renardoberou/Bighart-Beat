@@ -208,7 +208,8 @@ function loadSynthRootHelpers(mainJs, pitchHz) {
     extractFunction(mainJs, 'synthRootOctave'),
     extractFunction(mainJs, 'normalizeSynthRootNoteIndex'),
     extractFunction(mainJs, 'setSynthRootFromNote'),
-    'module.exports = { roundedSynthRootMidi, synthRootNoteIndex, synthRootOctave, normalizeSynthRootNoteIndex, setSynthRootFromNote };',
+    extractFunction(mainJs, 'syncSynthRootSelectorState'),
+    'module.exports = { roundedSynthRootMidi, synthRootNoteIndex, synthRootOctave, normalizeSynthRootNoteIndex, setSynthRootFromNote, syncSynthRootSelectorState };',
   ].join('\n\n');
   vm.runInNewContext(script, sandbox);
   return {
@@ -218,6 +219,38 @@ function loadSynthRootHelpers(mainJs, pitchHz) {
     getBuildSeqCalls: () => buildSeqCalls,
     getUpdateStatusCalls: () => updateStatusCalls,
   };
+}
+
+function createSelectorRow(count) {
+  const buttons = Array.from({ length: count }, () => {
+    const state = { active: false };
+    return {
+      classList: {
+        toggle(token, nextState) {
+          if (token === 'on') state.active = Boolean(nextState);
+        },
+        add(token) {
+          if (token === 'on') state.active = true;
+        },
+        remove(token) {
+          if (token === 'on') state.active = false;
+        },
+      },
+      get active() {
+        return state.active;
+      },
+    };
+  });
+  return {
+    buttons,
+    querySelectorAll() {
+      return buttons;
+    },
+  };
+}
+
+function activeButtonIndexes(row) {
+  return row.buttons.map((button, idx) => (button.active ? idx : -1)).filter(idx => idx >= 0);
 }
 
 const mainJs = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
@@ -241,6 +274,21 @@ assert.strictEqual(
 );
 assert.strictEqual(clickSelector.getBuildSeqCalls(), 1, 'setSynthRootFromNote rebuilds the sequencer after changing the root pitch');
 assert.strictEqual(clickSelector.getUpdateStatusCalls(), 1, 'setSynthRootFromNote refreshes the synth note status after changing the root pitch');
+const clampedSelector = loadSynthRootHelpers(mainJs, 130);
+const clampedNoteRow = createSelectorRow(12);
+const clampedOctaveRow = createSelectorRow(3);
+let labelRefreshes = 0;
+clampedSelector.setSynthRootFromNote(0, 1);
+const syncResult = clampedSelector.syncSynthRootSelectorState(clampedNoteRow, clampedOctaveRow, () => {
+  labelRefreshes += 1;
+});
+assert.strictEqual(clampedSelector.TRACKS[6].p.pitch, 40, 'low root pitch clamps to the 40 Hz floor');
+assert.strictEqual(syncResult.currentMidi, 27, 'clamped low root resyncs from the rounded actual MIDI value');
+assert.strictEqual(syncResult.currentNoteIdx, 3, 'clamped low root re-syncs to the actual D# note index');
+assert.strictEqual(syncResult.currentOctave, 1, 'clamped low root re-syncs to the actual octave');
+assert.deepStrictEqual(activeButtonIndexes(clampedNoteRow), [3], 'clamped low root highlights the actual D# button, not the requested C button');
+assert.deepStrictEqual(activeButtonIndexes(clampedOctaveRow), [0], 'clamped low root keeps the actual octave button in sync');
+assert.strictEqual(labelRefreshes, 1, 'selector label refresh callback fires once');
 assert(mainJs.includes('const SYNTH_NOTES = State.createSynthNotesBanks()'), 'runtime creates synth note banks');
 assert(mainJs.includes('pitch: getStepSynthPitch(firingStep)'), 'runtime routes step-specific synth pitch into mono synth');
 assert(mainJs.includes('data-synth-note-edit'), 'runtime exposes NOTE EDIT control');
