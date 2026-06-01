@@ -1287,16 +1287,26 @@ const NOTE_SELECTOR_24_NAMES = State.NOTE_NAMES_24 || NOTE_SELECTOR_NAMES;
 
 function synthRootNoteIndex() {
   // Return the closest note index for the current synth root pitch (0-11 = C-B)
-  const hz = TRACKS[6].p.pitch;
-  return State.hzToMidi(hz) % 12;
+  const midi = roundedSynthRootMidi();
+  return ((midi % 12) + 12) % 12;
 }
 
 function synthRootOctave() {
-  return Math.floor(State.hzToMidi(TRACKS[6].p.pitch) / 12) - 1;
+  return Math.floor(roundedSynthRootMidi() / 12) - 1;
+}
+
+function roundedSynthRootMidi() {
+  return Math.round(State.hzToMidi(TRACKS[6].p.pitch));
+}
+
+function normalizeSynthRootNoteIndex(noteIndex) {
+  const note = Number(noteIndex);
+  const roundedNoteIndex = Number.isFinite(note) ? Math.round(note) : 0;
+  return ((roundedNoteIndex % 12) + 12) % 12;
 }
 
 function setSynthRootFromNote(noteIndex, octave) {
-  const midi = (octave + 1) * 12 + noteIndex;
+  const midi = (octave + 1) * 12 + normalizeSynthRootNoteIndex(noteIndex);
   TRACKS[6].p.pitch = clamp(State.midiToHz(midi), 40, SYNTH_ROOT_MAX_HZ);
   buildSeq();
   updateSynthNoteStatus();
@@ -1322,7 +1332,7 @@ function rebuildNoteSelector(noteRow, octaveRow, currentNoteIdx, currentOctave) 
       nb.textContent = name24;
       nb.title = name24 + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
       nb.addEventListener('click', () => {
-        setSynthRootFromNote(ni, currentOctave);
+        setSynthRootFromNote(ni, synthRootOctave());
         noteRow.querySelectorAll('.syn-note-selector__btn').forEach(b => b.classList.remove('on'));
         nb.classList.add('on');
         noteSelectorDiv_querySelectorLabel();
@@ -1339,7 +1349,7 @@ function rebuildNoteSelector(noteRow, octaveRow, currentNoteIdx, currentOctave) 
       nb.textContent = NOTE_SELECTOR_NAMES[ni];
       nb.title = NOTE_SELECTOR_NAMES[ni] + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
       nb.addEventListener('click', () => {
-        setSynthRootFromNote(ni, currentOctave);
+        setSynthRootFromNote(ni, synthRootOctave());
         noteRow.querySelectorAll('.syn-note-selector__btn').forEach(b => b.classList.remove('on'));
         nb.classList.add('on');
         noteSelectorDiv_querySelectorLabel();
@@ -2226,8 +2236,9 @@ function buildVE() {
     noteSelectorDiv.innerHTML = `<div class="syn-note-selector__label">ROOT NOTE · ${currentSynthNoteLabel()}</div>`;
     const noteRow = document.createElement('div');
     noteRow.className = 'syn-note-selector__row';
-    const currentOctave = synthRootOctave();
-    const currentNoteIdx = synthRootNoteIndex();
+    const currentMidi = roundedSynthRootMidi();
+    const currentOctave = Math.floor(currentMidi / 12) - 1;
+    const currentNoteIdx = ((currentMidi % 12) + 12) % 12;
     // Build 12 chromatic note buttons
     for (let ni = 0; ni < 12; ni++) {
       const nb = document.createElement('button');
@@ -2235,7 +2246,7 @@ function buildVE() {
       nb.textContent = NOTE_SELECTOR_NAMES[ni];
       nb.title = NOTE_SELECTOR_NAMES[ni] + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
       nb.addEventListener('click', () => {
-        setSynthRootFromNote(ni, currentOctave);
+        setSynthRootFromNote(ni, synthRootOctave());
         // Update button states
         noteRow.querySelectorAll('.syn-note-selector__btn').forEach(b => b.classList.remove('on'));
         nb.classList.add('on');
@@ -2256,7 +2267,7 @@ function buildVE() {
       ob.textContent = 'C' + oct;
       ob.title = 'Octave ' + oct;
       ob.addEventListener('click', () => {
-        setSynthRootFromNote(currentNoteIdx, oct);
+        setSynthRootFromNote(synthRootNoteIndex(), oct);
         octaveRow.querySelectorAll('.syn-note-selector__btn--octave').forEach(b => b.classList.remove('on'));
         ob.classList.add('on');
         noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();

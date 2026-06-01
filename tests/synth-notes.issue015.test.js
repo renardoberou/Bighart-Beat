@@ -2,6 +2,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
 const SynthNotes = require(path.join(root, 'src', 'state', 'synth-notes.js'));
@@ -152,9 +153,94 @@ const rejected = parseProjectImport(bad);
 assert.strictEqual(rejected.ok, false, 'out-of-range synth note ratio is rejected');
 assert(rejected.errors.some(error => /synthNotes\[0\]\[0\]|ratio/i.test(error)), 'synth note rejection points at offending step');
 
+function extractFunction(source, name) {
+  const marker = `function ${name}(`;
+  const start = source.indexOf(marker);
+  assert(start >= 0, `runtime exposes ${name}`);
+  let depth = 0;
+  let end = -1;
+  for (let i = start; i < source.length; i++) {
+    const ch = source[i];
+    if (ch === '{') depth += 1;
+    if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        end = i + 1;
+        break;
+      }
+    }
+  }
+  assert(end >= 0, `runtime function ${name} has a balanced body`);
+  return source.slice(start, end);
+}
+
+function loadSynthRootHelpers(mainJs, pitchHz) {
+  let buildSeqCalls = 0;
+  let updateStatusCalls = 0;
+  const sandbox = {
+    TRACKS: Array.from({ length: 7 }, (_, i) => i === 6 ? { p: { pitch: pitchHz } } : { p: {} }),
+    State: {
+      hzToMidi(hz) {
+        if (!Number.isFinite(hz) || hz <= 0) return 0;
+        return 12 * Math.log2(hz / 440) + 69;
+      },
+      midiToHz(midi) {
+        if (!Number.isFinite(midi)) return 550;
+        return 440 * Math.pow(2, (midi - 69) / 12);
+      },
+    },
+    clamp(value, lo, hi) {
+      return Math.max(lo, Math.min(hi, value));
+    },
+    SYNTH_ROOT_MAX_HZ: 550,
+    buildSeq() {
+      buildSeqCalls += 1;
+    },
+    updateSynthNoteStatus() {
+      updateStatusCalls += 1;
+    },
+    module: { exports: {} },
+    exports: {},
+  };
+  const script = [
+    extractFunction(mainJs, 'roundedSynthRootMidi'),
+    extractFunction(mainJs, 'synthRootNoteIndex'),
+    extractFunction(mainJs, 'synthRootOctave'),
+    extractFunction(mainJs, 'normalizeSynthRootNoteIndex'),
+    extractFunction(mainJs, 'setSynthRootFromNote'),
+    'module.exports = { roundedSynthRootMidi, synthRootNoteIndex, synthRootOctave, normalizeSynthRootNoteIndex, setSynthRootFromNote };',
+  ].join('\n\n');
+  vm.runInNewContext(script, sandbox);
+  return {
+    ...sandbox.module.exports,
+    TRACKS: sandbox.TRACKS,
+    State: sandbox.State,
+    getBuildSeqCalls: () => buildSeqCalls,
+    getUpdateStatusCalls: () => updateStatusCalls,
+  };
+}
+
 const mainJs = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles', 'main.css'), 'utf8');
+const roundedSelector = loadSynthRootHelpers(mainJs, 130);
+assert.strictEqual(roundedSelector.roundedSynthRootMidi(), 48, 'default 130 Hz synth root rounds to MIDI 48 for selector building');
+assert.strictEqual(roundedSelector.synthRootNoteIndex(), 0, 'default 130 Hz synth root highlights C when building the selector');
+assert.strictEqual(roundedSelector.synthRootOctave(), 3, 'default 130 Hz synth root highlights octave 3 when building the selector');
+assert.strictEqual(
+  roundedSelector.roundedSynthRootMidi(),
+  (roundedSelector.synthRootOctave() + 1) * 12 + roundedSelector.synthRootNoteIndex(),
+  'rounded note index and octave are derived from the same semitone when building the selector',
+);
+const clickSelector = loadSynthRootHelpers(mainJs, 130);
+clickSelector.setSynthRootFromNote(11.892, 3);
+assert.strictEqual(
+  clickSelector.TRACKS[6].p.pitch,
+  clickSelector.State.midiToHz(48),
+  'octave clicks normalize stale fractional note indexes before converting back to Hz',
+);
+assert.strictEqual(clickSelector.getBuildSeqCalls(), 1, 'setSynthRootFromNote rebuilds the sequencer after changing the root pitch');
+assert.strictEqual(clickSelector.getUpdateStatusCalls(), 1, 'setSynthRootFromNote refreshes the synth note status after changing the root pitch');
 assert(mainJs.includes('const SYNTH_NOTES = State.createSynthNotesBanks()'), 'runtime creates synth note banks');
 assert(mainJs.includes('pitch: getStepSynthPitch(firingStep)'), 'runtime routes step-specific synth pitch into mono synth');
 assert(mainJs.includes('data-synth-note-edit'), 'runtime exposes NOTE EDIT control');
