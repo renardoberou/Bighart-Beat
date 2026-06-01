@@ -1646,6 +1646,11 @@ function buildSeq() {
     row.className = 'row';
     row.dataset.id = rowSpec.rowId;
 
+    // NOTE EDIT mode: highlight synth row when active
+    if (trackId === 'synth' && SYNTH_NOTE_EDIT) {
+      row.classList.add('note-edit-row');
+    }
+
     const lbl = document.createElement('div');
     lbl.className = 'rlbl' + (tr.mute ? ' mute' : '');
     lbl.dataset.ti = trackIndex;
@@ -1817,6 +1822,15 @@ function buildSeq() {
           c.classList.remove('tap-flash');
           void c.offsetWidth; // force reflow
           c.classList.add('tap-flash');
+          // Show interval name popover
+          const popover = document.createElement('div');
+          popover.className = 'syn-interval-popover';
+          popover.textContent = State.formatSynthNoteIntervalLabel(SYNTH_NOTES[S.patt][i] || 1);
+          c.appendChild(popover);
+          setTimeout(() => {
+            popover.classList.add('fade-out');
+            setTimeout(() => { popover.remove(); }, 300);
+          }, 350);
           return;
         }
         if (trackId === 'hihat' && isCellOn()) {
