@@ -66,8 +66,24 @@ assert(helperMatch, 'selected synth-step navigation helper body is discoverable'
 assert(!/PATTERNS|SYNTH_NOTES|cycleSynthNoteRatio|randomHarmonicSynthNotes/.test(helperMatch[1]), 'navigation does not mutate pattern steps or synth note ratios');
 
 // Tap-to-cycle: verify the click handler block for cycling synth note ratios on active steps
-assert(/trackId === 'synth' && trackIndex === S\.sel && !SYNTH_NOTE_EDIT && PATTERNS\[S\.patt\]\[trackId\]\[i\]/.test(mainJs),
-  'tap-to-cycle handler guards on synth track, selected pattern, note-edit off, and step on');
+const tapCycleBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && !SYNTH_NOTE_EDIT && PATTERNS\[S\.patt\]\[trackId\]\[i\]\) \{([\s\S]*?)\n        \}/);
+assert(tapCycleBranch, 'tap-to-cycle branch remains discoverable');
+assert(
+  /buildSeq\(\)[\s\S]*flashSynthStepEditFeedback\(i,/.test(tapCycleBranch[1]),
+  'tap-to-cycle refreshes the sequencer before attaching feedback to the rebuilt live synth cell',
+);
+assert(
+  !/c\.appendChild\(popover\)/.test(tapCycleBranch[1]),
+  'tap-to-cycle no longer appends the interval popover to the stale detached cell',
+);
+assert(
+  !/c\.classList\.add\('tap-flash'\)/.test(tapCycleBranch[1]),
+  'tap-to-cycle no longer flashes the stale detached cell directly',
+);
+assert(mainJs.includes('function flashSynthStepEditFeedback(stepIndex, label)'), 'tap-to-cycle feedback helper is defined');
+assert(mainJs.includes("const seq = $('seq');"), 'tap-to-cycle feedback helper re-queries the sequencer root');
+assert(mainJs.includes('.row[data-id="synth"] .sc[data-ti="6"][data-s="'), 'tap-to-cycle feedback helper resolves the live synth cell by step index');
+assert(mainJs.includes('liveCell.appendChild(popover);'), 'tap-to-cycle feedback helper appends feedback to the live synth cell');
 assert(/tap-flash/.test(mainJs), 'tap-to-cycle handler references tap-flash CSS class for visual feedback');
 assert(/synthTapFlash/.test(mainCss), 'main.css defines the synthTapFlash keyframe animation');
 

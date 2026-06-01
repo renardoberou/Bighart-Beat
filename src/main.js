@@ -1298,6 +1298,7 @@ function synthRootOctave() {
 function setSynthRootFromNote(noteIndex, octave) {
   const midi = (octave + 1) * 12 + noteIndex;
   TRACKS[6].p.pitch = clamp(State.midiToHz(midi), 40, SYNTH_ROOT_MAX_HZ);
+  buildSeq();
   updateSynthNoteStatus();
 }
 
@@ -1355,6 +1356,23 @@ function noteSelectorDiv_querySelectorLabel() {
   const panel = $('vePanel');
   const el = panel && panel.querySelector('.syn-note-selector__label');
   if (el) el.textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
+}
+
+function flashSynthStepEditFeedback(stepIndex, label) {
+  const seq = $('seq');
+  const liveCell = seq && seq.querySelector('.row[data-id="synth"] .sc[data-ti="6"][data-s="' + stepIndex + '"]');
+  if (!liveCell) return;
+  liveCell.classList.remove('tap-flash');
+  void liveCell.offsetWidth; // force reflow
+  liveCell.classList.add('tap-flash');
+  const popover = document.createElement('div');
+  popover.className = 'syn-interval-popover';
+  popover.textContent = label;
+  liveCell.appendChild(popover);
+  setTimeout(() => {
+    popover.classList.add('fade-out');
+    setTimeout(() => { popover.remove(); }, 300);
+  }, 350);
 }
 
 function moveSelectedSynthNoteStep(delta) {
@@ -1818,19 +1836,7 @@ function buildSeq() {
           buildVE();
           renderRhythmIntelligence();
           autosave();
-          // Flash visual feedback
-          c.classList.remove('tap-flash');
-          void c.offsetWidth; // force reflow
-          c.classList.add('tap-flash');
-          // Show interval name popover
-          const popover = document.createElement('div');
-          popover.className = 'syn-interval-popover';
-          popover.textContent = State.formatSynthNoteIntervalLabel(SYNTH_NOTES[S.patt][i] || 1);
-          c.appendChild(popover);
-          setTimeout(() => {
-            popover.classList.add('fade-out');
-            setTimeout(() => { popover.remove(); }, 300);
-          }, 350);
+          flashSynthStepEditFeedback(i, State.formatSynthNoteIntervalLabel(SYNTH_NOTES[S.patt][i] || 1));
           return;
         }
         if (trackId === 'hihat' && isCellOn()) {
