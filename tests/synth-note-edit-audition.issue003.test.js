@@ -54,6 +54,14 @@ assert(!/[^\w$]previewSynth\s*\(\s*\)\s*;/.test(sequencerSynthNoteEditHandler), 
 assert(/updateSynthNoteStatus\s*\(\)\s*;/.test(sequencerSynthNoteEditHandler), 'sequencer-cell SYNTH_NOTE_EDIT handler updates synth note status display');
 assert(/LAST_SYNTH_NOTE_STEP\s*=\s*i/.test(sequencerSynthNoteEditHandler), 'sequencer-cell SYNTH_NOTE_EDIT handler tracks last edited step for display');
 
+const sequencerSynthTapToCycleStart = main.indexOf("if (trackId === 'synth' && trackIndex === S.sel && !SYNTH_NOTE_EDIT && PATTERNS[S.patt][trackId][i])");
+assert(sequencerSynthTapToCycleStart >= 0, 'sequencer-cell non-edit tap-to-cycle synth branch exists');
+const sequencerSynthTapToCycleEnd = main.indexOf('return;', sequencerSynthTapToCycleStart);
+assert(sequencerSynthTapToCycleEnd > sequencerSynthTapToCycleStart, 'sequencer-cell non-edit tap-to-cycle synth branch can be inspected');
+const sequencerSynthTapToCycleBranch = main.slice(sequencerSynthTapToCycleStart, sequencerSynthTapToCycleEnd);
+assert(/previewSynthNoteEditAudition\s*\(\s*\)\s*;/.test(sequencerSynthTapToCycleBranch), 'sequencer-cell non-edit tap-to-cycle synth branch uses stopped-only synth note edit audition helper');
+assert(!/[^\w$]previewSynth\s*\(\s*\)\s*;/.test(sequencerSynthTapToCycleBranch), 'sequencer-cell non-edit tap-to-cycle synth branch does not call raw previewSynth()');
+
 const testSynthLine = main.match(/querySelector\('\[data-synth-test\]'\)\.addEventListener\('click',\s*previewSynth\s*\)/);
 assert(testSynthLine, 'explicit TEST SYN button continues to call previewSynth directly');
 
