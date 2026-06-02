@@ -1839,7 +1839,7 @@ function buildSeq() {
           SYNTH_NOTES[S.patt] = State.cycleSynthNoteRatio(SYNTH_NOTES[S.patt], i);
           LAST_SYNTH_NOTE_STEP = i;
           updateSynthNoteStatus();
-          previewSynth();
+          previewSynthNoteEditAudition();
           buildSeq();
           buildVE();
           renderRhythmIntelligence();
@@ -1851,7 +1851,7 @@ function buildSeq() {
           SYNTH_NOTES[S.patt] = State.cycleSynthNoteRatio(SYNTH_NOTES[S.patt], i);
           LAST_SYNTH_NOTE_STEP = i;
           updateSynthNoteStatus();
-          previewSynth();
+          previewSynthNoteEditAudition();
           buildSeq();
           buildVE();
           renderRhythmIntelligence();

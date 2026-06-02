@@ -339,8 +339,8 @@ assert(
 const noteEditCellTapBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && SYNTH_NOTE_EDIT\) \{[\s\S]*?\n        \}/);
 assert(noteEditCellTapBranch, 'runtime handles selected SYN NOTE EDIT cell taps');
 assert(
-  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?LAST_SYNTH_NOTE_STEP = i[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?previewSynth\(\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)/.test(noteEditCellTapBranch[0]),
-  'SYN NOTE EDIT cell taps audition the cycled harmonic through previewSynth after state, editor rebuild, rhythm render, and autosave updates'
+  /State\.cycleSynthNoteRatio\(SYNTH_NOTES\[S\.patt\], i\)[\s\S]*?LAST_SYNTH_NOTE_STEP = i[\s\S]*?updateSynthNoteStatus\(\)[\s\S]*?previewSynthNoteEditAudition\(\)[\s\S]*?buildSeq\(\)[\s\S]*?buildVE\(\)[\s\S]*?renderRhythmIntelligence\(\)[\s\S]*?autosave\(\)/.test(noteEditCellTapBranch[0]),
+  'SYN NOTE EDIT cell taps audition the cycled harmonic through the stopped-only helper after state, editor rebuild, rhythm render, and autosave updates'
 );
 assert(
   /updateSynthNoteStatus\(\)/.test(noteEditCellTapBranch[0]),
