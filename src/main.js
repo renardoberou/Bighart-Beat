@@ -880,6 +880,11 @@ function previewInput() {
   previewVoice(4, synthInput);
 }
 
+function previewInputEditAudition() {
+  if (!TRACKS[4].smp) return;
+  previewVoice(4, synthInput);
+}
+
 function previewEngineKit() {
   if (S.playing) return;
   initAudio();
@@ -1221,7 +1226,7 @@ function scheduleVoiceEditAudition(trackId) {
       case 'snare': previewVoice(1, synthSnare); break;
       case 'hihat': previewHihat(HHT_PLACE); break;
       case 'clap': previewVoice(3, synthClap); break;
-      case 'input': previewInput(); break;
+      case 'input': previewInputEditAudition(); break;
       case 'ether': previewVoice(5, synthEther); break;
       case 'synth': previewSynth(); break;
       default: break;

@@ -12,6 +12,20 @@ function assertMatches(pattern, message) {
   assert(pattern.test(main), message);
 }
 
+function extractFunction(name) {
+  const start = main.indexOf(`function ${name}(`);
+  assert(start >= 0, `${name}() helper exists`);
+  const open = main.indexOf('{', start);
+  assert(open >= 0, `${name}() helper has a body`);
+  let depth = 0;
+  for (let i = open; i < main.length; i += 1) {
+    if (main[i] === '{') depth += 1;
+    if (main[i] === '}') depth -= 1;
+    if (depth === 0) return main.slice(open + 1, i);
+  }
+  throw new Error(`${name}() helper body did not close`);
+}
+
 assertMatches(
   /const\s+VOICE_EDIT_AUDITION_DEBOUNCE_MS\s*=\s*(?:1[0-9]{2}|2[0-4][0-9]|250)\s*;/,
   'voice-edit slider audition uses a bounded short debounce constant'
@@ -28,7 +42,7 @@ assertMatches(
 );
 
 assertMatches(
-  /function\s+scheduleVoiceEditAudition\s*\(\s*trackId\s*\)\s*\{[\s\S]*?case\s+['"]kick['"]\s*:\s*previewVoice\s*\(\s*0\s*,\s*synthKick\s*\)[\s\S]*?case\s+['"]snare['"]\s*:\s*previewVoice\s*\(\s*1\s*,\s*synthSnare\s*\)[\s\S]*?case\s+['"]hihat['"]\s*:\s*previewHihat\s*\(\s*HHT_PLACE\s*\)[\s\S]*?case\s+['"]clap['"]\s*:\s*previewVoice\s*\(\s*3\s*,\s*synthClap\s*\)[\s\S]*?case\s+['"]input['"]\s*:\s*previewInput\s*\(\s*\)[\s\S]*?case\s+['"]ether['"]\s*:\s*previewVoice\s*\(\s*5\s*,\s*synthEther\s*\)[\s\S]*?case\s+['"]synth['"]\s*:\s*previewSynth\s*\(\s*\)/,
+  /function\s+scheduleVoiceEditAudition\s*\(\s*trackId\s*\)\s*\{[\s\S]*?case\s+['"]kick['"]\s*:\s*previewVoice\s*\(\s*0\s*,\s*synthKick\s*\)[\s\S]*?case\s+['"]snare['"]\s*:\s*previewVoice\s*\(\s*1\s*,\s*synthSnare\s*\)[\s\S]*?case\s+['"]hihat['"]\s*:\s*previewHihat\s*\(\s*HHT_PLACE\s*\)[\s\S]*?case\s+['"]clap['"]\s*:\s*previewVoice\s*\(\s*3\s*,\s*synthClap\s*\)[\s\S]*?case\s+['"]input['"]\s*:\s*previewInputEditAudition\s*\(\s*\)[\s\S]*?case\s+['"]ether['"]\s*:\s*previewVoice\s*\(\s*5\s*,\s*synthEther\s*\)[\s\S]*?case\s+['"]synth['"]\s*:\s*previewSynth\s*\(\s*\)/,
   'voice-edit slider audition reuses existing per-voice preview paths for KCK/SNR/HHT/CLP/INP/ETH/SYN'
 );
 
@@ -36,6 +50,13 @@ assertMatches(
   /f\.addEventListener\(\s*['"]input['"]\s*,\s*\(\s*\)\s*=>\s*\{[\s\S]*?onChange\s*\(\s*parseFloat\(f\.value\)\s*\)[\s\S]*?autosave\s*\(\s*\)[\s\S]*?initAudio\s*\(\s*\)\s*;[\s\S]*?scheduleVoiceEditAudition\s*\(\s*tr\.id\s*\)/,
   'VOICE EDIT slider input saves the parameter, synchronously unlocks audio, then schedules a debounced audition of the edited track'
 );
+
+const previewInputEditAuditionBody = extractFunction('previewInputEditAudition');
+assert(
+  /if\s*\(\s*!\s*TRACKS\s*\[\s*4\s*\]\s*\.\s*smp\s*\)\s*return\s*;[\s\S]*?previewVoice\s*\(\s*4\s*,\s*synthInput\s*\)/.test(previewInputEditAuditionBody),
+  'input slider audition helper stays sample-aware and only previews loaded input'
+);
+assert(!/toast\s*\(/.test(previewInputEditAuditionBody), 'input slider audition helper stays quiet when no sample is loaded');
 
 const auditionHelperStart = main.indexOf('function scheduleVoiceEditAudition(trackId)');
 assert(auditionHelperStart >= 0, 'voice-edit slider audition helper exists');
