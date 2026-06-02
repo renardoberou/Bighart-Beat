@@ -83,6 +83,34 @@ assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(3), 'oct+5th', 'inter
 assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(4), '2 oct', 'interval helper labels two-octave ratios compactly');
 assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1.5004), '5th', 'interval helper snaps near known harmonic ratios');
 assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1.37), '×1.37', 'interval helper falls back to a safe generic ratio label');
+assert.strictEqual(
+  SynthNotes.hzToNoteName(SynthNotes.midiToHz(60.4999), true),
+  'C♯½4',
+  '24-TET positive quarter-tone labels include the octave',
+);
+assert.strictEqual(
+  SynthNotes.hzToNoteName(SynthNotes.midiToHz(59.5), true),
+  'B♯½3',
+  '24-TET quarter-flat labels below C4 keep the lower octave',
+);
+assert.strictEqual(
+  SynthNotes.hzToNoteName(SynthNotes.midiToHz(61.5001), true),
+  'D♭½4',
+  '24-TET negative quarter-tone labels include the octave',
+);
+assert.strictEqual(
+  SynthNotes.hzToNoteName(SynthNotes.midiToHz(60), false),
+  'C4',
+  '12-TET note labels stay unchanged',
+);
+assert(
+  SynthNotes.formatSynthNotePitchDisplay(SynthNotes.midiToHz(59.5), true).includes('B♯½3'),
+  'pitch display keeps the octave for 24-TET quarter-tone roots below C4',
+);
+assert(
+  SynthNotes.formatSynthNotePitchDisplay(SynthNotes.midiToHz(61.5001), true).includes('D♭½4'),
+  'pitch display keeps the octave for 24-TET quarter-tone roots',
+);
 assert.strictEqual(SynthNotes.formatSynthNoteMarkerLabel(2.5), 'oct+3rd', 'marker helper keeps known harmonic cell badges compact');
 assert.strictEqual(SynthNotes.formatSynthNoteMarkerLabel(1.37), '×1.37', 'marker helper keeps generic ratio cell badges safe and readable');
 assert.strictEqual(

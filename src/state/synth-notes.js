@@ -78,20 +78,24 @@
     const midi = hzToMidi(hz);
     const midiRounded = Math.round(midi);
     const cents = Math.round((midi - midiRounded) * 100);
-    const octave = Math.floor(midiRounded / 12) - 1;
+    const roundedOctave = Math.floor(midiRounded / 12) - 1;
+    const lowerOctave = Math.floor(midi / 12) - 1;
     const noteIndex = ((midiRounded % 12) + 12) % 12;
     if (use24Tet) {
-      // 24-TET: use sharps/flats for quarter-tone neighbors
+      // 24-TET: use sharps/flats for quarter-tone neighbors.
+      // Quarter-flats inherit the lower octave so B↔C wraparounds stay unambiguous.
       const centsRounded = Math.round(cents / 50) * 50;
       if (centsRounded === 50) {
-        return NOTE_NAMES_24[noteIndex * 2 + 1] || NOTE_NAMES[noteIndex] + '♯½';
+        const quarterSharp = NOTE_NAMES_24[noteIndex * 2 + 1] || NOTE_NAMES[noteIndex] + '♯½';
+        return quarterSharp + roundedOctave;
       } else if (centsRounded === -50) {
         const prevIndex = ((noteIndex - 1) + 12) % 12;
-        return NOTE_NAMES_24[prevIndex * 2 + 1] || NOTE_NAMES[prevIndex] + '♭½';
+        const quarterFlat = NOTE_NAMES_24[prevIndex * 2 + 1] || NOTE_NAMES[prevIndex] + '♭½';
+        return quarterFlat + lowerOctave;
       }
-      return NOTE_NAMES[noteIndex] + octave;
+      return NOTE_NAMES[noteIndex] + roundedOctave;
     }
-    return NOTE_NAMES[noteIndex] + octave;
+    return NOTE_NAMES[noteIndex] + roundedOctave;
   }
 
   function noteNameToHz(nameAndOctave, use24Tet) {

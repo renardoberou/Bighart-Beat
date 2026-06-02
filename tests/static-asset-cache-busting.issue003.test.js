@@ -57,7 +57,7 @@ const HIHAT_VOICE_PREVIOUS_TOKENS = [
 const SYNTH_808_BODY_TOKEN = 'v=synth-808-body-20260524';
 const SYNTH_VOICE_TOKEN = 'v=synth-engine-tuneup-20260531-d';
 const KICK_VOICE_TOKEN = 'v=kick-endhz-floor-25hz-20260530';
-const SYNTH_NOTES_TOKEN = 'v=synth-grid-variety-20260531';
+const SYNTH_NOTES_TOKEN = 'v=synth-note-octave-labels-20260602';
 const TRACKS_TOKEN = 'v=synth-pitch-330-20260530';
 const PERSISTENCE_TOKEN = 'v=synth-tet24-persist-20260531';
 const TRACKS_PREVIOUS_TOKENS = [
@@ -90,6 +90,7 @@ const SYNTH_NOTES_PREVIOUS_TOKENS = [
   'v=synth-hint-notes-20260528',
   'v=synth-808-refine-20260530',
   'v=synth-tet24-persist-20260531',
+  'v=synth-grid-variety-20260531',
 ];
 const CLAP_STEREO_WIDTH_TOKEN = 'v=clap-burst-tone-20260531';
 const ENGINE_PROFILES_TOKEN = 'v=snare-volume-parity-20260531';
@@ -97,7 +98,7 @@ const CLAP_STEREO_WIDTH_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   'v=input-playback-rate-safety-20260526',
 ];
-const localAssetTokenPattern = /[?&]v=(?:synth-declick|synth-engine-tuneup|synth-note-edit-ux|synth-pitch-330|synth-musical-defaults|synth-velocity-boost|synth-808-refine|synth-tap-flash|synth-tap-cycle|synth-tet24-persist|synth-grid-variety|kick-floor-reznor-snare|kick-endhz-floor-25hz|hihat-aphex-bright-headroom|aphex-snare-clap-idm|aphex-kick-digital-crack|snare-volume-parity|clap-burst-tone|boost-week|hihat-open-tail-extend|hihat-idm-shimmer-decay-bloom|hihat-idm-engine-polish|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-aphex-closed-needle-accent|aphex-shimmer-edge-boost|hihat-metallic-rattle-pan|hihat-soft-open-tail|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|wreck-order-ux|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|clap-stereo-width|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|synth-detune-personality|synth-note-selector|synth-note-names|synth-hint-notes|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const localAssetTokenPattern = /[?&]v=(?:synth-declick|synth-engine-tuneup|synth-note-edit-ux|synth-pitch-330|synth-musical-defaults|synth-velocity-boost|synth-808-refine|synth-tap-flash|synth-tap-cycle|synth-tet24-persist|synth-grid-variety|synth-note-octave-labels|kick-floor-reznor-snare|kick-endhz-floor-25hz|hihat-aphex-bright-headroom|aphex-snare-clap-idm|aphex-kick-digital-crack|snare-volume-parity|clap-burst-tone|boost-week|hihat-open-tail-extend|hihat-idm-shimmer-decay-bloom|hihat-idm-engine-polish|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-aphex-closed-needle-accent|aphex-shimmer-edge-boost|hihat-metallic-rattle-pan|hihat-soft-open-tail|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|wreck-order-ux|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|clap-stereo-width|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|synth-detune-personality|synth-note-selector|synth-note-names|synth-hint-notes|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN, previousTokens = PREVIOUS_TOKENS) {
   assert(
     !assetUrl.includes(STALE_TOKEN) && previousTokens.every((token) => !assetUrl.includes(token)),
