@@ -55,6 +55,12 @@ assertRule(
 );
 assertRule(
   mobileScroll,
+  '\\.syn-note-selector__row--tet-band',
+  'overflow-y\\s*:\\s*hidden[\\s\\S]*?touch-action\\s*:\\s*pan-x\\s+pan-y',
+  'mobile 24-TET selector bands allow vertical page scrolling while preserving horizontal band swipe'
+);
+assertRule(
+  mobileScroll,
   '\\.ctrl',
   'flex\\s*:\\s*0\\s+0\\s+auto[\\s\\S]*?overflow\\s*:\\s*visible[\\s\\S]*?padding-bottom\\s*:\\s*calc\\(48px\\s*\\+\\s*env\\(safe-area-inset-bottom\\)\\)',
   'mobile control panels participate in the document scroll with safe-area bottom padding'
