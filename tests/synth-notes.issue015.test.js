@@ -265,6 +265,19 @@ assert.strictEqual(
   (roundedSelector.synthRootOctave() + 1) * 12 + roundedSelector.synthRootNoteIndex(),
   'rounded note index and octave are derived from the same semitone when building the selector',
 );
+const capSelector = loadSynthRootHelpers(mainJs, 550);
+assert.strictEqual(capSelector.roundedSynthRootMidi(), 73, '550 Hz synth root rounds to MIDI 73 for selector building');
+assert.strictEqual(capSelector.synthRootNoteIndex(), 1, '550 Hz synth root highlights C# when building the selector');
+assert.strictEqual(capSelector.synthRootOctave(), 5, '550 Hz synth root highlights octave 5 when building the selector');
+assert(
+  /for \(let oct = 1; oct <= 5; oct\+\+\)/.test(mainJs),
+  'runtime exposes octave buttons through C5 so the 550 Hz cap remains editable',
+);
+const capNoteRow = createSelectorRow(12);
+const capOctaveRow = createSelectorRow(5);
+capSelector.syncSynthRootSelectorState(capNoteRow, capOctaveRow, () => {});
+assert.deepStrictEqual(activeButtonIndexes(capNoteRow), [1], '550 Hz root keeps the C# note button highlighted');
+assert.deepStrictEqual(activeButtonIndexes(capOctaveRow), [4], '550 Hz root highlights the C5 octave button');
 const clickSelector = loadSynthRootHelpers(mainJs, 130);
 clickSelector.setSynthRootFromNote(11.892, 3);
 assert.strictEqual(

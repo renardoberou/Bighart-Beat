@@ -65,7 +65,7 @@ const TRACKS_PREVIOUS_TOKENS = [
   'v=hihat-aphex-bright-headroom-20260528',
   'v=synth-velocity-boost-20260530',
 ];
-const MAIN_JS_TOKEN = 'v=synth-tap-cycle-20260601-live-cell';
+const MAIN_JS_TOKEN = 'v=synth-note-selector-20260601-c5';
 const MAIN_JS_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   HIHAT_METALLIC_RATTLE_PAN_TOKEN,
@@ -78,6 +78,7 @@ const MAIN_JS_PREVIOUS_TOKENS = [
   'v=synth-velocity-boost-20260530',
   'v=synth-note-edit-ux-20260530',
   'v=synth-tap-cycle-20260531',
+  'v=synth-tap-cycle-20260601-live-cell',
   'v=hihat-aphex-bright-headroom-20260528',
 ];
 const SYNTH_NOTES_PREVIOUS_TOKENS = [

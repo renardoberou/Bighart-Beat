@@ -2271,7 +2271,7 @@ function buildVE() {
     // Octave selector row
     const octaveRow = document.createElement('div');
     octaveRow.className = 'syn-note-selector__row syn-note-selector__row--octave';
-    for (let oct = 1; oct <= 3; oct++) {
+    for (let oct = 1; oct <= 5; oct++) {
       const ob = document.createElement('button');
       ob.className = 'syn-note-selector__btn syn-note-selector__btn--octave' + (oct === currentOctave ? ' on' : '');
       ob.textContent = 'C' + oct;
