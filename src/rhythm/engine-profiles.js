@@ -10,7 +10,7 @@
     },
     '909': {
       kick: { pitch: 1.06, decay: 0.86, click: 1.18, clickHp: 1.45, drive: 0.88, body: 0.82, sub: 0.72, outputTrim: 1.00 },
-      snare: { tone: 1.12, noise: 1.12, body: 0.92, snap: 1.18, outputTrim: 0.95 },
+      snare: { tone: 1.12, noise: 0.70, body: 1.14, snap: 1.06, outputTrim: 0.95 },
       clap: { tone: 1.22, decay: 0.86, spread: 0.88, body: 1.0, tail: 0.92, snap: 1.12, highpass: 1.08, q: 1.08, jitter: 0.55, panWidth: 0.09, panAsym: 0.00 },
       hihat: { noise: 1.14, tone: 0.28, bright: 1.32, decay: 0.82, transient: 1.04, tailDamp: 0.94, airDamp: 1.06, trim: 1.00, ratios: [2.00, 2.33, 3.01, 3.88, 4.61, 5.97], osc: 'square', instability: 0.015, glitch: 0, chokeClosed: 0.014, chokeOpen: 0.044 },
     },

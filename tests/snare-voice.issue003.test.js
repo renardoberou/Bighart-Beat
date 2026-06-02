@@ -9,6 +9,7 @@ const root = path.resolve(__dirname, '..');
 const snareVoicePath = path.join(root, 'src', 'rhythm', 'snare-voice.js');
 assert(fs.existsSync(snareVoicePath), 'snare voice resolver module exists');
 
+const { createDefaultTracks } = require(path.join(root, 'src', 'state', 'tracks.js'));
 const { resolveSnareVoiceSpec } = require(snareVoicePath);
 assert.strictEqual(typeof resolveSnareVoiceSpec, 'function', 'resolveSnareVoiceSpec is exported');
 
@@ -18,6 +19,10 @@ const baseParams = {
   snap: 0.82,
   decay: 0.22,
 };
+
+const defaultSnareTrack = createDefaultTracks().find(track => track.id === 'snare');
+assert(defaultSnareTrack && defaultSnareTrack.p, 'default snare track exists');
+const defaultSnareParams = defaultSnareTrack.p;
 
 function assertFiniteBounded(spec, label) {
   assert(spec && typeof spec === 'object', `${label}: spec object returned`);
@@ -65,6 +70,7 @@ for (const engine of ['808', '909', 'reznor', 'aphex', 'mystery']) {
 
 const snare808 = resolveSnareVoiceSpec('808', baseParams, 1);
 const snare909 = resolveSnareVoiceSpec('909', baseParams, 1);
+const snare909Default = resolveSnareVoiceSpec('909', defaultSnareParams, 1);
 const reznor = resolveSnareVoiceSpec('reznor', baseParams, 1);
 const aphex = resolveSnareVoiceSpec('aphex', baseParams, 1);
 const fallback = resolveSnareVoiceSpec('unknown-engine', baseParams, 1);
@@ -72,6 +78,7 @@ const fallback = resolveSnareVoiceSpec('unknown-engine', baseParams, 1);
 assert.strictEqual(fallback.engine, 'aphex', 'unknown engine safely falls back to aphex/default');
 assert.strictEqual(fallback.fallbackEngine, true, 'unknown engine reports fallback');
 assert(snare808.shellPeakGain > snare909.shellPeakGain, '808 snare resolves more shell body than 909');
+assert(snare909Default.shellPeakGain >= snare909Default.noisePeakGain * 1.05, '909 snare shell/body resolves at least 5% stronger than noise at the shipped default track params');
 assert(snare808.shellDecaySec > snare909.shellDecaySec, '808 snare shell resolves longer than 909');
 assert(snare909.noiseBandpassHz > snare808.noiseBandpassHz, '909 snare resolves brighter noise body than 808');
 assert(snare909.crackPeakGain > snare808.crackPeakGain, '909 snare has stronger snap transient than 808');
