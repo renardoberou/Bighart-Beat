@@ -307,4 +307,10 @@ assert.strictEqual(twelveSync.currentOctave, 4, '12-TET sync reports the retuned
 assert.deepStrictEqual(activeIndexes(twelveNoteRow), [1], '12-TET sync highlights the semitone note button');
 assert.deepStrictEqual(activeIndexes(twelveOctaveRow), [3], '12-TET sync highlights the matching octave button');
 
+const twelveFallback = loadHarness(midiToHz(59.5), false);
+const twelveFallbackNoteRow = twelveFallback.document.createElement('div');
+const twelveFallbackOctaveRow = twelveFallback.document.createElement('div');
+twelveFallback.rebuildNoteSelector(twelveFallbackNoteRow, twelveFallbackOctaveRow);
+assert.strictEqual(twelveFallbackNoteRow.children[0].textContent, 'C4', '12-TET rebuild falls back to rounded semitone state when explicit indices are omitted');
+
 console.log('Issue 003 24-TET synth root selector checks passed.');

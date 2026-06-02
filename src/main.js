@@ -1366,6 +1366,8 @@ function rebuildNoteSelector(noteRow, octaveRow, currentNoteIdx, currentOctave) 
   const use24Tet = selectorState.use24Tet;
   const activeNoteIdx = selectorState.currentNoteIdx;
   const activeOctave = selectorState.currentOctave;
+  const fallbackNoteIdx = Number.isFinite(Number(currentNoteIdx)) ? Number(currentNoteIdx) : activeNoteIdx;
+  const fallbackOctave = Number.isFinite(Number(currentOctave)) ? Number(currentOctave) : activeOctave;
   noteRow.innerHTML = '';
   noteRow.classList.toggle('syn-note-selector__row--tet-stack', use24Tet);
   if (use24Tet) {
@@ -1401,10 +1403,10 @@ function rebuildNoteSelector(noteRow, octaveRow, currentNoteIdx, currentOctave) 
   noteRow.classList.remove('syn-note-selector__row--tet-stack');
   for (let ni = 0; ni < 12; ni++) {
     const nb = document.createElement('button');
-    nb.className = 'syn-note-selector__btn' + (ni === currentNoteIdx ? ' on' : '');
+    nb.className = 'syn-note-selector__btn' + (ni === fallbackNoteIdx ? ' on' : '');
     nb.dataset.noteIndex = String(ni);
-    nb.textContent = noteLabel(ni, currentOctave);
-    nb.title = noteLabel(ni, currentOctave) + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
+    nb.textContent = noteLabel(ni, fallbackOctave);
+    nb.title = noteLabel(ni, fallbackOctave) + ' (' + Math.round(State.midiToHz((fallbackOctave + 1) * 12 + ni)) + ' Hz)';
     nb.addEventListener('click', () => {
       setSynthRootFromNote(ni, synthRootOctave());
       syncSynthRootSelectorState(noteRow, octaveRow);
@@ -2321,10 +2323,12 @@ function buildVE() {
     tetBtn.className = 'syn-note-selector__btn syn-note-selector__btn--tet' + (synthUse24Tet ? ' on' : '');
     tetBtn.textContent = synthUse24Tet ? '24-TET ON' : '12-TET';
     tetBtn.title = 'Toggle 24-TET (quarter-tone) note selector';
+    tetBtn.setAttribute('aria-pressed', String(!!synthUse24Tet));
     tetBtn.addEventListener('click', () => {
       synthUse24Tet = !synthUse24Tet;
       tetBtn.textContent = synthUse24Tet ? '24-TET ON' : '12-TET';
       tetBtn.classList.toggle('on', synthUse24Tet);
+      tetBtn.setAttribute('aria-pressed', String(!!synthUse24Tet));
       rebuildNoteSelector(noteRow, octaveRow);
       syncSynthRootSelectorState(noteRow, octaveRow, () => {
         noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
