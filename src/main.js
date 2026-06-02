@@ -1310,19 +1310,36 @@ function normalizeSynthRootNoteIndex(noteIndex) {
   return ((roundedNoteIndex % 12) + 12) % 12;
 }
 
-function setSynthRootFromNote(noteIndex, octave) {
-  const midi = (octave + 1) * 12 + normalizeSynthRootNoteIndex(noteIndex);
+function synthRootSelectorState() {
+  const use24Tet = typeof synthUse24Tet === 'boolean' ? synthUse24Tet : false;
+  const currentMidi = use24Tet
+    ? Math.round(State.hzToMidi(TRACKS[6].p.pitch) * 2) / 2
+    : roundedSynthRootMidi();
+  const currentNoteIdx = use24Tet
+    ? ((Math.round(currentMidi * 2) % 24) + 24) % 24
+    : ((currentMidi % 12) + 12) % 12;
+  const currentOctave = Math.floor(currentMidi / 12) - 1;
+  return { currentMidi, currentNoteIdx, currentOctave, use24Tet };
+}
+
+function setSynthRootFromNote(noteIndex, octave, use24Tet = false) {
+  const note = Number(noteIndex);
+  const normalizedNoteIndex = use24Tet
+    ? (((Number.isFinite(note) ? Math.round(note) : 0) % 24) + 24) % 24
+    : normalizeSynthRootNoteIndex(noteIndex);
+  const midi = (octave + 1) * 12 + (use24Tet ? normalizedNoteIndex / 2 : normalizedNoteIndex);
   TRACKS[6].p.pitch = clamp(State.midiToHz(midi), 40, SYNTH_ROOT_MAX_HZ);
   buildSeq();
   updateSynthNoteStatus();
 }
 
 function syncSynthRootSelectorState(noteRow, octaveRow, updateLabel = noteSelectorDiv_querySelectorLabel) {
-  const currentMidi = roundedSynthRootMidi();
-  const currentNoteIdx = ((currentMidi % 12) + 12) % 12;
-  const currentOctave = Math.floor(currentMidi / 12) - 1;
+  const { currentMidi, currentNoteIdx, currentOctave } = synthRootSelectorState();
   if (noteRow) {
-    noteRow.querySelectorAll('.syn-note-selector__btn').forEach((b, idx) => b.classList.toggle('on', idx === currentNoteIdx));
+    noteRow.querySelectorAll('.syn-note-selector__btn').forEach((b, idx) => {
+      const buttonNoteIdx = b.dataset && b.dataset.noteIndex != null ? Number(b.dataset.noteIndex) : idx;
+      b.classList.toggle('on', buttonNoteIdx === currentNoteIdx);
+    });
   }
   if (octaveRow) {
     octaveRow.querySelectorAll('.syn-note-selector__btn--octave').forEach((b, idx) => b.classList.toggle('on', idx + 1 === currentOctave));
@@ -1331,8 +1348,13 @@ function syncSynthRootSelectorState(noteRow, octaveRow, updateLabel = noteSelect
   return { currentMidi, currentNoteIdx, currentOctave };
 }
 
-function noteLabel(noteIndex, octave) {
-  return NOTE_SELECTOR_NAMES[noteIndex] + octave;
+function noteLabel(noteIndex, octave, use24Tet = false) {
+  if (use24Tet) {
+    const roundedNoteIndex = Number.isFinite(Number(noteIndex)) ? Math.round(Number(noteIndex)) : 0;
+    const idx24 = ((roundedNoteIndex % 24) + 24) % 24;
+    return (NOTE_SELECTOR_24_NAMES[idx24] || NOTE_SELECTOR_NAMES[Math.floor(idx24 / 2)]) + octave;
+  }
+  return NOTE_SELECTOR_NAMES[normalizeSynthRootNoteIndex(noteIndex)] + octave;
 }
 
 function currentSynthNoteLabel() {
@@ -1340,40 +1362,57 @@ function currentSynthNoteLabel() {
 }
 
 function rebuildNoteSelector(noteRow, octaveRow, currentNoteIdx, currentOctave) {
-  // Rebuild note buttons for 24-TET mode
+  const selectorState = synthRootSelectorState();
+  const use24Tet = selectorState.use24Tet;
+  const activeNoteIdx = selectorState.currentNoteIdx;
+  const activeOctave = selectorState.currentOctave;
   noteRow.innerHTML = '';
-  if (synthUse24Tet) {
-    // Show 24-TET names: C, C#/D♭, D, D#/E♭, E, F, F#/G♭, G, G#/A♭, A, A#/B♭, B
-    for (let ni = 0; ni < 12; ni++) {
-      const nb = document.createElement('button');
-      const name24 = NOTE_SELECTOR_24_NAMES[ni * 2] || NOTE_SELECTOR_NAMES[ni];
-      nb.className = 'syn-note-selector__btn' + (ni === currentNoteIdx ? ' on' : '');
-      nb.textContent = name24;
-      nb.title = name24 + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
-      nb.addEventListener('click', () => {
-        setSynthRootFromNote(ni, synthRootOctave());
-        syncSynthRootSelectorState(noteRow, octaveRow);
-        autosave();
-        initAudio();
-        scheduleVoiceEditAudition('synth');
-      });
-      noteRow.appendChild(nb);
-    }
-  } else {
-    for (let ni = 0; ni < 12; ni++) {
-      const nb = document.createElement('button');
-      nb.className = 'syn-note-selector__btn' + (ni === currentNoteIdx ? ' on' : '');
-      nb.textContent = NOTE_SELECTOR_NAMES[ni];
-      nb.title = NOTE_SELECTOR_NAMES[ni] + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
-      nb.addEventListener('click', () => {
-        setSynthRootFromNote(ni, synthRootOctave());
-        syncSynthRootSelectorState(noteRow, octaveRow);
-        autosave();
-        initAudio();
-        scheduleVoiceEditAudition('synth');
-      });
-      noteRow.appendChild(nb);
-    }
+  noteRow.classList.toggle('syn-note-selector__row--tet-stack', use24Tet);
+  if (use24Tet) {
+    const tetBands = [
+      { className: 'syn-note-selector__row syn-note-selector__row--tet-band syn-note-selector__row--tet-band--semitone', offset: 0 },
+      { className: 'syn-note-selector__row syn-note-selector__row--tet-band syn-note-selector__row--tet-band--quarter', offset: 1 },
+    ];
+    tetBands.forEach(({ className, offset }) => {
+      const band = document.createElement('div');
+      band.className = className;
+      for (let ni = 0; ni < 12; ni++) {
+        const pitchIndex = ni * 2 + offset;
+        const nb = document.createElement('button');
+        nb.className = 'syn-note-selector__btn syn-note-selector__btn--tet-part' + (pitchIndex === activeNoteIdx ? ' on' : '');
+        nb.dataset.noteIndex = String(pitchIndex);
+        nb.textContent = noteLabel(pitchIndex, activeOctave, true);
+        const buttonMidi = (activeOctave + 1) * 12 + ni + (offset ? 0.5 : 0);
+        nb.title = noteLabel(pitchIndex, activeOctave, true) + ' (' + Math.round(State.midiToHz(buttonMidi)) + ' Hz)';
+        nb.addEventListener('click', () => {
+          setSynthRootFromNote(pitchIndex, activeOctave, true);
+          syncSynthRootSelectorState(noteRow, octaveRow);
+          autosave();
+          initAudio();
+          scheduleVoiceEditAudition('synth');
+        });
+        band.appendChild(nb);
+      }
+      noteRow.appendChild(band);
+    });
+    return;
+  }
+
+  noteRow.classList.remove('syn-note-selector__row--tet-stack');
+  for (let ni = 0; ni < 12; ni++) {
+    const nb = document.createElement('button');
+    nb.className = 'syn-note-selector__btn' + (ni === currentNoteIdx ? ' on' : '');
+    nb.dataset.noteIndex = String(ni);
+    nb.textContent = noteLabel(ni, currentOctave);
+    nb.title = noteLabel(ni, currentOctave) + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
+    nb.addEventListener('click', () => {
+      setSynthRootFromNote(ni, synthRootOctave());
+      syncSynthRootSelectorState(noteRow, octaveRow);
+      autosave();
+      initAudio();
+      scheduleVoiceEditAudition('synth');
+    });
+    noteRow.appendChild(nb);
   }
 }
 
@@ -2251,39 +2290,18 @@ function buildVE() {
     noteSelectorDiv.innerHTML = `<div class="syn-note-selector__label">ROOT NOTE · ${currentSynthNoteLabel()}</div>`;
     const noteRow = document.createElement('div');
     noteRow.className = 'syn-note-selector__row';
-    const currentMidi = roundedSynthRootMidi();
-    const currentOctave = Math.floor(currentMidi / 12) - 1;
-    const currentNoteIdx = ((currentMidi % 12) + 12) % 12;
-    // Build 12 chromatic note buttons
-    for (let ni = 0; ni < 12; ni++) {
-      const nb = document.createElement('button');
-      nb.className = 'syn-note-selector__btn' + (ni === currentNoteIdx ? ' on' : '');
-      nb.textContent = NOTE_SELECTOR_NAMES[ni];
-      nb.title = NOTE_SELECTOR_NAMES[ni] + currentOctave + ' (' + Math.round(State.midiToHz((currentOctave + 1) * 12 + ni)) + ' Hz)';
-      nb.addEventListener('click', () => {
-        setSynthRootFromNote(ni, synthRootOctave());
-        // Re-sync from rounded root pitch in case the requested note was clamped.
-        syncSynthRootSelectorState(noteRow, octaveRow, () => {
-          noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
-        });
-        autosave();
-        initAudio();
-        scheduleVoiceEditAudition(tr.id);
-      });
-      noteRow.appendChild(nb);
-    }
-    noteSelectorDiv.appendChild(noteRow);
-    // Octave selector row
     const octaveRow = document.createElement('div');
     octaveRow.className = 'syn-note-selector__row syn-note-selector__row--octave';
+    const selectorState = synthRootSelectorState();
     for (let oct = 1; oct <= 5; oct++) {
       const ob = document.createElement('button');
-      ob.className = 'syn-note-selector__btn syn-note-selector__btn--octave' + (oct === currentOctave ? ' on' : '');
+      ob.className = 'syn-note-selector__btn syn-note-selector__btn--octave' + (oct === selectorState.currentOctave ? ' on' : '');
       ob.textContent = 'C' + oct;
       ob.title = 'Octave ' + oct;
       ob.addEventListener('click', () => {
-        setSynthRootFromNote(synthRootNoteIndex(), oct);
-        // Re-sync from rounded root pitch in case the octave change hit the pitch floor.
+        const selectorStateNow = synthRootSelectorState();
+        setSynthRootFromNote(selectorStateNow.currentNoteIdx, oct, selectorStateNow.use24Tet);
+        rebuildNoteSelector(noteRow, octaveRow, selectorStateNow.currentNoteIdx, oct);
         syncSynthRootSelectorState(noteRow, octaveRow, () => {
           noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
         });
@@ -2293,6 +2311,8 @@ function buildVE() {
       });
       octaveRow.appendChild(ob);
     }
+    rebuildNoteSelector(noteRow, octaveRow, selectorState.currentNoteIdx, selectorState.currentOctave);
+    noteSelectorDiv.appendChild(noteRow);
     noteSelectorDiv.appendChild(octaveRow);
     // 24-TET toggle
     const tetRow = document.createElement('div');
@@ -2305,10 +2325,10 @@ function buildVE() {
       synthUse24Tet = !synthUse24Tet;
       tetBtn.textContent = synthUse24Tet ? '24-TET ON' : '12-TET';
       tetBtn.classList.toggle('on', synthUse24Tet);
-      noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
-      // Rebuild note buttons for 24-TET if needed
-      // Re-read current note/octave so 24-TET toggle doesn't stale the highlight
-      rebuildNoteSelector(noteRow, octaveRow, synthRootNoteIndex(), synthRootOctave());
+      rebuildNoteSelector(noteRow, octaveRow);
+      syncSynthRootSelectorState(noteRow, octaveRow, () => {
+        noteSelectorDiv.querySelector('.syn-note-selector__label').textContent = 'ROOT NOTE · ' + currentSynthNoteLabel();
+      });
       autosave();
     });
     tetRow.appendChild(tetBtn);

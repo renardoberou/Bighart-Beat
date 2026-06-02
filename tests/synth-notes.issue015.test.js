@@ -235,9 +235,10 @@ function loadSynthRootHelpers(mainJs, pitchHz) {
     extractFunction(mainJs, 'synthRootNoteIndex'),
     extractFunction(mainJs, 'synthRootOctave'),
     extractFunction(mainJs, 'normalizeSynthRootNoteIndex'),
+    extractFunction(mainJs, 'synthRootSelectorState'),
     extractFunction(mainJs, 'setSynthRootFromNote'),
     extractFunction(mainJs, 'syncSynthRootSelectorState'),
-    'module.exports = { roundedSynthRootMidi, synthRootNoteIndex, synthRootOctave, normalizeSynthRootNoteIndex, setSynthRootFromNote, syncSynthRootSelectorState };',
+    'module.exports = { roundedSynthRootMidi, synthRootNoteIndex, synthRootOctave, normalizeSynthRootNoteIndex, synthRootSelectorState, setSynthRootFromNote, syncSynthRootSelectorState };',
   ].join('\n\n');
   vm.runInNewContext(script, sandbox);
   return {
@@ -358,11 +359,15 @@ assert(mainJs.includes('formatSynthNoteCompactStatusLabel'), 'voice editor uses 
 assert(mainJs.includes('formatSynthNoteEditHintLabel'), 'voice editor uses synth note edit hint helper');
 assert(mainJs.includes('State.formatSynthNoteMarkerLabelWithPitch(ratio'), 'runtime uses compact marker helper for step badges');
 assert(/function updateSynthNoteStatus\(\) \{[\s\S]*?querySelector\('\[data-synth-note-status\]'\)[\s\S]*?querySelector\('\[data-synth-note-hint\]'\)[\s\S]*?synthNoteStatusText\(LAST_SYNTH_NOTE_STEP\)[\s\S]*?synthNoteEditHintText\(LAST_SYNTH_NOTE_STEP\)/.test(mainJs), 'selected synth note refresh updates both status and adjacent harmonic edit hint');
-const setSynthRootFromNoteBody = mainJs.match(/function setSynthRootFromNote\(noteIndex, octave\) \{([\s\S]*?)\n\}/);
+const setSynthRootFromNoteBody = mainJs.match(/function setSynthRootFromNote\(noteIndex, octave, use24Tet = false\) \{([\s\S]*?)\n\}/);
 assert(setSynthRootFromNoteBody, 'runtime exposes the synth root setter body');
 assert(
   /TRACKS\[6\]\.p\.pitch = clamp\([\s\S]*?buildSeq\(\)[\s\S]*?updateSynthNoteStatus\(\)/.test(setSynthRootFromNoteBody[1]),
   'setSynthRootFromNote refreshes the sequencer labels and pitch markers immediately after changing the root pitch',
+);
+assert(
+  /use24Tet\s*\?\s*normalizedNoteIndex\s*\/\s*2\s*:\s*normalizedNoteIndex/.test(setSynthRootFromNoteBody[1]),
+  'setSynthRootFromNote preserves quarter-tone roots when 24-TET is enabled',
 );
 const noteEditCellTapBranch = mainJs.match(/if \(trackId === 'synth' && trackIndex === S\.sel && SYNTH_NOTE_EDIT\) \{[\s\S]*?\n        \}/);
 assert(noteEditCellTapBranch, 'runtime handles selected SYN NOTE EDIT cell taps');

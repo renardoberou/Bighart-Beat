@@ -1548,6 +1548,38 @@ input[type="file"] { display: none; }
 .syn-note-selector__row--tet {
   margin-top: 2px;
 }
+.syn-note-selector__row--tet-stack {
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+.syn-note-selector__row--tet-band {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  touch-action: pan-x;
+  padding-bottom: 2px;
+}
+.syn-note-selector__row--tet-band::-webkit-scrollbar {
+  height: 4px;
+}
+.syn-note-selector__row--tet-band .syn-note-selector__btn {
+  flex: 0 0 3.5rem;
+  min-width: 3.5rem;
+}
+.syn-note-selector__row--tet-band--quarter .syn-note-selector__btn {
+  border-color: rgba(187, 131, 17, .35);
+  color: var(--amberLt);
+  background: rgba(106,74,18,.10);
+}
+.syn-note-selector__row--tet-band--quarter .syn-note-selector__btn.on {
+  background: var(--amberLt);
+  color: var(--bg);
+  border-color: var(--amber);
+}
 .syn-note-selector__btn {
   flex: 1;
   padding: 5px 2px;
@@ -1611,6 +1643,14 @@ input[type="file"] { display: none; }
   .syn-note-selector__btn--tet {
     min-height: 44px;
     padding: 10px 8px;
+  }
+  .syn-note-selector__row--tet-band {
+    gap: 3px;
+  }
+  .syn-note-selector__row--tet-band .syn-note-selector__btn {
+    min-height: 44px;
+    padding: 10px 8px;
+    font-size: 9px;
   }
   .syn-note-label-wrap {
     flex-wrap: wrap;
