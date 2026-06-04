@@ -84,24 +84,40 @@ assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(4), '2 oct', 'interva
 assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1.5004), '5th', 'interval helper snaps near known harmonic ratios');
 assert.strictEqual(SynthNotes.formatSynthNoteIntervalLabel(1.37), '×1.37', 'interval helper falls back to a safe generic ratio label');
 assert.strictEqual(
-  SynthNotes.hzToNoteName(SynthNotes.midiToHz(60.4999), true),
-  'C♯½4',
-  '24-TET positive quarter-tone labels include the octave',
+  SynthNotes.noteNameToHz('C♯½4', true),
+  SynthNotes.midiToHz(60.5),
+  '24-TET quarter-sharp labels parse back to 60.5 MIDI',
 );
 assert.strictEqual(
-  SynthNotes.hzToNoteName(SynthNotes.midiToHz(59.5), true),
-  'B♯½3',
-  '24-TET quarter-flat labels below C4 keep the lower octave',
+  SynthNotes.noteNameToHz('B♯½3', true),
+  SynthNotes.midiToHz(59.5),
+  '24-TET quarter-flat labels below C4 parse back to 59.5 MIDI',
 );
 assert.strictEqual(
-  SynthNotes.hzToNoteName(SynthNotes.midiToHz(61.5001), true),
+  SynthNotes.noteNameToHz('D♭½4', true),
+  SynthNotes.midiToHz(61.5),
+  '24-TET quarter-flat labels above C4 parse back to 61.5 MIDI',
+);
+const roundTrip24Tet = SynthNotes.hzToNoteName(SynthNotes.midiToHz(61.5), true);
+assert.strictEqual(
+  roundTrip24Tet,
   'D♭½4',
-  '24-TET negative quarter-tone labels include the octave',
+  '24-TET note names emitted by hzToNoteName stay canonical',
+);
+assert.strictEqual(
+  SynthNotes.noteNameToHz(roundTrip24Tet, true),
+  SynthNotes.midiToHz(61.5),
+  '24-TET note names emitted by hzToNoteName round-trip through noteNameToHz',
 );
 assert.strictEqual(
   SynthNotes.hzToNoteName(SynthNotes.midiToHz(60), false),
   'C4',
   '12-TET note labels stay unchanged',
+);
+assert.strictEqual(
+  SynthNotes.noteNameToHz('C♯½x4', true),
+  SynthNotes.SYNTH_ROOT_MAX_HZ,
+  'malformed 24-TET labels still fall back safely',
 );
 assert(
   SynthNotes.formatSynthNotePitchDisplay(SynthNotes.midiToHz(59.5), true).includes('B♯½3'),

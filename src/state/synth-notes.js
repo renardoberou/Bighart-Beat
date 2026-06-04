@@ -101,10 +101,21 @@
   function noteNameToHz(nameAndOctave, use24Tet) {
     const str = String(nameAndOctave || '').trim();
     if (!str) return SYNTH_ROOT_MAX_HZ;
-    // Parse note name and octave
-    const match = str.match(/^([A-Ga-g][#♯♭]?)([-+]?\d+)?$/);
+    // Parse note name and octave, allowing the canonical 24-TET half-step marker.
+    const match = str.match(/^([A-Ga-g][#♯♭]?(?:½)?)([-+]?\d+)?$/);
     if (!match) return SYNTH_ROOT_MAX_HZ;
-    let noteStr = match[1].toUpperCase();
+    const noteToken = match[1].toUpperCase();
+    const octave = match[2] !== undefined ? parseInt(match[2]) : 4;
+
+    if (use24Tet) {
+      const idx24 = NOTE_NAMES_24.indexOf(noteToken);
+      if (idx24 >= 0) {
+        const midi = (octave + 1) * 12 + idx24 / 2;
+        return midiToHz(midi);
+      }
+    }
+
+    let noteStr = noteToken;
     // Normalize accidentals
     if (noteStr.includes('♯')) noteStr = noteStr.replace('♯', '#');
     if (noteStr.includes('♭')) {
@@ -112,17 +123,8 @@
       const flatMap = { 'DB': 'C#', 'EB': 'D#', 'GB': 'F#', 'AB': 'G#', 'BB': 'A#' };
       noteStr = flatMap[noteStr] || noteStr.replace('♭', 'B');
     }
-    const octave = match[2] !== undefined ? parseInt(match[2]) : 4;
-    let noteIndex = NOTE_NAMES.indexOf(noteStr);
-    if (noteIndex < 0) {
-      // Try 24-TET names
-      const idx24 = NOTE_NAMES_24.indexOf(match[1].toUpperCase());
-      if (idx24 >= 0) {
-        noteIndex = Math.floor(idx24 / 2);
-      } else {
-        return SYNTH_ROOT_MAX_HZ;
-      }
-    }
+    const noteIndex = NOTE_NAMES.indexOf(noteStr);
+    if (noteIndex < 0) return SYNTH_ROOT_MAX_HZ;
     const midi = (octave + 1) * 12 + noteIndex;
     return midiToHz(midi);
   }
