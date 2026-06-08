@@ -17,7 +17,10 @@
     ether: 0.25,
     synth: 0.55,
   };
-  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'];
+  const GROOVE_TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+  const GROOVE_TRACK_SET = new Set(GROOVE_TRACK_IDS);
+  const TRACK_IDS = [...GROOVE_TRACK_IDS, 'synth'];
+  const GROOVE_WEIGHT_SUM = GROOVE_TRACK_IDS.reduce((sum, id) => sum + (TRACK_WEIGHTS[id] || 0), 0);
 
   function clamp01(v) {
     if (!Number.isFinite(v)) return 0;
@@ -127,9 +130,11 @@
         if (hasHit(pattern, trackId, step)) {
           const count = ratchetCount(ratchets, trackId, step);
           let weight = (TRACK_WEIGHTS[trackId] || 0.5) * ratchetWeightMultiplier(count);
-          if (trackId === 'hihat') weight += hihatOpennessAt(hihatOpenness, step) * 0.22;
-          if (trackId === 'hihat' && hihatAccentAt(hihatAccent, pattern, step)) weight += 0.12;
-          stepWeight += weight;
+          if (GROOVE_TRACK_SET.has(trackId)) {
+            if (trackId === 'hihat') weight += hihatOpennessAt(hihatOpenness, step) * 0.22;
+            if (trackId === 'hihat' && hihatAccentAt(hihatAccent, pattern, step)) weight += 0.12;
+            stepWeight += weight;
+          }
           hits.push(trackId);
           if (count > 1) ratchetMetrics[trackId] = count;
         }
@@ -147,7 +152,7 @@
       const metric = {
         step,
         hits,
-        weight: round3(stepWeight / 3.9),
+        weight: round3(stepWeight / GROOVE_WEIGHT_SUM),
         salience: round3(meter),
         surprise: round3(stepWeight ? surprise : 0),
       };
@@ -158,7 +163,7 @@
       stepMetrics.push(metric);
     }
 
-    const maxWeight = stepsPerBar * TRACK_IDS.reduce((sum, id) => sum + (TRACK_WEIGHTS[id] || 0), 0);
+    const maxWeight = stepsPerBar * GROOVE_WEIGHT_SUM;
     const density = clamp01(totalWeight / maxWeight);
     const syncopation = totalWeight ? clamp01(surpriseWeight / totalWeight) : 0;
     const meterConfidenceBase = totalWeight ? clamp01(meterWeight / totalWeight) : 0;
@@ -179,7 +184,7 @@
     let surpriseTension = clamp01((syncopation * 0.62) + (density * 0.58) + (offbeatRatio * 0.22) - (anchorConfidence * 0.18));
 
     const lateRecoveryHits = [12, 14, 15].filter(step => step < stepsPerBar).reduce((sum, step) => {
-      return sum + (stepMetrics[step] && stepMetrics[step].hits.length ? 1 : 0);
+      return sum + (stepMetrics[step] && stepMetrics[step].hits.some(trackId => GROOVE_TRACK_SET.has(trackId)) ? 1 : 0);
     }, 0) / 3;
     let recoverability = clamp01((meterConfidence * 0.70) + (anchorConfidence * 0.20) + (lateRecoveryHits * 0.10) - (densityPressure * 0.45));
 

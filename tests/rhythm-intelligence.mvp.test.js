@@ -107,6 +107,10 @@ const synthPattern = gridWith({ kick: [0], snare: [4], synth: [0] });
 const synthlessAnalysis = analyze(synthlessPattern);
 const synthAnalysis = analyze(synthPattern);
 assert(synthAnalysis.stepMetrics[0].hits.includes('synth'), 'synth hits surface in stepMetrics');
-assert(synthAnalysis.density > synthlessAnalysis.density, 'synth hits affect analyzer output, not just the input grid');
+for (const metric of ['syncopation', 'meterConfidence', 'surpriseTension', 'recoverability', 'movementDrive', 'density']) {
+  assert.strictEqual(synthAnalysis[metric], synthlessAnalysis[metric], `synth ostinato does not alter ${metric}`);
+}
+assert.deepStrictEqual(synthAnalysis.labels, synthlessAnalysis.labels, 'synth ostinato keeps the groove labels unchanged');
+assert.strictEqual(synthAnalysis.stepMetrics[0].weight, synthlessAnalysis.stepMetrics[0].weight, 'synth ostinato stays visible without changing drum step weight');
 
 console.log('Rhythm intelligence MVP checks passed.');
