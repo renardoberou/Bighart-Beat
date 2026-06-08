@@ -150,6 +150,11 @@ assert.strictEqual(
   'edit hint helper shows the previous/down and next/up approved harmonic labels with note names for root'
 );
 assert.strictEqual(
+  SynthNotes.formatSynthNoteEditHintLabel(1, undefined, true),
+  'HARM ▼ G#4 5th↓ · HARM ▲ E♯½5 3rd-ish',
+  'edit hint helper switches to 24-TET note names when requested'
+);
+assert.strictEqual(
   SynthNotes.formatSynthNoteEditHintLabel(0.5),
   'HARM ▼ C#7 2 oct · HARM ▲ G#4 5th↓',
   'edit hint helper wraps from the lowest approved harmonic to the highest approved harmonic with note names'

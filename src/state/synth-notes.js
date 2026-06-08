@@ -270,14 +270,15 @@
     return SYNTH_HARMONIC_RATIOS[nextIndex];
   }
 
-  function formatSynthNoteEditHintLabel(ratio, rootHz) {
+  function formatSynthNoteEditHintLabel(ratio, rootHz, use24Tet) {
     const previousRatio = findPreviousApprovedHarmonicRatio(ratio);
     const nextRatio = findNextApprovedHarmonicRatio(ratio);
     const previousInterval = formatSynthNoteIntervalLabel(previousRatio);
     const nextInterval = formatSynthNoteIntervalLabel(nextRatio);
     const root = rootHz || SYNTH_ROOT_MAX_HZ;
-    const previousName = hzToNoteName(synthPitchForStep(root, previousRatio), false);
-    const nextName = hzToNoteName(synthPitchForStep(root, nextRatio), false);
+    const use24TetMode = typeof use24Tet === 'boolean' ? use24Tet : false;
+    const previousName = hzToNoteName(synthPitchForStep(root, previousRatio), use24TetMode);
+    const nextName = hzToNoteName(synthPitchForStep(root, nextRatio), use24TetMode);
     return 'HARM ▼ ' + previousName + ' ' + previousInterval + ' · HARM ▲ ' + nextName + ' ' + nextInterval;
   }
 
