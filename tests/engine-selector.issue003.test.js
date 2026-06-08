@@ -10,6 +10,13 @@ const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const { ENGINES } = require(path.join(root, 'src', 'state', 'persistence.js'));
 
+const ENGINE_LABELS = {
+  '808': '808-inspired drum engine',
+  '909': '909-inspired drum engine',
+  reznor: 'Reznor/NIN-inspired industrial drum engine',
+  aphex: 'Aphex-inspired IDM drum engine',
+};
+
 function extractFunction(name) {
   const marker = `function ${name}(`;
   const start = main.indexOf(marker);
@@ -25,10 +32,33 @@ function extractFunction(name) {
   throw new Error(`${name} function body did not close`);
 }
 
+function buttonAttrs(engine) {
+  const match = index.match(new RegExp(`<button\\b(?=[^>]*\\bdata-engine="${engine}")[^>]*>`, 'i'));
+  assert(match, `engine selector button exists for ${engine}`);
+  return match[0];
+}
+
+function attrValue(attrs, name) {
+  const match = attrs.match(new RegExp(`\\b${name}="([^"]*)"`, 'i'));
+  return match && match[1];
+}
+
 assert.deepStrictEqual(ENGINES, ['808', '909', 'reznor', 'aphex'], 'canonical engine list is stable');
 
 for (const engine of ENGINES) {
   assert(index.includes(`data-engine="${engine}"`), `index exposes an engine selector button for ${engine}`);
+}
+
+for (const engine of ENGINES) {
+  const attrs = buttonAttrs(engine);
+  const ariaLabel = attrValue(attrs, 'aria-label');
+  assert(ariaLabel, `${engine} engine button has an accessible aria-label`);
+  assert(ariaLabel.includes(ENGINE_LABELS[engine]), `${engine} aria-label is descriptive (${ariaLabel})`);
+}
+
+assert.strictEqual(attrValue(buttonAttrs('808'), 'aria-pressed'), 'true', '808 engine starts pressed in markup');
+for (const engine of ['909', 'reznor', 'aphex']) {
+  assert.strictEqual(attrValue(buttonAttrs(engine), 'aria-pressed'), 'false', `${engine} engine starts unpressed in markup`);
 }
 
 [
@@ -64,5 +94,9 @@ assert(
 );
 assert(/syncEngineSelector\(\)/.test(engineSelectorBlock), 'valid engine click refreshes selected engine UI');
 assert(/autosave\(\)/.test(engineSelectorBlock), 'valid engine click persists selected engine');
+
+const syncEngineSelector = extractFunction('syncEngineSelector');
+assert(/setAttribute\(\s*['\"]aria-pressed['\"]\s*,\s*String\(/.test(syncEngineSelector), 'engine selector updates aria-pressed for the active button');
+assert(/classList\.toggle\(\s*['\"]on['\"]/.test(syncEngineSelector), 'syncEngineSelector still updates the existing .on class');
 
 console.log('Issue 003 engine selector regression checks passed.');

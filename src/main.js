@@ -2663,7 +2663,11 @@ function restorePatternFxScene(patternIndex) {
 }
 
 function syncEngineSelector() {
-  $('engineSel').querySelectorAll('[data-engine]').forEach(b => b.classList.toggle('on', b.dataset.engine === S.engine));
+  $('engineSel').querySelectorAll('[data-engine]').forEach(b => {
+    const isActive = b.dataset.engine === S.engine;
+    b.classList.toggle('on', isActive);
+    b.setAttribute('aria-pressed', String(isActive));
+  });
 }
 
 function syncToggleButton(buttonOrId, active) {
