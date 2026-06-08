@@ -102,4 +102,11 @@ for (const metric of ['syncopation', 'meterConfidence', 'surpriseTension', 'reco
 assert.strictEqual(analysis.stepMetrics.length, 16, 'stepMetrics covers the 16-step bar');
 assert.strictEqual(analysis.stepMetrics[0].step, 0, 'stepMetrics expose step indexes');
 
+const synthlessPattern = gridWith({ kick: [0], snare: [4] });
+const synthPattern = gridWith({ kick: [0], snare: [4], synth: [0] });
+const synthlessAnalysis = analyze(synthlessPattern);
+const synthAnalysis = analyze(synthPattern);
+assert(synthAnalysis.stepMetrics[0].hits.includes('synth'), 'synth hits surface in stepMetrics');
+assert(synthAnalysis.density > synthlessAnalysis.density, 'synth hits affect analyzer output, not just the input grid');
+
 console.log('Rhythm intelligence MVP checks passed.');

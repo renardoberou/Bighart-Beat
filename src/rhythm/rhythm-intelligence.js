@@ -15,8 +15,9 @@
     input: 0.65,
     hihat: 0.35,
     ether: 0.25,
+    synth: 0.55,
   };
-  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether'];
+  const TRACK_IDS = ['kick', 'snare', 'hihat', 'clap', 'input', 'ether', 'synth'];
 
   function clamp01(v) {
     if (!Number.isFinite(v)) return 0;
