@@ -2028,10 +2028,13 @@ function renderRhythmIntelligence() {
   }) : null;
   const riActionBtn = $('riFixAnchorBtn');
   const quickActionBtn = $('brainLoopQuickBtn');
+  const performanceMacroBtn = $('performanceMacroBtn');
   riActionBtn.disabled = !action;
   riActionBtn.textContent = action && action.reason ? ('APPLY BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
   quickActionBtn.disabled = !action;
   quickActionBtn.textContent = action && action.reason ? ('BRAIN LOOP · ' + action.reason) : 'BRAIN LOOP OK';
+  performanceMacroBtn.disabled = !action;
+  performanceMacroBtn.textContent = action && action.reason ? ('PERF MACRO V1 · ' + action.reason) : 'PERF MACRO V1 OK';
   $('brainLoopStatus').textContent = lastBrainLoopResultStatus || (action ? 'BRAIN LOOP READY' : 'NO ACTION NEEDED');
 }
 
@@ -2619,6 +2622,63 @@ function createRhythmActionVariation() {
   toast(toastMessage);
 }
 
+function resolvePerformanceMacroTargetIndex() {
+  if (S.patternChain && S.patternChain.enabled) {
+    const chain = State.normalizePatternChain(S.patternChain);
+    const nextQueuedSlot = (chain.position + 1) % chain.items.length;
+    return chain.items[nextQueuedSlot].pattern;
+  }
+  return (S.patt + 1) % 4;
+}
+
+function createPerformanceMacroV1Variation() {
+  if (!State.resolveRhythmMutationAction || !State.applyControlledPatternVariation) return;
+  const analysis = analyzeCurrentRhythm();
+  if (!analysis) return;
+  const action = State.resolveRhythmMutationAction({
+    analysis,
+    pattern: PATTERNS[S.patt],
+    ratchets: RATCHETS[S.patt],
+    hihatOpenness: HHT_OPENNESS[S.patt],
+    hihatAccent: HHT_ACCENT[S.patt],
+  });
+  if (!action || !action.edit) {
+    lastBrainLoopResultStatus = '';
+    $('brainLoopStatus').textContent = 'NO ACTION NEEDED';
+    toast('PERF MACRO V1 OK');
+    return;
+  }
+  const result = State.applyControlledPatternVariation({
+    patterns: PATTERNS,
+    ratchets: RATCHETS,
+    hihatOpenness: HHT_OPENNESS,
+    hihatAccent: HHT_ACCENT,
+    sourceIndex: S.patt,
+    targetIndex: resolvePerformanceMacroTargetIndex(),
+    edit: action.edit,
+  });
+  PATTERNS[result.targetIndex] = result.patterns[result.targetIndex];
+  RATCHETS[result.targetIndex] = result.ratchets[result.targetIndex];
+  HHT_OPENNESS[result.targetIndex] = result.hihatOpenness[result.targetIndex];
+  HHT_ACCENT[result.targetIndex] = result.hihatAccent[result.targetIndex];
+  lastBrainLoopResultStatus = formatBrainLoopResultStatus(action, result.targetIndex);
+  selectPattern(result.targetIndex, { source: 'manual', autosave: false });
+  renderRhythmIntelligence();
+  $('brainLoopStatus').textContent = formatBrainLoopResultStatus(action, result.targetIndex);
+  autosave();
+  let toastMessage = (action.reason || 'PERF MACRO V1') + ' → pattern ' + 'ABCD'[result.targetIndex];
+  if (action.edit.trackId === 'hihat' && action.edit.active) {
+    const hihatPreviewOpen = action.edit.hihatOpen ?? HHT_PLACE;
+    if (!S.playing) {
+      previewHihat(hihatPreviewOpen);
+      toastMessage += ' · heard hat';
+    } else {
+      toastMessage += ' · hat queued';
+    }
+  }
+  toast(toastMessage);
+}
+
 function createControlledPatternVariation() {
   if (!State.applyControlledPatternVariation) return;
   const result = State.applyControlledPatternVariation({
@@ -2886,6 +2946,7 @@ function wire() {
   $('latchFxBtn').addEventListener('click', latchCurrentPatternFxScene);
   $('variationBtn').addEventListener('click', createControlledPatternVariation);
   $('brainLoopQuickBtn').addEventListener('click', createRhythmActionVariation);
+  $('performanceMacroBtn').addEventListener('click', createPerformanceMacroV1Variation);
   $('riFixAnchorBtn').addEventListener('click', createRhythmActionVariation);
 
   // patterns
