@@ -66,6 +66,7 @@ const TRACKS_PREVIOUS_TOKENS = [
   'v=synth-velocity-boost-20260530',
 ];
 const MAIN_JS_TOKEN = 'v=synth-note-selector-20260601-c5';
+const ANDROID_BRIDGE_TOKEN = 'v=android-shell-20260611';
 const MAIN_JS_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   HIHAT_METALLIC_RATTLE_PAN_TOKEN,
@@ -98,7 +99,7 @@ const CLAP_STEREO_WIDTH_PREVIOUS_TOKENS = [
   ...PREVIOUS_TOKENS,
   'v=input-playback-rate-safety-20260526',
 ];
-const localAssetTokenPattern = /[?&]v=(?:synth-declick|synth-engine-tuneup|synth-note-edit-ux|synth-pitch-330|synth-musical-defaults|synth-velocity-boost|synth-808-refine|synth-tap-flash|synth-tap-cycle|synth-tet24-persist|synth-grid-variety|synth-note-octave-labels|kick-floor-reznor-snare|kick-endhz-floor-25hz|hihat-aphex-bright-headroom|aphex-snare-clap-idm|aphex-kick-digital-crack|snare-volume-parity|clap-burst-tone|boost-week|hihat-open-tail-extend|hihat-idm-shimmer-decay-bloom|hihat-idm-engine-polish|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-aphex-closed-needle-accent|aphex-shimmer-edge-boost|hihat-metallic-rattle-pan|hihat-soft-open-tail|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|wreck-order-ux|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|clap-stereo-width|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|synth-detune-personality|synth-note-selector|synth-note-names|synth-hint-notes|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
+const localAssetTokenPattern = /[?&]v=(?:android-shell|synth-declick|synth-engine-tuneup|synth-note-edit-ux|synth-pitch-330|synth-musical-defaults|synth-velocity-boost|synth-808-refine|synth-tap-flash|synth-tap-cycle|synth-tet24-persist|synth-grid-variety|synth-note-octave-labels|kick-floor-reznor-snare|kick-endhz-floor-25hz|hihat-aphex-bright-headroom|aphex-snare-clap-idm|aphex-kick-digital-crack|snare-volume-parity|clap-burst-tone|boost-week|hihat-open-tail-extend|hihat-idm-shimmer-decay-bloom|hihat-idm-engine-polish|hihat-accent(?:-bloom)?|hihat-open-contract|hihat-gain-stage|hihat-open-body|hihat-open-decay|hihat-open-velocity-tail|hihat-open-metal-air|hihat-open-splash(?:-runtime)?|hihat-aphex-micro-glitch|hihat-aphex-closed-needle-accent|aphex-shimmer-edge-boost|hihat-metallic-rattle-pan|hihat-soft-open-tail|hihat-flutter(?:-velocity)?|hihat-touch-targets|hihat-metal-budget|hihat-metal-air|hihat-velocity-tail|hihat-place-audition|hihat-place-silent|hihat-sizzle-tail|comp-detector-truth|brain-loop-hihat-guard|wreck-audible-send|wreck-order-ux|ether-mode-audition|ratchet-edit-audition|input-playback-rate-safety|clap-stereo-width|synth-cleanup|synth-note-engine-status|synth-note-edit-audition|synth-808-body|synth-detune-personality|synth-note-selector|synth-note-names|synth-hint-notes|syn-pitch-cap|hihat-idm-spark)-\d{8}(?:-[a-z0-9-]+)?/g;
 function assertExactlyOneCurrentToken(assetUrl, expectedToken = EXPECTED_TOKEN, previousTokens = PREVIOUS_TOKENS) {
   assert(
     !assetUrl.includes(STALE_TOKEN) && previousTokens.every((token) => !assetUrl.includes(token)),
@@ -163,6 +164,7 @@ const expectedScriptSrcs = [
   'src/rhythm/snare-voice.js',
   'src/rhythm/clap-voice.js',
   'src/main.js',
+  'src/android-bridge.js',
 ].map((unversionedPath) => {
   if (unversionedPath === 'src/rhythm/hihat-voice.js') return `${unversionedPath}?${HIHAT_VOICE_TOKEN}`;
   if (unversionedPath === 'src/rhythm/synth-voice.js') return `${unversionedPath}?${SYNTH_VOICE_TOKEN}`;
@@ -173,6 +175,7 @@ const expectedScriptSrcs = [
   if (unversionedPath === 'src/state/persistence.js') return `${unversionedPath}?${PERSISTENCE_TOKEN}`;
   if (unversionedPath === 'src/state/tracks.js') return `${unversionedPath}?${TRACKS_TOKEN}`;
   if (unversionedPath === 'src/main.js') return `${unversionedPath}?${MAIN_JS_TOKEN}`;
+  if (unversionedPath === 'src/android-bridge.js') return `${unversionedPath}?${ANDROID_BRIDGE_TOKEN}`;
   return `${unversionedPath}?${EXPECTED_TOKEN}`;
 });
 
@@ -197,6 +200,10 @@ scriptSrcs.forEach((src) => {
   if (src.startsWith('src/rhythm/clap-voice.js?')) {
     expectedToken = CLAP_STEREO_WIDTH_TOKEN;
     previousTokens = CLAP_STEREO_WIDTH_PREVIOUS_TOKENS;
+  }
+  if (src.startsWith('src/android-bridge.js?')) {
+    expectedToken = ANDROID_BRIDGE_TOKEN;
+    previousTokens = PREVIOUS_TOKENS;
   }
   if (src.startsWith('src/main.js?')) {
     expectedToken = MAIN_JS_TOKEN;
