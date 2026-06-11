@@ -1,0 +1,59 @@
+name: android-release
+
+on:
+  push:
+    tags: ['app-v*']
+
+permissions:
+  contents: write   # required to create the GitHub Release
+
+jobs:
+  signed-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Decode keystore from secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::KEYSTORE_B64 secret is missing — see docs/ADR-002-android-shell.md Phase B."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Derive version name from tag (app-v1.2.0 -> 1.2.0)
+        run: echo "VERSION_NAME=${GITHUB_REF_NAME#app-v}" >> "$GITHUB_ENV"
+
+      - name: Build signed APK + AAB
+        working-directory: android
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/release.jks
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.KEY_PASS }}
+        run: gradle assembleRelease bundleRelease
+
+      - name: Stage release assets
+        run: |
+          SHORT="${GITHUB_REF_NAME#app-}"
+          cp android/app/build/outputs/apk/release/app-release.apk "bighart-beat-${SHORT}.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "bighart-beat-${SHORT}.aab"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            bighart-beat-*.apk
+            bighart-beat-*.aab
+          generate_release_notes: true
+          fail_on_unmatched_files: true

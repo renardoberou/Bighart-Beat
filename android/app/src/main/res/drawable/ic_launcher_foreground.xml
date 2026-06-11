@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bighart Beat brand mark: a 4x4 sequencer step grid.
+     Rows top->bottom read as HHT / CLP / SNR / KCK; lit cells sketch a
+     classic backbeat. Amber on warm dark = Bighart Bay identity. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- dim cells -->
+    <path android:pathData="M 43,30 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 69,30 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 30,43 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 43,43 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 56,43 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 30,56 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 56,56 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 69,56 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 43,69 h9 v9 h-9 z" android:fillColor="#261D14" />
+    <path android:pathData="M 69,69 h9 v9 h-9 z" android:fillColor="#261D14" />
+
+    <!-- lit cells -->
+    <path android:pathData="M 30,30 h9 v9 h-9 z" android:fillColor="#E8A04C" />
+    <path android:pathData="M 56,30 h9 v9 h-9 z" android:fillColor="#E8A04C" />
+    <path android:pathData="M 69,43 h9 v9 h-9 z" android:fillColor="#E8A04C" />
+    <path android:pathData="M 43,56 h9 v9 h-9 z" android:fillColor="#E8A04C" />
+    <path android:pathData="M 30,69 h9 v9 h-9 z" android:fillColor="#E8A04C" />
+    <path android:pathData="M 56,69 h9 v9 h-9 z" android:fillColor="#E8A04C" />
+</vector>
