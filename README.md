@@ -8,9 +8,9 @@ Core translation:
 
 ## Current phase
 
-MVP-priority playable candidate.
+MVP-priority playable candidate (web), plus an early native Android shell (Phase A).
 
-Implemented baseline:
+Implemented baseline (web):
 
 - v4 studio app shell extracted into a repo-backed static browser app.
 - 6-track × 16-step drum machine: KCK, SNR, HHT, CLP, INP, ETH.
@@ -25,7 +25,51 @@ Implemented baseline:
   - RECOVER
   - DRIVE
 
-## How to run locally
+## Android app (native shell)
+
+`android/` contains a Kotlin WebView shell that packages the same live web
+source into a standalone Android app (`com.resonantsystems.bighartbeat`).
+Design decisions are recorded in `docs/ADR-002-android-shell.md`.
+
+Key points:
+
+- The APK never drifts from the web app: a Gradle `Sync` task copies
+  `index.html`, `src/`, and `styles/` into the app's assets at build time.
+- `src/android-bridge.js` is the only change to the web app itself (one
+  `<script>` tag in `index.html`). It's feature-detected and fully inert in
+  browsers, GitHub Pages, and the test runner.
+- Background audio is transport-driven: while the beat is playing, a
+  foreground `mediaPlayback` service keeps the JS scheduler alive with the
+  screen off; stopping the transport releases it.
+- Built entirely in GitHub Actions — no local Android toolchain is used or
+  required.
+
+**Build status:** `android-build` workflow is green; the debug APK builds
+successfully on every push touching `android/**`, `src/**`, `styles/**`, or
+`index.html` (download from that workflow run's artifacts, GitHub login
+required).
+
+**Test status:** CI build passes. The on-device smoke checklist in
+`docs/ADR-002-android-shell.md` (Phase A) has not yet been marked complete —
+run through it after installing the debug APK and check off each item as it
+passes.
+
+**Not yet done:**
+
+- Phase A on-device smoke checklist (installability, ENGAGE→audio,
+  play/stop, banks, persistence, screen-off playback, notification STOP,
+  phone-call focus loss, back-button exit).
+- Phase B signed release: keystore + repo secrets, `app-v1.0.0` tag, signed
+  APK/AAB GitHub Release, Gumroad attachment.
+- Phase C native deepening: offline font vendoring, haptics, WebView audio
+  latency evaluation.
+
+No keystore, signing passwords, `.env` files, or built APK/AAB binaries are
+ever committed to this repository — release artifacts are produced and
+distributed exclusively through GitHub Actions (workflow artifacts and
+GitHub Releases).
+
+## How to run locally (web)
 
 From the repo root:
 
@@ -52,15 +96,18 @@ for f in tests/*.test.js; do node "$f"; done
 for f in src/state/*.js src/rhythm/*.js src/*.js tests/*.js; do node --check "$f"; done
 ```
 
-Expected current result: all tests pass and syntax checks pass.
+Expected current result: all 142 tests pass and syntax checks pass. This is
+the same gate `pages.yml` runs before every deploy, and it also validates
+`src/android-bridge.js`'s registration in the cache-busting manifest.
 
 ## Bernado test script
 
 See:
 
-- `docs/mvp-test-checklist.md`
+- `docs/mvp-test-checklist.md` (web)
+- `docs/ADR-002-android-shell.md` Phase A checklist (Android on-device smoke)
 
-Minimum smoke path:
+Minimum smoke path (web):
 
 1. Open the app.
 2. Tap **ENGAGE**.
