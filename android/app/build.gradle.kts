@@ -16,8 +16,8 @@ android {
         applicationId = "com.resonantsystems.bighartbeat"
         minSdk = 26
         targetSdk = 35
-        // versionCode comes from CI run number — strictly increasing, zero bookkeeping
-        versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
+        // Bump this before each Play/public release; package updates require a monotonically increasing versionCode.
+        versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
         // versionName comes from the release tag (app-v1.2.0 → 1.2.0); fallback for debug
         versionName = System.getenv("VERSION_NAME") ?: "1.0.0"
     }

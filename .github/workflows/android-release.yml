@@ -22,12 +22,24 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Decode keystore from secrets
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.KEY_PASS }}
         run: |
-          if [ -z "$KEYSTORE_B64" ]; then
-            echo "::error::KEYSTORE_B64 secret is missing — see docs/ADR-002-android-shell.md Phase B."
+          missing=0
+          for name in KEYSTORE_B64 KEYSTORE_PASS KEY_ALIAS KEY_PASS; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name secret is missing — see docs/ADR-002-android-shell.md Phase B."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
             exit 1
           fi
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
@@ -50,10 +62,30 @@ jobs:
           cp android/app/build/outputs/apk/release/app-release.apk "bighart-beat-${SHORT}.apk"
           cp android/app/build/outputs/bundle/release/app-release.aab "bighart-beat-${SHORT}.aab"
 
+      - name: Verify APK signature and generate checksums
+        run: |
+          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          APKSIGNER=$(find "$SDK_ROOT/build-tools" -maxdepth 2 -name apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner not found under $SDK_ROOT/build-tools — cannot verify the release signature."
+            exit 1
+          fi
+          echo "Using $APKSIGNER"
+          "$APKSIGNER" verify --verbose bighart-beat-*.apk
+          sha256sum bighart-beat-*.apk bighart-beat-*.aab | tee CHECKSUMS.txt
+
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             bighart-beat-*.apk
             bighart-beat-*.aab
+            CHECKSUMS.txt
+          body: |
+            Signed Bighart Beat Android release.
+
+            Verify the APK signature yourself before installing:
+            `apksigner verify --verbose bighart-beat-*.apk`
+
+            SHA-256 checksums are in `CHECKSUMS.txt`.
           generate_release_notes: true
           fail_on_unmatched_files: true
