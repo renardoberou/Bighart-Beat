@@ -76,11 +76,11 @@ swarm** in this repo. A vendored snapshot would drift within days.
       transport; back-button double-press exits.
 
 ### Phase B — Signed release
-- [ ] Keystore generated in a throwaway CI run, stored only in repo secrets
+- [x] Keystore generated in Termux and stored only in repo secrets
       (`KEYSTORE_B64`, `KEYSTORE_PASS`, `KEY_ALIAS`, `KEY_PASS`) — follow
       ping-thing-android `docs/RELEASE.md`, which already retired the unsafe
       public-artifact path.
-- [ ] Tag `app-v1.0.0` → Release with `bighart-beat-v1.0.0.apk` + `.aab`.
+- [x] Tag `app-v1.0.0` → Release with `bighart-beat-v1.0.0.apk` + `.aab`.
 - [ ] Gumroad: attach the APK to the existing Bighart Beat product.
 
 ### Phase C — Native deepening (only after A+B stable)

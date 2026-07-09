@@ -54,13 +54,16 @@ required).
 run through it after installing the debug APK and check off each item as it
 passes.
 
+**Release status:**
+
+- First signed Android release is live: [`app-v1.0.0`](https://github.com/renardoberou/Bighart-Beat/releases/tag/app-v1.0.0) with signed APK, AAB, and SHA-256 checksums.
+
 **Not yet done:**
 
 - Phase A on-device smoke checklist (installability, ENGAGE→audio,
   play/stop, banks, persistence, screen-off playback, notification STOP,
   phone-call focus loss, back-button exit).
-- Phase B signed release: keystore + repo secrets, `app-v1.0.0` tag, signed
-  APK/AAB GitHub Release, Gumroad attachment.
+- Gumroad attachment / Play internal-test distribution from the signed APK/AAB.
 - Phase C native deepening: offline font vendoring, haptics, WebView audio
   latency evaluation.
 
