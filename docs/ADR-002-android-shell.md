@@ -81,6 +81,8 @@ swarm** in this repo. A vendored snapshot would drift within days.
       ping-thing-android `docs/RELEASE.md`, which already retired the unsafe
       public-artifact path.
 - [x] Tag `app-v1.0.0` → Release with `bighart-beat-v1.0.0.apk` + `.aab`.
+- [x] Signed APK installed and basic on-device smoke confirmed working on
+      2026-07-09.
 - [ ] Gumroad: attach the APK to the existing Bighart Beat product.
 
 ### Phase C — Native deepening (only after A+B stable)
